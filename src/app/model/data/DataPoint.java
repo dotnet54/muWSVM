@@ -3,13 +3,17 @@ package app.model.data;
 public class DataPoint {
 	
 	public static int id;
-	public int x;
-	public int y;
+	public double x;
+	public double y;
 	
-	public DataPoint(int x, int y){
+	public DataPoint(double x, double y){
 		this.x = x;
 		this.y = y;
 		id++;
+	}
+	
+	public String toString(){
+		return "DataPoint[x=" + x + ",y="+ y +"]";
 	}
 
 }

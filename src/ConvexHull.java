@@ -40,7 +40,7 @@ public class ConvexHull {
 	
 	private static boolean CCW(DataPoint p, DataPoint q, DataPoint r)
     {
-        int val = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
+        int val = (int) ((q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y));
  
          if (val >= 0)
              return false;

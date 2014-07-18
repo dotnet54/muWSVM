@@ -19,6 +19,14 @@ public class RCH {
 		int nfl = (int) Math.floor(1/mu);
 		int n = (int) Math.ceil(1/mu);
 		
+		if (X.size() == nfl){
+			System.out.println("Hull reduced to center " + findCentroid(X));
+			ArrayList<Point> res = new ArrayList<Point>();
+			res.add(findCentroid(X));
+			return  res;
+		}
+		
+		
 		ArrayList<Point> h = new ArrayList<Point>();
 		
 		if (first == true){
@@ -178,6 +186,22 @@ public class RCH {
 		}
 		
 		return vl;
+	}
+	
+	public static Point findCentroid(ArrayList<Point> P){
+		Point c = new Point();
+		
+		for (int i = 0; i < P.size(); i++){
+			c.x += P.get(i).x;
+		}
+		c.x /= P.size();
+
+		for (int i = 0; i < P.size(); i++){
+			c.y += P.get(i).y;
+		}
+		c.y /= P.size();
+		
+		return c;
 	}
 	
 	public static int[] sortmin(ArrayList<Point> X){

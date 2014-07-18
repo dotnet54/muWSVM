@@ -4,12 +4,20 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Point;
+import java.awt.TextField;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.Random;
 
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -19,102 +27,205 @@ import app.model.algorithms.ReducedQuickHull;
 
 public class Launcher extends JPanel
 					  implements ChangeListener{
-	static final int FPS_MIN = 0;
-	static final int FPS_MAX = 30;
-	static final int FPS_INIT = 15;    //initial frames per second
  
-	private double mu = 0.5;
-
+	private static double mu = 0.5;
+	private static int max = 20;	
+	private static Launcher panel;
+	private static ArrayList<Point> dataset1 = new ArrayList<Point>();
+	private static ArrayList<Point> dataset2 = new ArrayList<Point>();
+	
+	private static Point[] points;
+	private static Random randomGenerator = new Random();
+	final static JTextField text = new JTextField();
+	
+	
 	public static void main(String[] args) {
-		JFrame app = new JFrame();
-		Launcher panel = new Launcher();
+
+        javax.swing.SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+        		JFrame app = new JFrame();
+
+        		panel = new Launcher();
+        		
+        		app.setContentPane(panel);
+        		app.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        		app.setSize(new Dimension(600, 400));
+        		app.setVisible(true);
+            }
+        });
 		
-		app.setContentPane(panel);
-		app.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		app.setSize(new Dimension(600, 400));
-		app.setVisible(true);
 	}
 
-	ArrayList<Point> vertices = new ArrayList<Point>();
-	Point[] points;
-	Random randomGenerator = new Random();
+
+
 	
 	
 	Launcher(){
-		int max = 20;		
 		
-		JSlider slider = new JSlider(JSlider.HORIZONTAL, 1,
-				max, 1);
-		slider.addChangeListener(this);
-
-		// Turn on labels at major tick marks.
-		slider.setMajorTickSpacing(10);
-		slider.setMinorTickSpacing(1);
-		slider.setPaintTicks(true);
-		slider.setPaintLabels(true);
+		CreateUI();
 		
-		
-		add(slider);
-		
-		
-		
-		
-		
-		
-		
-		setBackground(new Color(255,255,255));
-		
+		points = new Point[max];
+		points[0] = new Point(0,0);
+		points[1] = new Point(100,0);
+		points[2] = new Point(0,100);
 
 
-		points = new Point[5];
-		points[0] = new Point(100,50);
-		points[1] = new Point(100,100);
-		points[2] = new Point(200,200);
-		points[3] = new Point(70,150);
-		points[4] = new Point(300,50);
+		dataset1.add(points[0]);
+		dataset1.add(points[1]);
+		dataset1.add(points[2]);
 
-		vertices.add(points[0]);
-		vertices.add(points[1]);
-		vertices.add(points[2]);
-		vertices.add(points[3]);
-		vertices.add(points[4]);
+		dataset2.add(points[0]);
+		dataset2.add(points[1]);
+		dataset2.add(points[2]);
+
+		dataset1.clear();
+		dataset2.clear();
 		
-//		vertices.clear();
-//		points[0] = new Point(300,200);
-//		points[1] = new Point(100,100);
-//		points[2] = new Point(500,100);
-//		
-//
-//		vertices.add(points[0]);
-//		vertices.add(points[1]);
-//		vertices.add(points[2]);
-
+		for (int i = 0; i < max; i++){
+			Point p = new Point();
+			p.setLocation(randomGenerator.nextInt(400), randomGenerator.nextInt(200)); //randomGenerator.nextInt(400);
+			dataset1.add(p);
+		}
+		
 		for (int i = 0; i < max; i++){
 			Point p = new Point();
 			p.setLocation(randomGenerator.nextInt(400)+50, randomGenerator.nextInt(200)+50); //randomGenerator.nextInt(400);
-			vertices.add(p);
+			dataset2.add(p);
 		}
-		
 	}
 	
+	public void CreateUI(){
+		setBackground(new Color(255,255,255));
+		
+		int maxLabel = (int) (20 / (double)max);
+		System.out.println("maxLabel = " + maxLabel);
+		
+		
+		JSlider slider = new JSlider(JSlider.HORIZONTAL, 1,
+				20,1);
+		slider.addChangeListener(this);
+
+		// Turn on labels at major tick marks.
+		slider.setMajorTickSpacing(2);
+		slider.setMinorTickSpacing(1);
+		slider.setPaintTicks(true);
+		//slider.setPaintLabels(true);
+		
+		
+		//add(slider);
+		
+		
+		text.setColumns(5);
+		text.setText("0.5");
+		add(text);
+		
+		JButton btn = new JButton();
+		btn.setText("Draw Hull");
+		btn.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				
+				mu = Double.parseDouble(text.getText());
+				
+				System.out.println("mu = " + mu);
+				
+				if ( Math.floor(1/mu) > dataset1.size()){
+					System.out.println("mu = " + mu 
+							+ ", Invalid mu Hull Undefined, " + Math.ceil(1/mu));
+				}else{
+					repaint();
+				}
+				
+			}
+		});
+		add(btn);
+		
+		addMouseListener(new MouseListener() {
+			
+			@Override
+			public void mouseReleased(MouseEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void mousePressed(MouseEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void mouseExited(MouseEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void mouseEntered(MouseEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				// TODO Auto-generated method stub
+				if (SwingUtilities.isLeftMouseButton(e)){
+					dataset1.add(new Point(e.getX(), e.getY()));
+					
+				}else{
+					dataset2.add(new Point(e.getX(), e.getY()));
+				}
+				panel.repaint();
+			}
+		});
+		
+		
+		JButton btnClear = new JButton();
+		btnClear.setText("Clear");
+		btnClear.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				// TODO Auto-generated method stub
+				dataset1.clear();
+				dataset2.clear();
+				getGraphics().clearRect(0, 0,
+						getWidth(), getHeight());
+				repaint();
+			}
+		});
+		
+		//add(btnClear);
+		
+		
+	}
+
 	
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
+        paintSet1(g);
+        //paintSet2(g);
+  
+    }
+    
+    public void paintSet1(Graphics g) {
         
         ArrayList<Point> ch = new ArrayList<Point>();	//mem leak with new
         ArrayList<Point> rch = new ArrayList<Point>();
         
         Point p = new Point();
-    	for (int i = 0; i < vertices.size(); i++){
-    		p = vertices.get(i);
+    	for (int i = 0; i < dataset1.size(); i++){
+    		p = dataset1.get(i);
     		g.setColor(Color.BLACK);
     		g.fillRect((int) p.getX(), (int) p.getY(), 3, 3);
     		g.setColor(Color.RED);
     		g.drawString(i + "", (int) p.getX(), (int) p.getY());
     	}
 
-        ch = QuickHull.QH(vertices);
+        //ch = QuickHull.QH(vertices);
+    	ch = RCH.qrh(dataset1, 1.0, null, null, true);
         
         int[] xPoints = new int[ch.size()];
         int[] yPoints =  new int[ch.size()];
@@ -124,11 +235,61 @@ public class Launcher extends JPanel
         	yPoints[i] = (int) ch.get(i).y;
       
         }
-        //g.drawPolygon(xPoints, yPoints, ch.size());
-        
         g.setColor(Color.GREEN);
-        //rch = ReducedQuickHull.RQH(vertices, .5);
-        rch = RCH.qrh(vertices, mu, null, null, true);
+        g.drawPolygon(xPoints, yPoints, ch.size());
+        
+        
+
+        rch = RCH.qrh(dataset1, mu, null, null, true);
+        
+        xPoints = new int[rch.size()];
+        yPoints =  new int[rch.size()];
+        
+        for (int i = 0; i < rch.size(); i++){
+        	xPoints[i] = (int) rch.get(i).x;
+        	yPoints[i] = (int) rch.get(i).y;
+      
+        }
+        g.setColor(Color.RED);
+        g.drawPolygon(xPoints, yPoints, rch.size());
+        
+        if (rch.size() == 1){
+        	g.drawOval(rch.get(0).x, rch.get(0).y, 2, 2);
+        	g.drawString("c", rch.get(0).x +4, rch.get(0).y+4);
+        }
+    }
+
+    public void paintSet2(Graphics g) {
+        
+        ArrayList<Point> ch = new ArrayList<Point>();	//mem leak with new
+        ArrayList<Point> rch = new ArrayList<Point>();
+        
+        Point p = new Point();
+    	for (int i = 0; i < dataset2.size(); i++){
+    		p = dataset2.get(i);
+    		g.setColor(Color.BLACK);
+    		g.fillRect((int) p.getX(), (int) p.getY(), 3, 3);
+    		g.setColor(Color.BLUE);
+    		g.drawString(i + "", (int) p.getX(), (int) p.getY());
+    	}
+
+        //ch = QuickHull.QH(vertices);
+    	ch = RCH.qrh(dataset2, 1.0, null, null, true);
+        
+        int[] xPoints = new int[ch.size()];
+        int[] yPoints =  new int[ch.size()];
+        
+        for (int i = 0; i < ch.size(); i++){
+        	xPoints[i] = (int) ch.get(i).x;
+        	yPoints[i] = (int) ch.get(i).y;
+      
+        }
+        g.setColor(Color.GREEN);
+        g.drawPolygon(xPoints, yPoints, ch.size());
+        
+        
+
+        rch = RCH.qrh(dataset2, mu, null, null, true);
         
         xPoints = new int[rch.size()];
         yPoints =  new int[rch.size()];
@@ -140,16 +301,27 @@ public class Launcher extends JPanel
         }
         g.setColor(Color.BLUE);
         g.drawPolygon(xPoints, yPoints, rch.size());
+        
+        if (rch.size() == 1){
+        	g.drawOval(rch.get(0).x, rch.get(0).y, 2, 2);
+        	g.drawString("c", rch.get(0).x +4, rch.get(0).y+4);
+        }
     }
-
-
+    
+    
 	@Override
 	public void stateChanged(ChangeEvent e) {
         JSlider source = (JSlider)e.getSource();
         if (!source.getValueIsAdjusting()) {
-             System.out.println(" slider -> m = " + source.getValue() 
-            		 + ", 1/mu = " + 1.0/source.getValue());
-             mu = 1.0/source.getValue();
+             
+             double d = (double)source.getValue() / (20 / (double)max);
+             mu = 1.0/d;
+             
+             System.out.println(" slider  -> " + source.getValue() 
+            		 + ",  mu =  " + mu
+            		 + ", 1/mu = " + 1.0/mu);
+             
+             text.setText(String.valueOf(mu));
              repaint();
         }
 	}
