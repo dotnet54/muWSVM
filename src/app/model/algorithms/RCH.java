@@ -233,7 +233,7 @@ public class RCH {
 		for (int i = 0; i < P.size(); i++){
 			c.x += P.get(i).x;
 		}
-		c.x /= P.size();
+		c.x /= P.size();	//if p.size = 0 division by 0 throw
 
 		for (int i = 0; i < P.size(); i++){
 			c.y += P.get(i).y;

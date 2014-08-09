@@ -21,6 +21,7 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.Plot;
 import org.jfree.chart.plot.PlotRenderingInfo;
 import org.jfree.chart.plot.PlotState;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.DefaultXYDataset;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
@@ -99,8 +100,17 @@ public class TempGUI {
 		JFreeChart chart = ChartFactory.createScatterPlot
 		("temp chart", "X", "Y", dataset);
 		
-		ChartPanel cpanel = new ChartPanel(chart);
+		CPanel cpanel = new CPanel(chart);
 		frame.getContentPane().add(cpanel);
+		XYLineAndShapeRenderer renderer = (XYLineAndShapeRenderer) chart.getXYPlot().getRenderer();
+
+		renderer.setBaseLinesVisible(true);
+		renderer.setShapesVisible(false);
+//		renderer.setDefaultLinesVisible(true);
+//		renderer.setDefaultShapesFilled(true);
+//		renderer.setDefaultShapesVisible(true);
+		
+		//cpanel.pa
 		
 	}
 

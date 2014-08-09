@@ -26,9 +26,13 @@ import javax.swing.JRadioButton;
 import javax.swing.JLabel;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.JTabbedPane;
+
+import app.model.data.SVMModel;
+
 import java.awt.event.InputMethodListener;
 import java.awt.event.InputMethodEvent;
 import java.beans.PropertyChangeListener;
@@ -38,16 +42,7 @@ public class MinWindow
 		implements ActionListener, MouseListener, ChangeListener{
 
 	//Model globals
-	
-	private static double mu1 = 0.5;
-	private static double mu2 = 0.5;
-	private static int max = 10;	
-	private static ArrayList<Point> dataset1 = new ArrayList<Point>();
-	private static ArrayList<Point> dataset2 = new ArrayList<Point>();
-	
-	private static Point[] points;
-	private static Random randomGenerator = new Random();
-	
+	private static SVMModel model = null;
 	
 	//GUI globals
 	private JFrame frame;
@@ -60,7 +55,9 @@ public class MinWindow
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
+		System.out.println("start main");
+		
+		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				try {
 					MinWindow window = new MinWindow();
@@ -70,84 +67,23 @@ public class MinWindow
 				}
 			}
 		});
+		
+		System.out.println("exit main");
 	}
 
 	/**
 	 * Create the application.
 	 */
 	public MinWindow() {
-		initializeData();
+		//init Model
+		
+		model = new SVMModel();
+		
+		//init GUI
 		initialize();
-		addListeners();
-		
-		
-		
-		
-		
-		
-	}
-	
-	/**
-	 * Do computation and  visualization
-	 * 
-	 */
-	
-	private void performComputations(){
-		
-		
-	}
-	
-	/**
-	 * initialize global data
-	 * 
-	 */
-	
-	private void initializeData(){
-		points = new Point[max];
-		points[0] = new Point(0,0);
-		points[1] = new Point(100,0);
-		points[2] = new Point(0,100);
-
-		dataset1.clear();
-		dataset2.clear();
-		
-		dataset1.add(points[0]);
-		dataset1.add(points[1]);
-		dataset1.add(points[2]);
-
-		points[0] = new Point(100,100);
-		points[1] = new Point(200,100);
-		points[2] = new Point(100,200);
-		
-		dataset2.add(points[0]);
-		dataset2.add(points[1]);
-		dataset2.add(points[2]);
-
-		dataset1.clear();
-		dataset2.clear();
-		
-		for (int i = 0; i < max; i++){
-			Point p = new Point();
-			p.setLocation(randomGenerator.nextInt(250), randomGenerator.nextInt(200)); //randomGenerator.nextInt(400);
-			dataset1.add(p);
-		}
-		
-		for (int i = 0; i < max; i++){
-			Point p = new Point();
-			p.setLocation(randomGenerator.nextInt(250)+200, randomGenerator.nextInt(200)+50); //randomGenerator.nextInt(400);
-			dataset2.add(p);
-		}
-	}
-	
-	
-	/**
-	 * Registers event listeners to components
-	 * 
-	 */
-	
-	private void addListeners(){
 		btnClear.addActionListener(this);
 	}
+	
 
 	
 	/**
@@ -160,7 +96,7 @@ public class MinWindow
 		SpringLayout springLayout = new SpringLayout();
 		frame.getContentPane().setLayout(springLayout);
 		
-		panel = new DrawPanel(dataset1, dataset2, mu1, mu2);
+		panel = new DrawPanel(model);
 		springLayout.putConstraint(SpringLayout.WEST, panel, 10, SpringLayout.WEST, frame.getContentPane());
 		springLayout.putConstraint(SpringLayout.SOUTH, panel, -2, SpringLayout.SOUTH, frame.getContentPane());
 		springLayout.putConstraint(SpringLayout.EAST, panel, -199, SpringLayout.EAST, frame.getContentPane());
@@ -218,9 +154,9 @@ public class MinWindow
 		textField.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				JSlider j = (JSlider) arg0.getSource();
-				mu1 = (double)j.getValue()/100;
-				System.out.println("actionPerformed " + mu1 + arg0.getActionCommand());
-				panel.setMu(mu1,mu2);
+				model.mu1 = (double)j.getValue()/100;
+				System.out.println("actionPerformed " + model.mu1 + arg0.getActionCommand());
+				//panel.setMu(mu1,mu2);
 			}
 		});
 		textField.setText("0.5");
@@ -282,9 +218,9 @@ public class MinWindow
 		textField_1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				JSlider j = (JSlider) arg0.getSource();
-				mu2 = (double)j.getValue()/100;
-				System.out.println("actionPerformed " + mu2 + arg0.getActionCommand());
-				panel.setMu(mu1,mu2);
+				model.mu2 = (double)j.getValue()/100;
+				System.out.println("actionPerformed " + model.mu2 + arg0.getActionCommand());
+				//panel.setMu(mu1,mu2);
 			}
 		});
 		textField_1.setText("0.5");
@@ -412,7 +348,7 @@ public class MinWindow
 		System.out.println(e.getSource().toString());
 		if (e.getSource().equals(btnClear)){
 			
-			initializeData();
+			//initializeData();
 			
 			panel.setBackground(Color.WHITE);
 			//

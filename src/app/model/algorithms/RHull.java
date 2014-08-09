@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -49,13 +50,22 @@ public class RHull {
 	static ArrayList<DP> PP;
 
 	public static void main(String[] args) {
-		int np = 3;
+		int np = 5;
 		DP[] points = new DP[np];
 		DP[] wh;
 		
+//		points[0] = new DP(0,0);
+//		points[1] =  new DP(1,0);
+//		points[2] = new DP(0, 1);
+//		points[3] = new DP(1, 1);
+//		points[4] = new DP(1, 2);
+		
+		
 		points[0] = new DP(0,0);
-		points[1] =  new DP(1,0);
-		points[2] = new DP(0, 1);
+		points[1] =  new DP(100, 0);
+		points[2] = new DP(184, 40);
+		points[3] = new DP(109, 103);
+		points[4] = new DP(0, 100);
 		
 		PP = new ArrayList<DP>();
 		for(int i = 0; i < points.length; i++){
@@ -66,8 +76,8 @@ public class RHull {
 		for(int i = 0; i < points.length; i++){
 			weights[i] = 1;
 		}
-		weights[0] = 2;
-		wh = rhull(points, (double)0.5);
+		weights[0] = 1;
+		wh = rhull(points, (double)1);
 		for (int i = 0; i < wh.length; i++){
 			System.out.println("wh Point  = " + wh[i]);
 		}
@@ -89,7 +99,7 @@ public class RHull {
 			PP.add(i,t);
 			weights[i] = 1;
 		}
-		weights[0]=2;
+		//weights[0]=2;
 		
 		
 		DP[] res = rhull(P, mu);
@@ -119,7 +129,7 @@ public class RHull {
 		DP [] A = rhull_h(P, l ,r, mu);
 		DP [] B = rhull_h(P, r, l, mu);
 		
-		Set<DP> set = new HashSet<DP>();
+		Set<DP> set = new LinkedHashSet<DP>();
 		set.addAll(Arrays.asList(A));
 		set.addAll(Arrays.asList(B));
 
@@ -218,7 +228,7 @@ public class RHull {
 		DP [] A = rhull_h(L, l ,h, mu);
 		DP [] B = rhull_h(R, h, r, mu);
 		
-		Set<DP> set = new HashSet<DP>();
+		Set<DP> set = new LinkedHashSet<DP>();
 		set.addAll(Arrays.asList(A));
 		set.addAll(Arrays.asList(B));
 

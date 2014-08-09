@@ -1,8 +1,10 @@
 package app.gui;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -12,33 +14,29 @@ import java.util.ArrayList;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 
 import app.model.algorithms.RCH;
 import app.model.algorithms.RHull;
 import app.model.algorithms.WRCH;
+import app.model.data.SVMModel;
 
 public class DrawPanel extends JPanel 
 	implements MouseListener, MouseMotionListener{
 	
-	private static ArrayList<Point> dataset1 = new ArrayList<Point>();
-	private static ArrayList<Point> dataset2 = new ArrayList<Point>();
-	private static double mu1 = 0.5;
-	private static double mu2 = 0.5;
+	private static SVMModel model = null;
+	private BGTask bg = null;
 	
-	public DrawPanel(ArrayList<Point> set1, ArrayList<Point> set2,
-			double m1, double m2){
+	
+	public  ArrayList<Point> ch1 = new ArrayList<Point>();
+    public  ArrayList<Point> rch1 = new ArrayList<Point>();
+    
+	public  ArrayList<Point> ch2 = new ArrayList<Point>();
+    public  ArrayList<Point> rch2 = new ArrayList<Point>();
+	
+	public DrawPanel(SVMModel model){
 		
-		dataset1 = set1;
-		dataset2 = set2;
-		mu1=m1;
-		mu2=m2;
-		
-		
-		WRCH.mu = m1;
-		WRCH.weights = new double[dataset1.size()];
-		for(int i = 0; i < dataset1.size(); i++){
-			WRCH.weights[i] = 1;
-		}
+		this.model = model;
 		
 		addMouseListener(this);
 		
@@ -46,39 +44,74 @@ public class DrawPanel extends JPanel
 //		addMouseListener(new PopUpListner(){
 //			
 //		});
+		
+        bg = new BGTask(this, model);
+        bg.execute();
 	}
 	
-	
-	public void setMu(double m1, double m2){
-		mu1=m1;
-		mu2=m2;
-		repaint();
-	}
 	
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        System.out.println("redawing panel " + mu1 + ", " + mu2);
+        //System.out.println("redawing panel " + mu1 + ", " + mu2);
         
-        if (dataset1.isEmpty())
+        if (model.dataset1.isEmpty())
         	return;
-        if (dataset2.isEmpty())
+        if (model.dataset2.isEmpty())
         	return;
+        
+
         
         paintSet1(g);
         paintSet2(g);
+        paintHyperPlanes((Graphics2D) g);
   
     }
     
+    public void paintHyperPlanes(Graphics2D g2){
+    	Point w = model.w;
+        double b = 0;//model.b;
+        
+        int yMin = -500;
+        int yMax = 500;
+        
+        Point h = new Point(-w.y, w.x);
+        
+        int xMin = (int) ((b-(h.y*yMin))/h.x);
+        int xMax = (int) ((b-(h.y*yMax))/h.x);
+        
+        
+        Point to = new Point(xMin, yMin);
+        Point bo = new Point(xMax, yMin);
+        
+        g2.translate(getWidth()/2, getHeight()/2);
+        
+        g2.drawLine(xMin, yMin, xMax, yMax);
+        
+        g2.setColor(Color.GRAY);
+         xMin = (int) ((b-10-(h.y*yMin))/h.x);
+         xMax = (int) ((b-10-(h.y*yMax))/h.x);
+        g2.drawLine(xMin, yMin, xMax, yMax);
+        
+        g2.setColor(Color.GRAY);
+        xMin = (int) ((b+10-(h.y*yMin))/h.x);
+        xMax = (int) ((b+10-(h.y*yMax))/h.x);
+       g2.drawLine(xMin, yMin, xMax, yMax);
+       
+       g2.setColor(Color.DARK_GRAY);
+       xMin = (int) ((b-(w.y*yMin))/w.x);
+       xMax = (int) ((b-(w.y*yMax))/w.x);
+      g2.drawLine(xMin, yMin, xMax, yMax);
+    }
+
+    
+    
     public void paintSet1(Graphics g) {
         
-        ArrayList<Point> ch = new ArrayList<Point>();	//mem leak with new
-        ArrayList<Point> rch = new ArrayList<Point>();
-        
         Point p = new Point();
-    	for (int i = 0; i < dataset1.size(); i++){
-    		p = dataset1.get(i);
+    	for (int i = 0; i < model.dataset1.size(); i++){
+    		p = model.dataset1.get(i);
     		g.setColor(Color.BLACK);
     		g.fillRect((int) p.getX(), (int) p.getY(), 3, 3);
     		g.setColor(Color.RED);
@@ -88,46 +121,65 @@ public class DrawPanel extends JPanel
 
         //ch = WRCH.WRCH(dataset1);
     	//ch = RCH.qrh(dataset1, 1.0, null, null, true);
-    	ch = RHull.rhull(dataset1, 1.0);
+    	//ch = RHull.rhull(model.dataset1, 1.0);
         
-        int[] xPoints = new int[ch.size()];
-        int[] yPoints =  new int[ch.size()];
+
+        int[] xPoints = new int[ch1.size()];
+        int[] yPoints =  new int[ch1.size()];
         
-        for (int i = 0; i < ch.size(); i++){
-        	xPoints[i] = (int) ch.get(i).x;
-        	yPoints[i] = (int) ch.get(i).y;
+        for (int i = 0; i < ch1.size(); i++){
+        	xPoints[i] = (int) ch1.get(i).x;
+        	yPoints[i] = (int) ch1.get(i).y;
       
         }
+
         
         g.setFont(new Font("Arial", Font.PLAIN, 12));
         g.setColor(Color.GREEN);
-        g.drawPolygon(xPoints, yPoints, ch.size());
-        Point c = RCH.findCentroid(dataset1);
+        g.drawPolygon(xPoints, yPoints, ch1.size());
+        Point c = RCH.findCentroid(model.dataset1);
     	g.drawOval(c.x, c.y, 3, 3);
     	g.drawString("c", c.x -4, c.y-4);
         
+
+//        xPoints = new int[model.dataset1.size()];
+//        yPoints =  new int[model.dataset1.size()];
+//        
+//        
+//        for (int i = 0; i < model.dataset1.size(); i++){
+//        	xPoints[i] = (int) model.dataset1.get(i).x;
+//        	yPoints[i] = (int) model.dataset1.get(i).y;
+//      
+//        }
+//        Graphics2D g2 = (Graphics2D) g;
+//        g2.setColor(Color.DARK_GRAY);
+//        g2.setStroke(new BasicStroke(3));
+//        g2.drawPolygon(xPoints, yPoints, model.dataset1.size());
+//        g2.setStroke(new BasicStroke(1));
+    	
     	 //rch = WRCH.WRCH(dataset1);
         //rch = RCH.qrh(dataset1, mu1, null, null, true);
-        rch = RHull.rhull(dataset1, 0.5);
+        //rch = RHull.rhull(model.dataset1, 0.5);
         
-        xPoints = new int[rch.size()];
-        yPoints =  new int[rch.size()];
+    	
+        xPoints = new int[rch1.size()];
+        yPoints =  new int[rch1.size()];
         
-        for (int i = 0; i < rch.size(); i++){
-        	xPoints[i] = (int) rch.get(i).x;
-        	yPoints[i] = (int) rch.get(i).y;
+        for (int i = 0; i < rch1.size(); i++){
+        	xPoints[i] = (int) rch1.get(i).x;
+        	yPoints[i] = (int) rch1.get(i).y;
       
         }
         g.setColor(Color.RED);
-        g.drawPolygon(xPoints, yPoints, rch.size());
+        g.drawPolygon(xPoints, yPoints, rch1.size());
 
-    	for (int i = 0; i < rch.size(); i++){
-    		p = rch.get(i);
+    	for (int i = 0; i < rch1.size(); i++){
+    		p = rch1.get(i);
     		g.setColor(Color.RED);
     		g.fillRect((int) p.getX(), (int) p.getY(), 3, 3);
     	}
 
-        c = RCH.findCentroid(rch);
+        c = RCH.findCentroid(rch1);
     	g.drawOval(c.x, c.y, 3, 3);
     	g.drawString("c", c.x +4, c.y+4);
 
@@ -135,67 +187,64 @@ public class DrawPanel extends JPanel
 
     public void paintSet2(Graphics g) {
         
-        ArrayList<Point> ch = new ArrayList<Point>();	//mem leak with new
-        ArrayList<Point> rch = new ArrayList<Point>();
-        
         Point p = new Point();
-    	for (int i = 0; i < dataset2.size(); i++){
-    		p = dataset2.get(i);
+    	for (int i = 0; i < model.dataset2.size(); i++){
+    		p = model.dataset2.get(i);
     		g.setColor(Color.BLACK);
     		g.drawOval((int) p.getX(), (int) p.getY(), 3, 3);
     		g.setColor(Color.BLUE);
     		//g.drawString(i + "", (int) p.getX(), (int) p.getY());
     	}
 
-    	 //ch = WRCH.WRCH(dataset1);
-    	//ch = RCH.qrh(dataset2, 1.0, null, null, true);
-    	ch = RHull.rhull(dataset2, 1.0);
+    	 //ch2 = WRCH.WRCH(dataset1);
+    	//ch2 = RCH.qrh(dataset2, 1.0, null, null, true);
+    	ch2 = RHull.rhull(model.dataset2, 1.0);
         
-        int[] xPoints = new int[ch.size()];
-        int[] yPoints =  new int[ch.size()];
+        int[] xPoints = new int[ch2.size()];
+        int[] yPoints =  new int[ch2.size()];
         
-        for (int i = 0; i < ch.size(); i++){
-        	xPoints[i] = (int) ch.get(i).x;
-        	yPoints[i] = (int) ch.get(i).y;
+        for (int i = 0; i < ch2.size(); i++){
+        	xPoints[i] = (int) ch2.get(i).x;
+        	yPoints[i] = (int) ch2.get(i).y;
       
         }
         g.setColor(Color.GREEN);
-        g.drawPolygon(xPoints, yPoints, ch.size());
+        g.drawPolygon(xPoints, yPoints, ch2.size());
         
         g.setFont(new Font("Arial", Font.PLAIN, 12));
         g.setColor(Color.GREEN);
-        g.drawPolygon(xPoints, yPoints, ch.size());
-        Point c = RCH.findCentroid(dataset2);
+        g.drawPolygon(xPoints, yPoints, ch2.size());
+        Point c = RCH.findCentroid(model.dataset2);
     	g.fillOval(c.x, c.y, 6, 6);
     	g.drawString("c", c.x -4, c.y-4);
 
-    	//rch = WRCH.WRCH(dataset1);
-        //rch = RCH.qrh(dataset2, mu2, null, null, true);
-        rch = RHull.rhull(dataset2, 0.5);
+    	//rch2 = WRCH.WRCH(dataset1);
+        //rch2 = RCH.qrh(dataset2, mu2, null, null, true);
+        rch2 = RHull.rhull(model.dataset2, 0.5);
         
-        xPoints = new int[rch.size()];
-        yPoints =  new int[rch.size()];
+        xPoints = new int[rch2.size()];
+        yPoints =  new int[rch2.size()];
         
-        for (int i = 0; i < rch.size(); i++){
-        	xPoints[i] = (int) rch.get(i).x;
-        	yPoints[i] = (int) rch.get(i).y;
+        for (int i = 0; i < rch2.size(); i++){
+        	xPoints[i] = (int) rch2.get(i).x;
+        	yPoints[i] = (int) rch2.get(i).y;
       
         }
         g.setColor(Color.BLUE);
-        g.drawPolygon(xPoints, yPoints, rch.size());
+        g.drawPolygon(xPoints, yPoints, rch2.size());
         
-        if (rch.size() == 1){
-        	g.drawOval(rch.get(0).x, rch.get(0).y, 3, 3);
-        	g.drawString("c", rch.get(0).x +4, rch.get(0).y+4);
+        if (rch2.size() == 1){
+        	g.drawOval(rch2.get(0).x, rch2.get(0).y, 3, 3);
+        	g.drawString("c", rch2.get(0).x +4, rch2.get(0).y+4);
         }
         
-    	for (int i = 0; i < rch.size(); i++){
-    		p = rch.get(i);
+    	for (int i = 0; i < rch2.size(); i++){
+    		p = rch2.get(i);
     		g.setColor(Color.BLUE);
     		g.fillRect((int) p.getX(), (int) p.getY(), 3, 3);
     	}
         
-        c = RCH.findCentroid(rch);
+        c = RCH.findCentroid(rch2);
     	g.fillOval(c.x, c.y, 6, 6);
     	g.drawString("c", c.x +4, c.y+4);
     }
@@ -206,11 +255,14 @@ public class DrawPanel extends JPanel
 		// TODO Auto-generated method stub
 		System.out.println(e.getX() + ", " + e.getY());
 		if (SwingUtilities.isLeftMouseButton(e)){
-			dataset1.add(new Point(e.getX(), e.getY()));
+			model.dataset1.add(new Point(e.getX(), e.getY()));
 			
 		}else{
-			dataset2.add(new Point(e.getX(), e.getY()));
+			model.dataset2.add(new Point(e.getX(), e.getY()));
 		}
+		
+        bg = new BGTask(this, model);
+        bg.execute();
 		repaint();
 	}
 
