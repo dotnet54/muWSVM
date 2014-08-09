@@ -44,7 +44,11 @@ public class SliderDemo extends JPanel
                         implements ActionListener,
                                    WindowListener,
                                    ChangeListener {
-    //Set up animation parameters.
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	//Set up animation parameters.
     static final int FPS_MIN = 0;
     static final int FPS_MAX = 30;
     static final int FPS_INIT = 15;    //initial frames per second

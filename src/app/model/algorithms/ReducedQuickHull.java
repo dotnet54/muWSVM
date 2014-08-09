@@ -3,6 +3,8 @@ package app.model.algorithms;
 import java.awt.Point;
 import java.util.ArrayList;
 
+import app.model.data.DataPoint;
+
 public class ReducedQuickHull {
 
 	
@@ -112,6 +114,49 @@ public class ReducedQuickHull {
 		n[1].y = dy;
 		return null;
 	}
+	
+	
+	public static DataPoint argMax(ArrayList<DataPoint> P,
+			DataPoint n){
+		ArrayList<DataPoint>points = getPoints(P);
+		double r = 0;
+		double max = 0;
+		DataPoint maxPoint = null;
+		for (int i = 0; i < points.size(); i++){
+			r = n.x * points.get(i).x + n.y * points.get(i).y;
+			if (max < r){
+				max = r;
+				maxPoint = points.get(i);
+			}
+		}
+		return maxPoint;
+	}
+
+
+	private static ArrayList<DataPoint> 
+	getPoints(ArrayList<DataPoint> p) {
+		return p;
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 }
 
 

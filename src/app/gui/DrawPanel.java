@@ -14,6 +14,8 @@ import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
 import app.model.algorithms.RCH;
+import app.model.algorithms.RHull;
+import app.model.algorithms.WRCH;
 
 public class DrawPanel extends JPanel 
 	implements MouseListener, MouseMotionListener{
@@ -30,6 +32,13 @@ public class DrawPanel extends JPanel
 		dataset2 = set2;
 		mu1=m1;
 		mu2=m2;
+		
+		
+		WRCH.mu = m1;
+		WRCH.weights = new double[dataset1.size()];
+		for(int i = 0; i < dataset1.size(); i++){
+			WRCH.weights[i] = 1;
+		}
 		
 		addMouseListener(this);
 		
@@ -77,8 +86,9 @@ public class DrawPanel extends JPanel
     		//g.drawString(i + "", (int) p.getX(), (int) p.getY());
     	}
 
-        //ch = QuickHull.QH(vertices);
-    	ch = RCH.qrh(dataset1, 1.0, null, null, true);
+        //ch = WRCH.WRCH(dataset1);
+    	//ch = RCH.qrh(dataset1, 1.0, null, null, true);
+    	ch = RHull.rhull(dataset1, 1.0);
         
         int[] xPoints = new int[ch.size()];
         int[] yPoints =  new int[ch.size()];
@@ -96,8 +106,9 @@ public class DrawPanel extends JPanel
     	g.drawOval(c.x, c.y, 3, 3);
     	g.drawString("c", c.x -4, c.y-4);
         
-
-        rch = RCH.qrh(dataset1, mu1, null, null, true);
+    	 //rch = WRCH.WRCH(dataset1);
+        //rch = RCH.qrh(dataset1, mu1, null, null, true);
+        rch = RHull.rhull(dataset1, 0.5);
         
         xPoints = new int[rch.size()];
         yPoints =  new int[rch.size()];
@@ -136,8 +147,9 @@ public class DrawPanel extends JPanel
     		//g.drawString(i + "", (int) p.getX(), (int) p.getY());
     	}
 
-        //ch = QuickHull.QH(vertices);
-    	ch = RCH.qrh(dataset2, 1.0, null, null, true);
+    	 //ch = WRCH.WRCH(dataset1);
+    	//ch = RCH.qrh(dataset2, 1.0, null, null, true);
+    	ch = RHull.rhull(dataset2, 1.0);
         
         int[] xPoints = new int[ch.size()];
         int[] yPoints =  new int[ch.size()];
@@ -157,7 +169,9 @@ public class DrawPanel extends JPanel
     	g.fillOval(c.x, c.y, 6, 6);
     	g.drawString("c", c.x -4, c.y-4);
 
-        rch = RCH.qrh(dataset2, mu2, null, null, true);
+    	//rch = WRCH.WRCH(dataset1);
+        //rch = RCH.qrh(dataset2, mu2, null, null, true);
+        rch = RHull.rhull(dataset2, 0.5);
         
         xPoints = new int[rch.size()];
         yPoints =  new int[rch.size()];

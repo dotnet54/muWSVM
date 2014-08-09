@@ -41,7 +41,7 @@ public class MinWindow
 	
 	private static double mu1 = 0.5;
 	private static double mu2 = 0.5;
-	private static int max = 3;	
+	private static int max = 10;	
 	private static ArrayList<Point> dataset1 = new ArrayList<Point>();
 	private static ArrayList<Point> dataset2 = new ArrayList<Point>();
 	

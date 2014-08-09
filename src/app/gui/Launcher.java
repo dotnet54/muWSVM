@@ -23,13 +23,14 @@ import javax.swing.event.ChangeListener;
 
 import app.model.algorithms.QuickHull;
 import app.model.algorithms.RCH;
+import app.model.algorithms.RHull;
 import app.model.algorithms.ReducedQuickHull;
 
 public class Launcher extends JPanel
 					  implements ChangeListener{
  
 	private static double mu = 0.5;
-	private static int max = 20;	
+	private static int max = 4;	
 	private static Launcher panel;
 	private static ArrayList<Point> dataset1 = new ArrayList<Point>();
 	private static ArrayList<Point> dataset2 = new ArrayList<Point>();
@@ -51,6 +52,7 @@ public class Launcher extends JPanel
         		app.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         		app.setSize(new Dimension(600, 400));
         		app.setVisible(true);
+        		//app.revalidate();
             }
         });
 		
@@ -225,7 +227,8 @@ public class Launcher extends JPanel
     	}
 
         //ch = QuickHull.QH(vertices);
-    	ch = RCH.qrh(dataset1, 1.0, null, null, true);
+    	//ch = RCH.qrh(dataset1, 1.0, null, null, true);
+    	ch = RHull.rhull(dataset1, 1.0);
         
         int[] xPoints = new int[ch.size()];
         int[] yPoints =  new int[ch.size()];
@@ -239,8 +242,8 @@ public class Launcher extends JPanel
         g.drawPolygon(xPoints, yPoints, ch.size());
         
         
-
-        rch = RCH.qrh(dataset1, mu, null, null, true);
+        rch = RHull.rhull(dataset1, 0.5);
+        //rch = RCH.qrh(dataset1, mu, null, null, true);
         
         xPoints = new int[rch.size()];
         yPoints =  new int[rch.size()];
@@ -274,8 +277,10 @@ public class Launcher extends JPanel
     	}
 
         //ch = QuickHull.QH(vertices);
-    	ch = RCH.qrh(dataset2, 1.0, null, null, true);
-        
+    	//ch = RCH.qrh(dataset2, 1.0, null, null, true);
+    	ch = RHull.rhull(dataset2, 1.0);
+    	
+    	
         int[] xPoints = new int[ch.size()];
         int[] yPoints =  new int[ch.size()];
         
@@ -288,8 +293,8 @@ public class Launcher extends JPanel
         g.drawPolygon(xPoints, yPoints, ch.size());
         
         
-
-        rch = RCH.qrh(dataset2, mu, null, null, true);
+        rch = RHull.rhull(dataset2, 0.5);
+        //rch = RCH.qrh(dataset2, mu, null, null, true);
         
         xPoints = new int[rch.size()];
         yPoints =  new int[rch.size()];

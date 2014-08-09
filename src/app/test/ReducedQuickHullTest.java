@@ -16,7 +16,7 @@ public class ReducedQuickHullTest {
 	static ArrayList<Point> vertices = new ArrayList<Point>();
 	static Point[] points;
 	static Random randomGenerator = new Random();
-	
+	static double weights[];
 	
 	public static void main(String[] args) {
 		double mu = 0.5;
@@ -25,11 +25,21 @@ public class ReducedQuickHullTest {
 		points[0] = new Point(0,0);
 		points[1] = new Point(0,10);
 		points[2] = new Point(10,0);
+		weights = new double[3];
+		weights[0] = 1;
+		weights[1] = 1;
+		weights[2] = 1;
+		
+		Point normal = new Point(1,1);
+		
 		
 
 		vertices.add(points[0]);
 		vertices.add(points[1]);
 		vertices.add(points[2]);
+		
+		Point resV = RCH.alg7(vertices, weights, mu, normal);
+		System.out.println("weighted new v: " + resV.x + ", " + resV.y);
 		
 		Point A = vertices.get(1);
 		Point B = vertices.get(2);

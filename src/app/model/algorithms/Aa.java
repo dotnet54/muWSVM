@@ -1,5 +1,10 @@
 package app.model.algorithms;
 
+public class Aa {
+/*
+ * 
+package app.model.algorithms;
+
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -9,15 +14,12 @@ import app.model.data.DataPoint;
 
 
 public class RCH {
-	
-	public static double [] weights;
-	public static Point normal;
 
 	//function vert = qrh(X, mu, l, r)
 	public static ArrayList<Point> qrh(ArrayList<Point> X, double mu, 
 			ArrayList<Point> l, ArrayList<Point> r,
 			boolean first){
-
+		
 		//nfl = floor(1/mu);
 		//n = ceil(1/mu);
 		
@@ -54,20 +56,6 @@ public class RCH {
 			}
 			r = (ArrayList<Point>) l.clone();
 
-			
-			normal = new Point(-1,0);
-			Point hpt = new Point(0,0);
-			hpt = alg7(X, weights, mu, normal);
-			
-			normal = new Point(1,0);
-			Point lpt = new Point(0,0);
-			lpt = alg7(X, weights, mu, normal);
-			
-			normal = new Point(-1,0);
-			Point rpt = new Point(0,0);
-			rpt = alg7(X, weights, mu, normal);
-			
-			
 		}else{
 			 //h = X(1:n,:);
 			for (int a = 0; a < n; a++){
@@ -80,26 +68,6 @@ public class RCH {
 		//hpt = mu*sum(h(1:nfl,:),1) + (1-mu*nfl)*h(n,:);
 		//lpt = mu*sum(l(1:nfl,:),1) + (1-mu*nfl)*l(n,:);
 		//rpt = mu*sum(r(1:nfl,:),1) + (1-mu*nfl)*r(n,:);
-		
-		///Point lh = new Point(hpt.x-lpt.x, hpt.y-lpt.y);
-		//Point hr = new Point(rpt.x-hpt.x, rpt.y-hpt.y);
-		//Point wlh = new Point(-lh.y, lh.x);
-		//Point whr = new Point(-hr.y, hr.x);
-		
-		
-		normal = new Point(-1,0);
-		Point hpt = new Point(0,0);
-		hpt = alg7(X, weights, mu, normal);
-		
-		normal = new Point(1,0);
-		Point lpt = new Point(0,0);
-		lpt = alg7(X, weights, mu, normal);
-		
-		normal = new Point(-1,0);
-		Point rpt = new Point(0,0);
-		rpt = alg7(X, weights, mu, normal);
-		
-		/*
 		
 		Point hpt = new Point(0,0);
 		double sumX = 0, sumY = 0;
@@ -144,7 +112,7 @@ public class RCH {
 		
 		rpt.x += (1-mu*nfl) * r.get(n - 1).x;
 		rpt.y += (1-mu*nfl) * r.get(n - 1).y;	
-		*/
+		
 		
 		
 		
@@ -430,4 +398,6 @@ public class RCH {
 	
  * 
  * 
-*/
+*/ 
+
+}
