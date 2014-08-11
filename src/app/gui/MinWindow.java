@@ -2,6 +2,8 @@ package app.gui;
 
 import java.awt.EventQueue;
 import java.awt.Point;
+import java.awt.Shape;
+import java.awt.Polygon;
 
 import javax.swing.JFrame;
 import javax.swing.SpringLayout;
@@ -31,6 +33,13 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.JTabbedPane;
 
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.annotations.XYShapeAnnotation;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
+
 import app.model.data.SVMModel;
 
 import java.awt.event.InputMethodListener;
@@ -46,7 +55,7 @@ public class MinWindow
 	
 	//GUI globals
 	private JFrame frame;
-	private DrawPanel panel;
+	private JFCPanel panel;
 	private JTextField textField;
 	private JTextField textField_1;
 	private JButton btnClear;
@@ -84,7 +93,64 @@ public class MinWindow
 		btnClear.addActionListener(this);
 	}
 	
+	private JFCPanel createChartPanel(){
+		
+		
+		model.compute();
+		
+		
+		XYSeries series1 = new XYSeries("Positive Class");
+		series1.add(100.0, 100.0);
+		series1.add(200.0, 400.0);
+		series1.add(3.0, 3.0);
+		series1.add(4.0, 5.0);
+		series1.add(5.0, 5.0);
+		series1.add(6.0, 7.0);
+		series1.add(7.0, 7.0);
+		series1.add(8.0, 8.0);
+		XYSeries series2 = new XYSeries("Negative Class");
+		series2.add(1.0, 5.0);
+		series2.add(2.0, 7.0);
+		series2.add(3.0, 6.0);
+		series2.add(4.0, 8.0);
+		series2.add(5.0, 4.0);
+		series2.add(6.0, 4.0);
+		series2.add(7.0, 2.0);
+		series2.add(8.0, 1.0);
+		series2.add(1.0, 5.0);
 
+		XYSeriesCollection dataset = new XYSeriesCollection();
+		
+		dataset.addSeries(series1);
+		dataset.addSeries(series2);
+
+		JFreeChart chart = ChartFactory.createScatterPlot
+		("XY Scatter Plot", "X", "Y", dataset);
+		
+		XYPlot plot = chart.getXYPlot();
+        plot.setDomainPannable(true);
+        plot.setRangePannable(true);
+        
+		  final Shape[] shapes = new Shape[3];
+		  
+		  
+	        int[] xPoints = new int[model.ch1.size()];
+	        int[] yPoints =  new int[model.ch1.size()];
+	        
+	        for (int i = 0; i < model.ch1.size(); i++){
+	        	xPoints[i] = (int) model.ch1.get(i).x;
+	        	yPoints[i] = (int) model.ch1.get(i).y;
+	      
+	        }
+	        shapes[0] = new Polygon(xPoints, yPoints, model.ch1.size());
+	        
+        chart.getXYPlot().addAnnotation(new XYShapeAnnotation(
+       		 shapes[0]));
+        
+		
+		JFCPanel pan = new JFCPanel(chart);
+		return pan;
+	}
 	
 	/**
 	 * Initialize the contents of the frame.
@@ -96,7 +162,7 @@ public class MinWindow
 		SpringLayout springLayout = new SpringLayout();
 		frame.getContentPane().setLayout(springLayout);
 		
-		panel = new DrawPanel(model);
+		panel = createChartPanel();
 		springLayout.putConstraint(SpringLayout.WEST, panel, 10, SpringLayout.WEST, frame.getContentPane());
 		springLayout.putConstraint(SpringLayout.SOUTH, panel, -2, SpringLayout.SOUTH, frame.getContentPane());
 		springLayout.putConstraint(SpringLayout.EAST, panel, -199, SpringLayout.EAST, frame.getContentPane());

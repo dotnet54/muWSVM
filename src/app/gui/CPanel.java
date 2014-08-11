@@ -36,7 +36,7 @@ public class CPanel extends ChartPanel implements ChartMouseListener,MouseWheelL
 		this.chart = chart;
 		this.addChartMouseListener(this);
 		this.addMouseWheelListener(this);
-		
+		setMouseWheelEnabled(true);
 //		
 //		this.addChartMouseListener(new ChartMouseListener() {
 //		    @Override

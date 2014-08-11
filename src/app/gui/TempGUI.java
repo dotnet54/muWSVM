@@ -2,6 +2,8 @@ package app.gui;
 
 import java.awt.EventQueue;
 import java.awt.Graphics2D;
+import java.awt.Polygon;
+import java.awt.Shape;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -18,9 +20,12 @@ import javax.swing.JLabel;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.annotations.XYShapeAnnotation;
 import org.jfree.chart.plot.Plot;
 import org.jfree.chart.plot.PlotRenderingInfo;
 import org.jfree.chart.plot.PlotState;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.DefaultXYDataset;
 import org.jfree.data.xy.XYDataset;
@@ -28,6 +33,7 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
 import java.awt.Color;
+import java.awt.geom.Ellipse2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import javax.swing.event.ChangeListener;
@@ -78,14 +84,11 @@ public class TempGUI {
 		series2.add(7.0, 2.0);
 		series2.add(8.0, 1.0);
 		XYSeries series3 = new XYSeries("Third");
-		series3.add(3.0, 4.0);
-		series3.add(4.0, 3.0);
-		series3.add(5.0, 2.0);
-		series3.add(6.0, 3.0);
-		series3.add(7.0, 6.0);
-		series3.add(8.0, 3.0);
-		series3.add(9.0, 4.0);
-		series3.add(10.0, 3.0);
+		series3.add(1.0, 1.0);
+		series3.add(1.0, 2.0);
+		series3.add(2.0, 1.0);
+//		series3.add(1.0, 1.0);
+
 		XYSeriesCollection dataset = new XYSeriesCollection();
 		
 		dataset.addSeries(series1);
@@ -106,6 +109,27 @@ public class TempGUI {
 
 		renderer.setBaseLinesVisible(true);
 		renderer.setShapesVisible(false);
+		int x = 0, y= 0, radius= 5;
+		XYPlot plot = chart.getXYPlot();
+        plot.setDomainPannable(true);
+        plot.setRangePannable(true);
+		
+		  final Shape[] shapes = new Shape[3];
+	        int[] xpoints;
+	        int[] ypoints;
+
+	        // right-pointing triangle
+	        xpoints = new int[] {-3, 3, -3};
+	        ypoints = new int[] {-3, 0, 3};
+	        shapes[0] = new Polygon(xpoints, ypoints, 3);
+	        
+	        chart.getXYPlot().addAnnotation(new XYShapeAnnotation(
+	        		 shapes[0]));
+		
+		chart.getXYPlot().addAnnotation(new XYShapeAnnotation
+				(new Ellipse2D.Double(x - radius, y - radius, 
+						radius + radius, radius + radius)));
+
 //		renderer.setDefaultLinesVisible(true);
 //		renderer.setDefaultShapesFilled(true);
 //		renderer.setDefaultShapesVisible(true);
