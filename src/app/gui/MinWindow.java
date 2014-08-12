@@ -1,9 +1,11 @@
 package app.gui;
 
+import java.awt.BasicStroke;
 import java.awt.EventQueue;
 import java.awt.Point;
 import java.awt.Shape;
 import java.awt.Polygon;
+import java.awt.Stroke;
 
 import javax.swing.JFrame;
 import javax.swing.SpringLayout;
@@ -20,6 +22,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JSeparator;
 import javax.swing.JSlider;
 import javax.swing.JTextField;
@@ -40,12 +43,17 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
+import app.model.algorithms.RHull;
+import app.model.algorithms.RHull.DP;
 import app.model.data.SVMModel;
 
 import java.awt.event.InputMethodListener;
 import java.awt.event.InputMethodEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeEvent;
+import javax.swing.JPopupMenu;
+import java.awt.Component;
+import java.awt.event.MouseAdapter;
 
 public class MinWindow 
 		implements ActionListener, MouseListener, ChangeListener{
@@ -59,6 +67,7 @@ public class MinWindow
 	private JTextField textField;
 	private JTextField textField_1;
 	private JButton btnClear;
+	private JFCPanel pan;
 
 	/**
 	 * Launch the application.
@@ -103,7 +112,7 @@ public class MinWindow
 		series1.add(100.0, 100.0);
 		series1.add(200.0, 400.0);
 		series1.add(3.0, 3.0);
-		series1.add(4.0, 5.0);
+		series1.add(3.0, 3.0);
 		series1.add(5.0, 5.0);
 		series1.add(6.0, 7.0);
 		series1.add(7.0, 7.0);
@@ -130,7 +139,56 @@ public class MinWindow
 		XYPlot plot = chart.getXYPlot();
         plot.setDomainPannable(true);
         plot.setRangePannable(true);
-        
+ 
+		
+		pan = new JFCPanel(chart);
+		
+		JPopupMenu popupMenu = new JPopupMenu();
+		addPopup(pan, popupMenu);
+		
+		JMenuItem mntmAddpoint = new JMenuItem("addPoint");
+		mntmAddpoint.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				System.out.print("a");
+			}
+		});
+		popupMenu.add(mntmAddpoint);
+		
+		JMenuItem mntmRemovepoint = new JMenuItem("removePoint");
+		mntmRemovepoint.setEnabled(false);
+		mntmRemovepoint.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				System.out.print("r");
+			}
+		});
+		popupMenu.add(mntmRemovepoint);
+		
+		JMenuItem mntmChangeweight = new JMenuItem("changeWeight");
+		mntmChangeweight.setEnabled(false);
+		mntmChangeweight.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+
+				System.out.print("w");
+			}
+		});
+		popupMenu.add(mntmChangeweight);
+		return pan;
+	}
+	static XYShapeAnnotation anoHull = null;
+	static XYShapeAnnotation anoRHull = null;
+	
+	private void findCH(){
+		System.out.println("finding CH...");
+		
+		XYSeriesCollection sc = (XYSeriesCollection) pan.getChart().getXYPlot().getDataset();
+		XYSeries s = sc.getSeries(0);
+		
+
+		
+		model.setSeries1(s);
+		model.compute();
+		
+		
 		  final Shape[] shapes = new Shape[3];
 		  
 		  
@@ -143,15 +201,60 @@ public class MinWindow
 	      
 	        }
 	        shapes[0] = new Polygon(xPoints, yPoints, model.ch1.size());
+	        XYPlot p = pan.getChart().getXYPlot();
+	        if (anoHull != null){
+	        	p.removeAnnotation(anoHull);
+	        }
 	        
-        chart.getXYPlot().addAnnotation(new XYShapeAnnotation(
-       		 shapes[0]));
-        
+	        anoHull = new XYShapeAnnotation(shapes[0]);
+	        p.addAnnotation(anoHull);
+    
+    
+		//DP[] res = RHull.rhull(points, 1.0);
 		
-		JFCPanel pan = new JFCPanel(chart);
-		return pan;
+		System.out.println("CH found");
 	}
 	
+	private void findRCH(){
+		System.out.println("finding RCH...");
+		
+		XYSeriesCollection sc = (XYSeriesCollection) pan.getChart().getXYPlot().getDataset();
+		XYSeries s = sc.getSeries(0);
+		
+
+		
+		model.setSeries1(s);
+		double m1 = Double.parseDouble(textField.getText());
+		model.setMu(m1, 0.5);
+		model.compute();
+		
+		
+		  final Shape[] shapes = new Shape[3];
+		  
+		  
+	        int[] xPoints = new int[model.rch1.size()];
+	        int[] yPoints =  new int[model.rch1.size()];
+	        
+	        for (int i = 0; i < model.rch1.size(); i++){
+	        	xPoints[i] = (int) model.rch1.get(i).x;
+	        	yPoints[i] = (int) model.rch1.get(i).y;
+	      
+	        }
+	        shapes[0] = new Polygon(xPoints, yPoints, model.rch1.size());
+	        XYPlot p = pan.getChart().getXYPlot();
+	        if (anoRHull != null){
+	        	p.removeAnnotation(anoRHull);
+	        }
+	        anoRHull = new XYShapeAnnotation(shapes[0],
+	        		new BasicStroke(2.0f), Color.blue);
+	        //anoRHull.
+	        p.addAnnotation(anoRHull);
+    
+    
+		//DP[] res = RHull.rhull(points, 1.0);
+		
+		System.out.println("RCH found");
+	}
 	/**
 	 * Initialize the contents of the frame.
 	 */
@@ -295,9 +398,7 @@ public class MinWindow
 		textField_1.setColumns(10);
 		frame.getContentPane().add(textField_1);
 		
-		btnClear = new JButton("Random");
-		springLayout.putConstraint(SpringLayout.SOUTH, btnClear, -10, SpringLayout.SOUTH, frame.getContentPane());
-		springLayout.putConstraint(SpringLayout.EAST, btnClear, -10, SpringLayout.EAST, frame.getContentPane());
+		btnClear = new JButton("Random Data");
 		frame.getContentPane().add(btnClear);
 		
 		JSlider slider_1 = new JSlider();
@@ -329,11 +430,44 @@ public class MinWindow
 		frame.getContentPane().add(slider_1);
 		
 		JPanel panel_1 = new JPanel();
+		springLayout.putConstraint(SpringLayout.WEST, btnClear, 0, SpringLayout.WEST, panel_1);
 		springLayout.putConstraint(SpringLayout.NORTH, panel_1, 33, SpringLayout.SOUTH, slider_1);
 		springLayout.putConstraint(SpringLayout.WEST, panel_1, 20, SpringLayout.EAST, panel);
-		springLayout.putConstraint(SpringLayout.SOUTH, panel_1, -24, SpringLayout.NORTH, btnClear);
 		springLayout.putConstraint(SpringLayout.EAST, panel_1, -34, SpringLayout.EAST, frame.getContentPane());
 		frame.getContentPane().add(panel_1);
+		
+		JButton btnNewButton = new JButton("find CH");
+		btnNewButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				findCH();
+			}
+		});
+		springLayout.putConstraint(SpringLayout.NORTH, btnNewButton, 374, SpringLayout.NORTH, frame.getContentPane());
+		springLayout.putConstraint(SpringLayout.SOUTH, panel_1, -6, SpringLayout.NORTH, btnNewButton);
+		springLayout.putConstraint(SpringLayout.WEST, btnNewButton, 17, SpringLayout.EAST, pan);
+		frame.getContentPane().add(btnNewButton);
+		
+		JButton btnNewButton_1 = new JButton("find RCH");
+		btnNewButton_1.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				findRCH();
+			}
+		});
+		springLayout.putConstraint(SpringLayout.NORTH, btnNewButton_1, 6, SpringLayout.SOUTH, panel_1);
+		springLayout.putConstraint(SpringLayout.WEST, btnNewButton_1, 6, SpringLayout.EAST, btnNewButton);
+		frame.getContentPane().add(btnNewButton_1);
+		
+		JButton btnNewButton_2 = new JButton("Solve");
+		springLayout.putConstraint(SpringLayout.NORTH, btnNewButton_2, 6, SpringLayout.SOUTH, btnNewButton);
+		springLayout.putConstraint(SpringLayout.WEST, btnNewButton_2, 0, SpringLayout.WEST, panel_1);
+		frame.getContentPane().add(btnNewButton_2);
+		
+		JButton btnNewButton_3 = new JButton("Clear");
+		springLayout.putConstraint(SpringLayout.NORTH, btnClear, 0, SpringLayout.NORTH, btnNewButton_3);
+		springLayout.putConstraint(SpringLayout.NORTH, btnNewButton_3, 35, SpringLayout.SOUTH, btnNewButton_1);
+		springLayout.putConstraint(SpringLayout.EAST, btnNewButton_3, -10, SpringLayout.EAST, frame.getContentPane());
+		frame.getContentPane().add(btnNewButton_3);
 		
 		JMenuBar menuBar = new JMenuBar();
 		frame.setJMenuBar(menuBar);
@@ -425,5 +559,22 @@ public class MinWindow
 			panel.getGraphics().drawRect(0, 0, 200, 200);
 			panel.repaint();
 		}
+	}
+	private static void addPopup(Component component, final JPopupMenu popup) {
+		component.addMouseListener(new MouseAdapter() {
+			public void mousePressed(MouseEvent e) {
+				if (e.isPopupTrigger()) {
+					showMenu(e);
+				}
+			}
+			public void mouseReleased(MouseEvent e) {
+				if (e.isPopupTrigger()) {
+					showMenu(e);
+				}
+			}
+			private void showMenu(MouseEvent e) {
+				popup.show(e.getComponent(), e.getX(), e.getY());
+			}
+		});
 	}
 }

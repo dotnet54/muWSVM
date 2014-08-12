@@ -76,7 +76,7 @@ public class RHull {
 		for(int i = 0; i < points.length; i++){
 			weights[i] = 1;
 		}
-		weights[0] = 1;
+		weights[0] = 0.5;
 		wh = rhull(points, (double)1);
 		for (int i = 0; i < wh.length; i++){
 			System.out.println("wh Point  = " + wh[i]);

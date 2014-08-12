@@ -4,7 +4,10 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Random;
 
+import org.jfree.data.xy.XYSeries;
+
 import app.model.algorithms.RHull;
+import app.model.algorithms.RHull.DP;
 
 public class SVMModel {
 	
@@ -59,6 +62,18 @@ public class SVMModel {
 	
 	public double getMu2(){
 		return mu2;
+	}
+	
+	public void setSeries1(XYSeries s){
+		dataset1.clear();
+		
+		for (int i = 0; i < s.getItemCount(); i++){
+			
+			double x =  s.getX(i).doubleValue();	//TODO cast double problem
+			double y =  s.getY(i).doubleValue();	//TODO cast double problem
+			dataset1.add(new Point((int)x,(int) y));
+			
+		}
 	}
 	
 	
