@@ -103,7 +103,7 @@ public class TempGUI {
 		JFreeChart chart = ChartFactory.createScatterPlot
 		("temp chart", "X", "Y", dataset);
 		
-		CPanel cpanel = new CPanel(chart);
+		TempPanel cpanel = new TempPanel(chart);
 		frame.getContentPane().add(cpanel);
 		XYLineAndShapeRenderer renderer = (XYLineAndShapeRenderer) chart.getXYPlot().getRenderer();
 

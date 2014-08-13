@@ -8,6 +8,7 @@ import org.jfree.data.xy.XYSeries;
 
 import app.model.algorithms.RHull;
 import app.model.algorithms.RHull.DP;
+import app.model.algorithms.SK;
 
 public class SVMModel {
 	
@@ -30,9 +31,11 @@ public class SVMModel {
 	public ArrayList<Point> ch2 = new ArrayList<Point>();
 	public ArrayList<Point> rch2 = new ArrayList<Point>();
 	
-	public Point w = new Point(0,1);
+	public RHull.DP w = new RHull.DP(0,1);
 	public double b = 0;
 	
+	
+	//TODO sync problem, run bgtask in debugger, before 1 task finishes 
 	public SVMModel(){
 		
 		//dataset1 = data1;
@@ -44,12 +47,15 @@ public class SVMModel {
 	
 	
 	public void compute(){
-		ch1 = RHull.rhull(dataset1, 1.0);
-		rch1 = RHull.rhull(dataset1, mu1);
+//		ch1 = RHull.rhull(dataset1, 1.0);
+//		rch1 = RHull.rhull(dataset1, mu1);
+//		
+//		ch2 = RHull.rhull(dataset2, 1.0);
+//		rch2 = RHull.rhull(dataset2, mu2);
 		
-		ch2 = RHull.rhull(dataset2, 1.0);
-		rch2 = RHull.rhull(dataset2, mu2);
+		SK.solve(this);
 	}
+
 	
 	public void setMu(double m1, double m2){
 		mu1=m1;
@@ -84,9 +90,9 @@ public class SVMModel {
 		points[2] = new Point(0,100);
 		
 		
-		//dataset1.add(points[0]);
-		//dataset1.add(points[1]);
-		//dataset1.add(points[2]);
+		dataset1.add(points[0]);
+		dataset1.add(points[1]);
+		dataset1.add(points[2]);
 
 //		dataset1.add(new Point(0, 0));
 //		dataset1.add(new Point(100, 0));
@@ -99,27 +105,27 @@ public class SVMModel {
 		
 		
 
-		points[0] = new Point(200,0);
-		points[1] = new Point(300,0);
-		points[2] = new Point(200,100);
+		points[0] = new Point(500,0);
+		points[1] = new Point(400,0);
+		points[2] = new Point(500,100);
 		
 		dataset2.add(points[0]);
 		dataset2.add(points[1]);
 		dataset2.add(points[2]);
 
-		dataset1.clear();
-		dataset2.clear();
-		
-		for (int i = 0; i < max; i++){
-			Point p = new Point();
-			p.setLocation(randomGenerator.nextInt(250), randomGenerator.nextInt(200)); //randomGenerator.nextInt(400);
-			dataset1.add(p);
-		}
-		
-		for (int i = 0; i < max; i++){
-			Point p = new Point();
-			p.setLocation(randomGenerator.nextInt(250)+200, randomGenerator.nextInt(200)+50); //randomGenerator.nextInt(400);
-			dataset2.add(p);
-		}
+//		dataset1.clear();
+//		dataset2.clear();
+//		
+//		for (int i = 0; i < max; i++){
+//			Point p = new Point();
+//			p.setLocation(randomGenerator.nextInt(250), randomGenerator.nextInt(200)); //randomGenerator.nextInt(400);
+//			dataset1.add(p);
+//		}
+//		
+//		for (int i = 0; i < max; i++){
+//			Point p = new Point();
+//			p.setLocation(randomGenerator.nextInt(250)+200, randomGenerator.nextInt(200)+50); //randomGenerator.nextInt(400);
+//			dataset2.add(p);
+//		}
 	}
 }

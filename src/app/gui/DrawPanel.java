@@ -62,47 +62,54 @@ public class DrawPanel extends JPanel
         	return;
         
 
-        
+        Graphics2D g2 = (Graphics2D) g;
+        g2.scale(1,1);
         paintSet1(g);
         paintSet2(g);
-        paintHyperPlanes((Graphics2D) g);
+        paintHyperPlanes(g2);
   
     }
     
     public void paintHyperPlanes(Graphics2D g2){
-    	Point w = model.w;
-        double b = 0;//model.b;
+    	RHull.DP w = model.w; //	new RHull.DP(-1000, -2000);//TODO w is Point
+        double b =model.b; //-180;
+        
+
         
         int yMin = -500;
         int yMax = 500;
         
-        Point h = new Point(-w.y, w.x);
+//        RHull.DP h = new RHull.DP(-w.y, w.x);
         
-        int xMin = (int) ((b-(h.y*yMin))/h.x);
-        int xMax = (int) ((b-(h.y*yMax))/h.x);
+        double xMin = ((b-(w.y*yMin))/w.x);
+        double xMax =   ((b-(w.y*yMax))/w.x);
         
+        System.out.println("---------drawing with-----------");
+		System.out.println("w = " + w.x + ", "+w.y);
+		System.out.println("b = " + b);
+		System.out.format("Line: [%s, %s] to [%s, %s]\n", xMin, yMin, xMax, yMax);
+		System.out.println("---------drawing with-----------");        
+        Point to = new Point((int)xMin, yMin);
+        Point bo = new Point((int)xMax, yMin);
         
-        Point to = new Point(xMin, yMin);
-        Point bo = new Point(xMax, yMin);
+//        g2.translate(getWidth()/2, getHeight()/2);
         
-        g2.translate(getWidth()/2, getHeight()/2);
-        
-        g2.drawLine(xMin, yMin, xMax, yMax);
-        
-        g2.setColor(Color.GRAY);
-         xMin = (int) ((b-10-(h.y*yMin))/h.x);
-         xMax = (int) ((b-10-(h.y*yMax))/h.x);
-        g2.drawLine(xMin, yMin, xMax, yMax);
-        
-        g2.setColor(Color.GRAY);
-        xMin = (int) ((b+10-(h.y*yMin))/h.x);
-        xMax = (int) ((b+10-(h.y*yMax))/h.x);
-       g2.drawLine(xMin, yMin, xMax, yMax);
-       
-       g2.setColor(Color.DARK_GRAY);
-       xMin = (int) ((b-(w.y*yMin))/w.x);
-       xMax = (int) ((b-(w.y*yMax))/w.x);
-      g2.drawLine(xMin, yMin, xMax, yMax);
+        g2.drawLine((int)xMin, yMin,(int) xMax, yMax);
+//        
+//        g2.setColor(Color.GRAY);
+//         xMin = (int) ((b-10-(h.y*yMin))/h.x);
+//         xMax = (int) ((b-10-(h.y*yMax))/h.x);
+//        g2.drawLine(xMin, yMin, xMax, yMax);
+//        
+//        g2.setColor(Color.GRAY);
+//        xMin = (int) ((b+10-(h.y*yMin))/h.x);
+//        xMax = (int) ((b+10-(h.y*yMax))/h.x);
+//       g2.drawLine(xMin, yMin, xMax, yMax);
+//       
+//       g2.setColor(Color.DARK_GRAY);
+//       xMin = (int) ((b-(w.y*yMin))/w.x);
+//       xMax = (int) ((b-(w.y*yMax))/w.x);
+//      g2.drawLine(xMin, yMin, xMax, yMax);
     }
 
     
@@ -180,8 +187,11 @@ public class DrawPanel extends JPanel
     	}
 
         c = RCH.findCentroid(rch1);
-    	g.drawOval(c.x, c.y, 3, 3);
-    	g.drawString("c", c.x +4, c.y+4);
+        if (c != null){//TODO
+        	g.drawOval(c.x, c.y, 3, 3);
+        	g.drawString("c", c.x +4, c.y+4);
+        }
+    	
 
     }
 
@@ -249,21 +259,13 @@ public class DrawPanel extends JPanel
     	g.drawString("c", c.x +4, c.y+4);
     }
 
-
+    //TODO IMPORTANT mouse clicks dont work if u move/drag mouse
+    //even by a few pixels which meakes jpanel miss mose licks
+    //use mouse released event
 	@Override
 	public void mouseClicked(MouseEvent e) {
 		// TODO Auto-generated method stub
-		System.out.println(e.getX() + ", " + e.getY());
-		if (SwingUtilities.isLeftMouseButton(e)){
-			model.dataset1.add(new Point(e.getX(), e.getY()));
-			
-		}else{
-			model.dataset2.add(new Point(e.getX(), e.getY()));
-		}
-		
-        bg = new BGTask(this, model);
-        bg.execute();
-		repaint();
+
 	}
 
 
@@ -291,7 +293,17 @@ public class DrawPanel extends JPanel
 	@Override
 	public void mouseReleased(MouseEvent e) {
 		// TODO Auto-generated method stub
+		System.out.println(e.getX() + ", " + e.getY());
+		if (SwingUtilities.isLeftMouseButton(e)){
+			model.dataset1.add(new Point(e.getX(), e.getY()));
+			
+		}else{
+			model.dataset2.add(new Point(e.getX(), e.getY()));
+		}
 		
+        bg = new BGTask(this, model);
+        bg.execute();
+		repaint();
 	}
 
 

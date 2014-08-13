@@ -233,6 +233,10 @@ public class RCH {
 		for (int i = 0; i < P.size(); i++){
 			c.x += P.get(i).x;
 		}
+		//TODO
+		if (P.size() == 0){
+			return null;
+		}
 		c.x /= P.size();	//if p.size = 0 division by 0 throw
 
 		for (int i = 0; i < P.size(); i++){

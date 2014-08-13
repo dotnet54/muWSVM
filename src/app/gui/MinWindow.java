@@ -63,7 +63,7 @@ public class MinWindow
 	
 	//GUI globals
 	private JFrame frame;
-	private JFCPanel panel;
+	private JPanel panel;
 	private JTextField textField;
 	private JTextField textField_1;
 	private JButton btnClear;
@@ -102,21 +102,26 @@ public class MinWindow
 		btnClear.addActionListener(this);
 	}
 	
-	private JFCPanel createChartPanel(){
+	
+	private DrawPanel createDrawPanel(){
+		return new DrawPanel(model);
+	}
+	
+	private JPanel createChartPanel(){
 		
 		
 		model.compute();
 		
 		
 		XYSeries series1 = new XYSeries("Positive Class");
-		series1.add(100.0, 100.0);
-		series1.add(200.0, 400.0);
+		series1.add(1.0, 1.0);
+		series1.add(2.0, 4.0);
 		series1.add(3.0, 3.0);
 		series1.add(3.0, 3.0);
 		series1.add(5.0, 5.0);
 		series1.add(6.0, 7.0);
-		series1.add(7.0, 7.0);
-		series1.add(8.0, 8.0);
+		series1.add(1.0, 7.0);
+		series1.add(4.0, 2.0);
 		XYSeries series2 = new XYSeries("Negative Class");
 		series2.add(1.0, 5.0);
 		series2.add(2.0, 7.0);
@@ -266,6 +271,7 @@ public class MinWindow
 		frame.getContentPane().setLayout(springLayout);
 		
 		panel = createChartPanel();
+		//panel = createDrawPanel();
 		springLayout.putConstraint(SpringLayout.WEST, panel, 10, SpringLayout.WEST, frame.getContentPane());
 		springLayout.putConstraint(SpringLayout.SOUTH, panel, -2, SpringLayout.SOUTH, frame.getContentPane());
 		springLayout.putConstraint(SpringLayout.EAST, panel, -199, SpringLayout.EAST, frame.getContentPane());
@@ -464,6 +470,11 @@ public class MinWindow
 		frame.getContentPane().add(btnNewButton_2);
 		
 		JButton btnNewButton_3 = new JButton("Clear");
+		btnNewButton_3.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				model.dataset1.clear();
+			}
+		});
 		springLayout.putConstraint(SpringLayout.NORTH, btnClear, 0, SpringLayout.NORTH, btnNewButton_3);
 		springLayout.putConstraint(SpringLayout.NORTH, btnNewButton_3, 35, SpringLayout.SOUTH, btnNewButton_1);
 		springLayout.putConstraint(SpringLayout.EAST, btnNewButton_3, -10, SpringLayout.EAST, frame.getContentPane());

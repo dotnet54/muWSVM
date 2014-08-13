@@ -4,8 +4,12 @@ import java.awt.Point;
 import java.util.ArrayList;
 
 import app.model.data.DataPoint;
+import app.model.data.SVMModel;
 
 public class SK {
+	
+	private static RHull.DP finalW;
+	private static double finalB;
 
 	public static void main(String[] args){
 		
@@ -65,16 +69,48 @@ public class SK {
 		
 	}
 	
+	public static void solve(SVMModel model){
+		//TODO solve using different mu? mekae GUI less confusing
+		
+		
+		RHull.DP[] Ppos;
+		RHull.DP[] Pneg;
+		double mu = model.mu1;
+		
+		Ppos = new RHull.DP[model.dataset1.size()];
+		Pneg = new RHull.DP[model.dataset2.size()];
+		
+		for (int i = 0; i < Ppos.length; i++){
+			Ppos[i] = new RHull.DP(model.dataset1.get(i).x,
+					model.dataset1.get(i).y);
+			Ppos[i].pclass = +1;
+		}
+		
+		for (int i = 0; i < Pneg.length; i++){
+			Pneg[i] = new RHull.DP(model.dataset2.get(i).x,
+					model.dataset2.get(i).y);
+			Pneg[i].pclass = -1;
+		}
+		
+		sk(Ppos, Pneg, mu);
+		
+		model.w = finalW;
+		model.b = finalB;
+	}
+	
 	public static void sk(RHull.DP[] Ppos, RHull.DP[] Pneg
 			,double mu){
 
-		RHull.DP p = Ppos[0];
-		RHull.DP n = Pneg[0];
+		RHull.DP p = null;
+		RHull.DP n = null;
 		RHull.DP w = null;
 		
 		double eps = 0.005;
 		int MAXIT = 500;
 		int it = 0;
+		
+		p = RHull.theorem32(Ppos, new RHull.DP(-1, 0), mu);
+		n = RHull.theorem32(Pneg, new RHull.DP(1, 0), mu);
 		
 		while(it < MAXIT){
 			w = new RHull.DP(p.x - n.x, p.y - n.y);
@@ -153,9 +189,12 @@ public class SK {
 		double b = 0.5 * ((w.x * p.x + w.y * p.y) + 
 						(w.x * n.x + w.y * n.y));
 		
-		System.out.println("w = " + w.x + ", "+w.y);
-		System.out.println("b = " + b);
+		finalW = w;
+		finalB = b;
+		System.out.println("w = " + finalW.x + ", "+finalW.y);
+		System.out.println("b = " + finalB);
 		System.out.println("it = " + it);
+		
 		
 	}
 	
