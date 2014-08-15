@@ -40,6 +40,7 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.annotations.XYShapeAnnotation;
 import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
@@ -144,8 +145,11 @@ public class MinWindow
 		XYPlot plot = chart.getXYPlot();
         plot.setDomainPannable(true);
         plot.setRangePannable(true);
- 
+        XYLineAndShapeRenderer rr = (XYLineAndShapeRenderer) plot.getRenderer();
 		
+        rr.setSeriesLinesVisible(0, true);
+        rr.setDrawSeriesLineAsPath(true);
+        
 		pan = new JFCPanel(chart);
 		
 		JPopupMenu popupMenu = new JPopupMenu();

@@ -16,9 +16,10 @@ import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 
+import old.WRCH;
+
 import app.model.algorithms.RCH;
 import app.model.algorithms.RHull;
-import app.model.algorithms.WRCH;
 import app.model.data.SVMModel;
 
 public class DrawPanel extends JPanel 

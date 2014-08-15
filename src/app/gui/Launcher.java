@@ -21,10 +21,11 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import app.model.algorithms.QuickHull;
+import old.QuickHull;
+import old.ReducedQuickHull;
+
 import app.model.algorithms.RCH;
 import app.model.algorithms.RHull;
-import app.model.algorithms.ReducedQuickHull;
 
 public class Launcher extends JPanel
 					  implements ChangeListener{

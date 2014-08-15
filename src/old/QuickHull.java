@@ -1,37 +1,29 @@
-package app.model.algorithms;
+package old;
 
 import java.awt.Point;
 import java.util.ArrayList;
 
-import app.model.algorithms.RHull.DP;
+public class QuickHull {
 
-public class WRCH {
 	
-	public static double [] weights;
-	public static Point normal;
-	public static double mu = 1;
-	
-	public static ArrayList<Point> WRCH(ArrayList<Point> P){
+	public static ArrayList<Point> QH(ArrayList<Point> P){
 		ArrayList<Point> result = null;
 		ArrayList<Point> left = null;
 		ArrayList<Point> right = null;
-		Point n  = new Point (1,0);
-		//Point l = findMinX(P);
-		Point l = RCH.alg7(P, weights, mu, n);
-		n.x = -1;
-		Point r = RCH.alg7(P, weights, mu, n);
-		//Point r = findMaxX(P);
+		Point n  = null;
+		Point l = findMinX(P);
+		Point r = findMaxX(P);
 		
 		
-		left = WRCH_aux(P, l, r );
-		right  = WRCH_aux(P, r, l);
+		left = QH_aux(P, l, r );
+		right  = QH_aux(P, r, l);
 		if (left.addAll(right) == false){
 			throw new RuntimeException("cannot append left and right QH");
 		}
 		return left;
 	}
 	
-	public static ArrayList<Point> WRCH_aux(ArrayList<Point> P, Point l, Point r){
+	public static ArrayList<Point> QH_aux(ArrayList<Point> P, Point l, Point r){
 		ArrayList<Point> result1,result2 = null;
 		ArrayList<Point> L = new ArrayList<Point>();
 		ArrayList<Point> R = new ArrayList<Point>();
@@ -47,10 +39,8 @@ public class WRCH {
 			return P;// incorrect
 		}else{
 
-			//h = maxPerpendicularPoint(l, r, P);
-			n = normal(r, l);
-			h = RCH.alg7(P, weights, mu, n);
-			
+			h = maxPerpendicularPoint(l, r, P);
+
 			if (h == null){
 				return P;
 			}
@@ -62,8 +52,8 @@ public class WRCH {
 			R = getRight(h, r, P);
 			
 			
-			result1 = WRCH_aux(L, l, h);
-			result2  = WRCH_aux(R, h, r);
+			result1 = QH_aux(L, l, h);
+			result2  = QH_aux(R, h, r);
 			if (result1.addAll(result2) == false){
 				throw new RuntimeException("cannot append left and right AUX");
 			}
@@ -173,23 +163,6 @@ public class WRCH {
 			}
 		}
 		return max;	
-	}
-	
-	public static Point normal(Point p1, Point p2){
-		int dx, dy;
-		Point[] n = new Point[2];
-		
-		dx = p2.x - p1.x;
-		dy = p2.y - p1.y;
-		
-		n[0] = new Point(0,0);
-		n[0].x = dx;
-		n[0].y = -dy;
-		
-		n[1] = new Point(0,0);
-		n[1].x = -dx;
-		n[1].y = dy;
-		return n[0];
 	}
 	
 }

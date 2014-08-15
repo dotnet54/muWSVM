@@ -3,6 +3,7 @@ package app.gui;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.List;
@@ -17,6 +18,8 @@ import org.jfree.chart.ChartMouseListener;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.entity.ChartEntity;
+import org.jfree.chart.entity.EntityCollection;
+import org.jfree.chart.entity.StandardEntityCollection;
 import org.jfree.chart.entity.XYItemEntity;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.data.xy.XYDataItem;
@@ -63,7 +66,7 @@ public class JFCPanel extends ChartPanel implements ChartMouseListener{
 	            //System.out.println("X:" + d.getX(s, i) + ", Y:" + d.getY(s, i));
 	            
 	            XYSeriesCollection dd = (XYSeriesCollection) e.getDataset();
-	            XYSeries ss =  dd.getSeries(0);
+	            XYSeries ss =  dd.getSeries(s);
 	            
 	            System.out.println("rem:" + ss.getItems().get(i));
 	            ss.remove(i);
@@ -94,6 +97,61 @@ public class JFCPanel extends ChartPanel implements ChartMouseListener{
 	double cly=0;
 	XYItemEntity selection = null;
 	
+	
+	@Override
+	public void mouseReleased(MouseEvent event) {
+		super.mouseReleased(event);
+		 System.out.println("rel:[" + event.getX() + "," + event.getY() + "]");
+//		 Point2D p = this.translateScreenToJava2D(event.getTrigger().getPoint());
+			Rectangle2D plotArea = this.getScreenDataArea();
+			XYPlot plot = (XYPlot) getChart().getPlot(); // your plot
+			double chartX = plot.getDomainAxis().java2DToValue(event.getX(), plotArea, plot.getDomainAxisEdge());
+			double chartY = plot.getRangeAxis().java2DToValue(event.getY(), plotArea, plot.getRangeAxisEdge());
+			
+	        ChartEntity entity = null;
+	        List list = null;
+	        if (getChartRenderingInfo() != null) {
+	            EntityCollection entities = getChartRenderingInfo().getEntityCollection();
+	            if (entities != null) {
+	                entity = entities.getEntity(event.getX(), event.getY());
+	                //@shifaz 11/8/2014
+	                StandardEntityCollection sec = (StandardEntityCollection)
+	                getChartRenderingInfo().getEntityCollection();
+	                list = sec.getEntities(event.getX(), event.getY());
+	            }
+	        }
+			ChartMouseEvent chartEvent = new ChartMouseEvent(getChart(), event,
+	        		list,event.getX(),event.getY());
+			report(chartEvent);
+			 System.out.println("rel:[" + chartX + "," + chartX + "]");
+			 //addPoint((double)chartX, (double)chartY);
+			  clx = chartX;
+			  cly = chartY;
+			  
+			  
+			  
+			  
+			  
+			  
+			  
+			  selection = getSelection(chartEvent,chartX,chartY);
+//			  System.out.println("releasedb on:" + selection.toString());
+			  if (selection == null){
+				  popup.show(this, event.getX(), event.getY());
+			  }else{
+		            XYItemEntity e = selection;
+		            XYDataset d = e.getDataset();
+		            int s = e.getSeriesIndex();
+		            int i = e.getItem();
+		            System.out.println("Selection:" + i +" : "+ d.getX(s, i) + ", Y:" + d.getY(s, i));
+		            //d.g
+		            
+		            popup.show(this, event.getX(), event.getY());
+			  }
+			  
+			  
+	}
+	
 	@Override
 	public void chartMouseClicked(ChartMouseEvent event) {
 		// TODO Auto-generated method stub
@@ -109,19 +167,19 @@ public class JFCPanel extends ChartPanel implements ChartMouseListener{
 		  cly = chartY;
 		  
 		  
-		  selection = getSelection(event,chartX,chartY);
-		  if (selection == null){
-			  popup.show(this, event.getX(), event.getY());
-		  }else{
-	            XYItemEntity e = selection;
-	            XYDataset d = e.getDataset();
-	            int s = e.getSeriesIndex();
-	            int i = e.getItem();
-	            System.out.println("Selection:" + i +" : "+ d.getX(s, i) + ", Y:" + d.getY(s, i));
-	            //d.g
-	            
-	            popup.show(this, event.getX(), event.getY());
-		  }
+//		  selection = getSelection(event,chartX,chartY);
+//		  if (selection == null){
+//			  popup.show(this, event.getX(), event.getY());
+//		  }else{
+//	            XYItemEntity e = selection;
+//	            XYDataset d = e.getDataset();
+//	            int s = e.getSeriesIndex();
+//	            int i = e.getItem();
+//	            System.out.println("Selection:" + i +" : "+ d.getX(s, i) + ", Y:" + d.getY(s, i));
+//	            //d.g
+//	            
+//	            popup.show(this, event.getX(), event.getY());
+//		  }
 		 
 		 
 	}

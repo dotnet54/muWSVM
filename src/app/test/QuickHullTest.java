@@ -4,7 +4,8 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Random;
 
-import app.model.algorithms.QuickHull;
+import old.QuickHull;
+
 
 public class QuickHullTest {
 
