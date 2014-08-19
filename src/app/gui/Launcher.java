@@ -22,10 +22,10 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import old.QuickHull;
+import old.RCH_old;
 import old.ReducedQuickHull;
 
 import app.model.algorithms.RCH;
-import app.model.algorithms.RHull;
 
 public class Launcher extends JPanel
 					  implements ChangeListener{
@@ -229,7 +229,7 @@ public class Launcher extends JPanel
 
         //ch = QuickHull.QH(vertices);
     	//ch = RCH.qrh(dataset1, 1.0, null, null, true);
-    	ch = RHull.rhull(dataset1, 1.0);
+    	ch = RCH.rhull(dataset1, 1.0);
         
         int[] xPoints = new int[ch.size()];
         int[] yPoints =  new int[ch.size()];
@@ -243,7 +243,7 @@ public class Launcher extends JPanel
         g.drawPolygon(xPoints, yPoints, ch.size());
         
         
-        rch = RHull.rhull(dataset1, 0.5);
+        rch = RCH.rhull(dataset1, 0.5);
         //rch = RCH.qrh(dataset1, mu, null, null, true);
         
         xPoints = new int[rch.size()];
@@ -279,7 +279,7 @@ public class Launcher extends JPanel
 
         //ch = QuickHull.QH(vertices);
     	//ch = RCH.qrh(dataset2, 1.0, null, null, true);
-    	ch = RHull.rhull(dataset2, 1.0);
+    	ch = RCH.rhull(dataset2, 1.0);
     	
     	
         int[] xPoints = new int[ch.size()];
@@ -294,7 +294,7 @@ public class Launcher extends JPanel
         g.drawPolygon(xPoints, yPoints, ch.size());
         
         
-        rch = RHull.rhull(dataset2, 0.5);
+        rch = RCH.rhull(dataset2, 0.5);
         //rch = RCH.qrh(dataset2, mu, null, null, true);
         
         xPoints = new int[rch.size()];

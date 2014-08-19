@@ -6,7 +6,7 @@ import java.util.concurrent.ExecutionException;
 
 import javax.swing.SwingWorker;
 
-import app.model.algorithms.RHull;
+import app.model.algorithms.RCH;
 import app.model.data.SVMModel;
 
 public class BGTask extends SwingWorker<SVMModel , Void>{
