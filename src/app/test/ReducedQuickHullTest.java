@@ -5,11 +5,11 @@ import java.util.ArrayList;
 import java.util.Random;
 
 import old.QuickHull;
+import old.RCH_old;
 import old.ReducedQuickHull;
 import old.ReducedQuickHull2D;
 import old.ReducedQuickHull2D.Vector;
 
-import app.model.algorithms.RCH;
 import app.model.data.DataPoint;
 
 public class ReducedQuickHullTest {
@@ -39,7 +39,7 @@ public class ReducedQuickHullTest {
 		vertices.add(points[1]);
 		vertices.add(points[2]);
 		
-		Point resV = RCH.alg7(vertices, weights, mu, normal);
+		Point resV = RCH_old.alg7(vertices, weights, mu, normal);
 		System.out.println("weighted new v: " + resV.x + ", " + resV.y);
 		
 		Point A = vertices.get(1);
@@ -47,11 +47,11 @@ public class ReducedQuickHullTest {
 		
 		testRCH2D();
 		
-		int[] a = RCH.sortmin(vertices);
+		int[] a = RCH_old.sortmin(vertices);
 
 		//Point H = ReducedQuickHull.findExtremePoint(vertices, mu, A, B);
 		ArrayList<Point> result = new ArrayList<Point>();
-		result = RCH.qrh(vertices, 0.5, null, null, true);
+		result = RCH_old.qrh(vertices, 0.5, null, null, true);
 		System.out.println("Extreme  = " + result);
 		
 		

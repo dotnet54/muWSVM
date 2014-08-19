@@ -1,6 +1,6 @@
 package app.test;
 
-import app.model.algorithms.RHull;
+import app.model.algorithms.RCH;
 
 public class Test {
 

@@ -16,10 +16,11 @@ import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 
+import old.RCH_old;
 import old.WRCH;
 
 import app.model.algorithms.RCH;
-import app.model.algorithms.RHull;
+import app.model.data.SVMDataItem;
 import app.model.data.SVMModel;
 
 public class DrawPanel extends JPanel 
@@ -72,7 +73,7 @@ public class DrawPanel extends JPanel
     }
     
     public void paintHyperPlanes(Graphics2D g2){
-    	RHull.DP w = model.w; //	new RHull.DP(-1000, -2000);//TODO w is Point
+    	SVMDataItem w = model.w; //	new RHull.DP(-1000, -2000);//TODO w is Point
         double b =model.b; //-180;
         
 
@@ -82,11 +83,11 @@ public class DrawPanel extends JPanel
         
 //        RHull.DP h = new RHull.DP(-w.y, w.x);
         
-        double xMin = ((b-(w.y*yMin))/w.x);
-        double xMax =   ((b-(w.y*yMax))/w.x);
+        double xMin = ((b-(w.getYValue()*yMin))/w.getXValue());
+        double xMax =   ((b-(w.getYValue()*yMax))/w.getXValue());
         
         System.out.println("---------drawing with-----------");
-		System.out.println("w = " + w.x + ", "+w.y);
+		System.out.println("w = " + w.getXValue() + ", "+w.getYValue());
 		System.out.println("b = " + b);
 		System.out.format("Line: [%s, %s] to [%s, %s]\n", xMin, yMin, xMax, yMax);
 		System.out.println("---------drawing with-----------");        
@@ -145,7 +146,7 @@ public class DrawPanel extends JPanel
         g.setFont(new Font("Arial", Font.PLAIN, 12));
         g.setColor(Color.GREEN);
         g.drawPolygon(xPoints, yPoints, ch1.size());
-        Point c = RCH.findCentroid(model.dataset1);
+        Point c = RCH_old.findCentroid(model.dataset1);
     	g.drawOval(c.x, c.y, 3, 3);
     	g.drawString("c", c.x -4, c.y-4);
         
@@ -187,7 +188,7 @@ public class DrawPanel extends JPanel
     		g.fillRect((int) p.getX(), (int) p.getY(), 3, 3);
     	}
 
-        c = RCH.findCentroid(rch1);
+        c = RCH_old.findCentroid(rch1);
         if (c != null){//TODO
         	g.drawOval(c.x, c.y, 3, 3);
         	g.drawString("c", c.x +4, c.y+4);
@@ -209,7 +210,7 @@ public class DrawPanel extends JPanel
 
     	 //ch2 = WRCH.WRCH(dataset1);
     	//ch2 = RCH.qrh(dataset2, 1.0, null, null, true);
-    	ch2 = RHull.rhull(model.dataset2, 1.0);
+    	ch2 = RCH.rhull(model.dataset2, 1.0);
         
         int[] xPoints = new int[ch2.size()];
         int[] yPoints =  new int[ch2.size()];
@@ -225,13 +226,13 @@ public class DrawPanel extends JPanel
         g.setFont(new Font("Arial", Font.PLAIN, 12));
         g.setColor(Color.GREEN);
         g.drawPolygon(xPoints, yPoints, ch2.size());
-        Point c = RCH.findCentroid(model.dataset2);
+        Point c = RCH_old.findCentroid(model.dataset2);
     	g.fillOval(c.x, c.y, 6, 6);
     	g.drawString("c", c.x -4, c.y-4);
 
     	//rch2 = WRCH.WRCH(dataset1);
         //rch2 = RCH.qrh(dataset2, mu2, null, null, true);
-        rch2 = RHull.rhull(model.dataset2, 0.5);
+        rch2 = RCH.rhull(model.dataset2, 0.5);
         
         xPoints = new int[rch2.size()];
         yPoints =  new int[rch2.size()];
@@ -255,7 +256,7 @@ public class DrawPanel extends JPanel
     		g.fillRect((int) p.getX(), (int) p.getY(), 3, 3);
     	}
         
-        c = RCH.findCentroid(rch2);
+        c = RCH_old.findCentroid(rch2);
     	g.fillOval(c.x, c.y, 6, 6);
     	g.drawString("c", c.x +4, c.y+4);
     }

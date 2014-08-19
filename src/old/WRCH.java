@@ -3,9 +3,6 @@ package old;
 import java.awt.Point;
 import java.util.ArrayList;
 
-import app.model.algorithms.RCH;
-import app.model.algorithms.RHull.DP;
-
 public class WRCH {
 	
 	public static double [] weights;
@@ -18,9 +15,9 @@ public class WRCH {
 		ArrayList<Point> right = null;
 		Point n  = new Point (1,0);
 		//Point l = findMinX(P);
-		Point l = RCH.alg7(P, weights, mu, n);
+		Point l = RCH_old.alg7(P, weights, mu, n);
 		n.x = -1;
-		Point r = RCH.alg7(P, weights, mu, n);
+		Point r = RCH_old.alg7(P, weights, mu, n);
 		//Point r = findMaxX(P);
 		
 		
@@ -50,7 +47,7 @@ public class WRCH {
 
 			//h = maxPerpendicularPoint(l, r, P);
 			n = normal(r, l);
-			h = RCH.alg7(P, weights, mu, n);
+			h = RCH_old.alg7(P, weights, mu, n);
 			
 			if (h == null){
 				return P;

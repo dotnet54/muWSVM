@@ -1,66 +1,71 @@
 package app.model.algorithms;
 
 import java.awt.Point;
+import java.awt.Shape;
+import java.awt.geom.Line2D;
+import java.awt.geom.Path2D;
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
 
 import app.model.data.DataPoint;
+import app.model.data.SVMDataItem;
 import app.model.data.SVMModel;
 
 public class SK {
 	
-	private static RHull.DP finalW;
+	private static SVMDataItem finalW;
 	private static double finalB;
 
 	public static void main(String[] args){
 		
-		ArrayList<RHull.DP> Ppos = new ArrayList<RHull.DP>();
+		ArrayList<SVMDataItem> Ppos = new ArrayList<SVMDataItem>();
 		
-		RHull.DP d = new RHull.DP(0,0);
-		d.pclass = +1;
+		SVMDataItem d = new SVMDataItem(0,0);
+		d.setDataClass(1);
 		Ppos.add(d);
-		d = new RHull.DP(0,0);
-		d.pclass = +1;
+		d = new SVMDataItem(0,0);
+		d.setDataClass(1);
 		Ppos.add(d);
-		d = new RHull.DP(0,0);
-		d.pclass = +1;
+		d = new SVMDataItem(0,0);
+		d.setDataClass(1);
 		Ppos.add(d);
 		
-		ArrayList<RHull.DP> Pneg = new ArrayList<RHull.DP>();
-		d = new RHull.DP(0,0);
-		d.pclass = -1;
+		ArrayList<SVMDataItem> Pneg = new ArrayList<SVMDataItem>();
+		d = new SVMDataItem(0,0);
+		d.setDataClass(-1);
 		Pneg.add(d);
-		d = new RHull.DP(0,0);
-		d.pclass = -1;
+		d = new SVMDataItem(0,0);
+		d.setDataClass(-1);
 		Pneg.add(d);
-		d = new RHull.DP(0,0);
-		d.pclass = -1;
+		d = new SVMDataItem(0,0);
+		d.setDataClass(-1);
 		Pneg.add(d);
 		
 		
 		
-		RHull.DP a = null;
-		RHull.DP[] aa = new RHull.DP[3];
+		SVMDataItem a = null;
+		SVMDataItem[] aa = new SVMDataItem[3];
 		
-		a = new RHull.DP(0,0);
-		a.pclass = +1;
+		a = new SVMDataItem(0,0);
+		d.setDataClass(1);
 		aa[0] = a;
-		a =  new RHull.DP(1,0);
-		a.pclass = +1;
+		a =  new SVMDataItem(1,0);
+		d.setDataClass(1);
 		aa[1] = a;
-		a =  new RHull.DP(0,1);
-		a.pclass = +1;
+		a =  new SVMDataItem(0,1);
+		d.setDataClass(1);
 		aa[2] = a;
 		
-		RHull.DP[] bb = new RHull.DP[3];
+		SVMDataItem[] bb = new SVMDataItem[3];
 		
-		a = new RHull.DP(6,0);
-		a.pclass = -1;
+		a = new SVMDataItem(6,0);
+		d.setDataClass(-1);
 		bb[0] = a;
-		a =  new RHull.DP(7,0);
-		a.pclass = -1;
+		a =  new SVMDataItem(7,0);
+		d.setDataClass(-1);
 		bb[1] = a;
-		a =  new RHull.DP(7,1);
-		a.pclass = -1;
+		a =  new SVMDataItem(7,1);
+		d.setDataClass(-1);
 		bb[2] = a;
 		
 		
@@ -73,23 +78,23 @@ public class SK {
 		//TODO solve using different mu? mekae GUI less confusing
 		
 		
-		RHull.DP[] Ppos;
-		RHull.DP[] Pneg;
+		SVMDataItem[] Ppos;
+		SVMDataItem[] Pneg;
 		double mu = model.mu1;
 		
-		Ppos = new RHull.DP[model.dataset1.size()];
-		Pneg = new RHull.DP[model.dataset2.size()];
+		Ppos = new SVMDataItem[model.dataset1.size()];
+		Pneg = new SVMDataItem[model.dataset2.size()];
 		
 		for (int i = 0; i < Ppos.length; i++){
-			Ppos[i] = new RHull.DP(model.dataset1.get(i).x,
-					model.dataset1.get(i).y);
-			Ppos[i].pclass = +1;
+			Ppos[i] = new SVMDataItem(model.dataset1.get(i).getXValue(),
+					model.dataset1.get(i).getYValue());
+			Ppos[i].setDataClass(1);
 		}
 		
 		for (int i = 0; i < Pneg.length; i++){
-			Pneg[i] = new RHull.DP(model.dataset2.get(i).x,
-					model.dataset2.get(i).y);
-			Pneg[i].pclass = -1;
+			Pneg[i] = new SVMDataItem(model.dataset2.get(i).getXValue(),
+					model.dataset2.get(i).getYValue());
+			Pneg[i].setDataClass(-1);
 		}
 		
 		sk(Ppos, Pneg, mu);
@@ -98,38 +103,53 @@ public class SK {
 		model.b = finalB;
 	}
 	
-	public static void sk(RHull.DP[] Ppos, RHull.DP[] Pneg
+	public static Line2D getLine(SVMDataItem w, double b){
+        double yMin = -500;
+        double yMax = 500;
+        double xMin = ((b-(w.getYValue()*yMin))/w.getXValue());
+        double xMax =   ((b-(w.getYValue()*yMax))/w.getXValue());
+        
+        Point.Double p1= new Point.Double(xMin, yMin);
+        Point.Double p2= new Point.Double(xMax, yMax);
+        return new Line2D.Double(p1, p2);
+	}
+	
+	public static void sk(SVMDataItem[] Ppos, SVMDataItem[] Pneg
 			,double mu){
 
-		RHull.DP p = null;
-		RHull.DP n = null;
-		RHull.DP w = null;
+		SVMDataItem p = null;
+		SVMDataItem n = null;
+		SVMDataItem w = null;
 		
 		double eps = 0.005;
 		int MAXIT = 500;
 		int it = 0;
 		
-		p = RHull.theorem32(Ppos, new RHull.DP(-1, 0), mu);
-		n = RHull.theorem32(Pneg, new RHull.DP(1, 0), mu);
+		p = RCH.theorem32(Ppos, new SVMDataItem(-1, 0), mu);
+		n = RCH.theorem32(Pneg, new SVMDataItem(1, 0), mu);
 		
 		while(it < MAXIT){
-			w = new RHull.DP(p.x - n.x, p.y - n.y);
+			w = new SVMDataItem(p.getXValue() - n.getXValue(),
+					p.getYValue() - n.getYValue());
 			
-			w.x *= -1;
-			w.y *= -1;
-			RHull.DP vp = RHull.theorem32(Ppos, w, mu);
-			w.x *= -1;
-			w.y *= -1;
-			RHull.DP vn = RHull.theorem32(Pneg, w, mu);
+			w.setX(w.getXValue() -1);
+			w.setY(w.getYValue() -1);
+			SVMDataItem vp = RCH.theorem32(Ppos, w, mu);
+			w.setX(w.getXValue() -1);
+			w.setY(w.getYValue() -1);
+			SVMDataItem vn = RCH.theorem32(Pneg, w, mu);
 			
-			RHull.DP dvp = new RHull.DP(vp.x - n.x, vp.y - n.y);
-			RHull.DP dpv = new RHull.DP(p.x - vn.x, p.y - vn.y);
+			SVMDataItem dvp = new SVMDataItem(vp.getXValue() - n.getXValue(), 
+					vp.getYValue() - n.getYValue());
+			SVMDataItem dpv = new SVMDataItem(p.getXValue() - vn.getXValue(), 
+					p.getYValue() - vn.getYValue());
 			
-			double w1 =(w.x * dvp.x + w.y * dvp.y);
-			double w2 = (w.x * dpv.x + w.y * dpv.y);
+			double w1 =(w.getDotProduct(dvp));
+			double w2 = (w.getDotProduct(dpv));
 			if ( w1 < w2){
 				
-				double ws = Math.sqrt(Math.pow(w.x, 2)  + Math.pow(w.y, 2));
+				double ws = Math.sqrt(Math.pow(w.getXValue(), 2)  
+						+ Math.pow(w.getXValue(), 2));
 				ws = Math.pow(ws, 2);
 				
 				
@@ -139,11 +159,11 @@ public class SK {
 				
 				double temp;
 				
-				double x1 = n.x - p.x;
-				double x2 = p.x - vp.x;
+				double x1 = n.getXValue() - p.getXValue();
+				double x2 = p.getXValue() - vp.getXValue();
 				
-				double y1 = n.y - p.y;
-				double y2 = p.y - vp.y;
+				double y1 = n.getYValue() - p.getYValue();
+				double y2 = p.getYValue() - vp.getYValue();
 				
 				double top = (x1 * x2) + (y1 * y2);
 				double bottom = (x2 * x2) + (y2 * y2);
@@ -151,12 +171,13 @@ public class SK {
 				temp = top / bottom;
 				
 				double delta = clamp(temp,0,1);
-				p.x = (1-delta) * p.x + delta * vp.x;
-				p.y = (1-delta) * p.y + delta * vp.y;
+				p.setX((1-delta) * p.getXValue() + delta * vp.getXValue());
+				p.setY((1-delta) * p.getYValue() + delta * vp.getYValue());
 				int f=0;
 				
 			}else{
-				double ws = Math.sqrt(Math.pow(w.x, 2)  + Math.pow(w.y, 2));
+				double ws = Math.sqrt(Math.pow(w.getXValue(), 2) 
+						+ Math.pow(w.getYValue(), 2));
 				ws = Math.pow(ws, 2);
 				
 				if ((1-w2/ws) < eps){
@@ -165,11 +186,11 @@ public class SK {
 				
 				double temp;
 				
-				double x1 = p.x - n.x;
-				double x2 = n.x - vn.x;
+				double x1 = p.getXValue() - n.getXValue();
+				double x2 = n.getXValue() - vn.getXValue();
 				
-				double y1 = p.y - n.y;
-				double y2 = n.y - vn.y;
+				double y1 = p.getYValue() - n.getYValue();
+				double y2 = n.getYValue() - vn.getYValue();
 				
 				double top = (x1 * x2) + (y1 * y2);
 				double bottom = (x2 * x2) + (y2 * y2);
@@ -177,8 +198,8 @@ public class SK {
 				temp = top / bottom;
 				
 				double delta = clamp(temp,0,1);
-				n.x = (1-delta) * n.x + delta * vn.x;
-				n.y = (1-delta) * n.y + delta * vn.y;
+				n.setX((1-delta) * n.getXValue() + delta * vn.getXValue());
+				n.setY((1-delta) * n.getYValue() + delta * vn.getYValue());
 				int f=0;
 			}
 			
@@ -186,12 +207,12 @@ public class SK {
 		}
 		
 
-		double b = 0.5 * ((w.x * p.x + w.y * p.y) + 
-						(w.x * n.x + w.y * n.y));
+		double b = 0.5 * ((w.getDotProduct(p)) + 
+						(w.getDotProduct(n)));
 		
 		finalW = w;
 		finalB = b;
-		System.out.println("w = " + finalW.x + ", "+finalW.y);
+		System.out.println("w = " + finalW.getXValue() + ", "+finalW.getYValue());
 		System.out.println("b = " + finalB);
 		System.out.println("it = " + it);
 		

@@ -1,9 +1,16 @@
 package app.gui;
 
+import java.awt.BasicStroke;
+import java.awt.Color;
 import java.awt.Insets;
+import java.awt.Point;
+import java.awt.Polygon;
+import java.awt.Shape;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
+import java.awt.geom.Line2D;
+import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.List;
@@ -17,6 +24,8 @@ import org.jfree.chart.ChartMouseEvent;
 import org.jfree.chart.ChartMouseListener;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.annotations.XYLineAnnotation;
+import org.jfree.chart.annotations.XYShapeAnnotation;
 import org.jfree.chart.entity.ChartEntity;
 import org.jfree.chart.entity.EntityCollection;
 import org.jfree.chart.entity.StandardEntityCollection;
@@ -27,57 +36,99 @@ import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
+import app.model.algorithms.SK;
+import app.model.data.SVMDataItem;
+import app.model.data.SVMModel;
+
 public class JFCPanel extends ChartPanel implements ChartMouseListener{
 //TODO BUG point is not added to click location but upper corner of popup menu
-		JPopupMenu popup = new JPopupMenu();
-		JMenuItem it = new JMenuItem("Add Point");
-		JMenuItem itr = new JMenuItem("Remove Point");
-		JMenuItem itw = new JMenuItem("Change Weight");
 	
-	public JFCPanel(JFreeChart chart) {
-		super(chart);
-		setMouseWheelEnabled(true);
-		addChartMouseListener(this);
-		popup.add(it);
-		popup.add(itr);
-		popup.add(itw);
-		setPopupMenu(popup);
+	
+	private JPopupMenu popup = new JPopupMenu();
+	private JMenuItem itp = new JMenuItem("Add to Positive Class");
+	private JMenuItem itn = new JMenuItem("Add to Negative Class");
+	private JMenuItem itr = new JMenuItem("Remove Point");
+	private JMenuItem itw = new JMenuItem("Change Weight");
 		
-		it.addActionListener(new ActionListener() {
-			
+	protected XYPlot thisPlot = null;
+	protected JFreeChart thisChart = null;
+	
+	private SVMModel model = null;
+	
+	private  XYPolyAnnotation anoHull1 = null;
+	private  XYShapeAnnotation anoRHull1 = null;
+	private  XYPolyAnnotation anoHull2 = null;
+	private  XYShapeAnnotation anoRHull2 = null;
+	
+	private  XYLineAnnotation hyperPlane = null;
+	private  XYLineAnnotation marginPos = null;
+	private  XYLineAnnotation marginNeg = null;
+	
+	private double xChart =0;
+	private double yChart=0;
+	private double xPanel =0;
+	private double yPanel=0;
+	
+	private XYItemEntity selectedEntity = null;
+	private XYSeries selectedSeries = null;
+	private SVMDataItem selectedDataItem = null;
+		
+	public JFCPanel(JFreeChart chart,SVMModel model ) {
+		super(chart);
+		
+		this.model = model;
+		thisChart = chart;
+		thisPlot = chart.getXYPlot();
+		
+//		popup.add(it);
+//		popup.add(itr);
+//		popup.add(itw);
+		
+		setPopupMenu(popup);
+		setMouseWheelEnabled(true);
+		
+		addChartMouseListener(this);
+		
+		//popup menu
+		itp.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				// TODO Auto-generated method stub
-				//e.
-				 
-				addPoint(clx, cly);
+				addPoint(0,xChart, yChart);
 			}
 		});
 		
+		itn.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				addPoint(1,xChart, yChart);
+			}
+		});
+		
+		
 		itr.addActionListener(new ActionListener() {
-			
 			@Override
 			public void actionPerformed(ActionEvent ev) {
-				// TODO Auto-generated method stub
-	            XYItemEntity e = (XYItemEntity) selection;
-	            XYDataset d = e.getDataset(); //TODO check selection for null
-	            int s = e.getSeriesIndex();
-	            int i = e.getItem();
-	            //System.out.println("X:" + d.getX(s, i) + ", Y:" + d.getY(s, i));
+				if (selectedEntity != null){
+					XYItemEntity e = (XYItemEntity) selectedEntity;
+		            XYDataset d = e.getDataset(); //TODO check selection for null
+		            int s = e.getSeriesIndex();
+		            int i = e.getItem();
+		            //System.out.println("X:" + d.getX(s, i) + ", Y:" + d.getY(s, i));
+		            
+		            XYSeriesCollection dd = (XYSeriesCollection) e.getDataset();
+		            XYSeries ss =  dd.getSeries(s);
+		            
+		            System.out.println("rem:" + ss.getItems().get(i));
+		            ss.remove(i);
+				}
 	            
-	            XYSeriesCollection dd = (XYSeriesCollection) e.getDataset();
-	            XYSeries ss =  dd.getSeries(s);
-	            
-	            System.out.println("rem:" + ss.getItems().get(i));
-	            ss.remove(i);
 			}
 		});
 		
 		itw.addActionListener(new ActionListener() {
-			
 			@Override
 			public void actionPerformed(ActionEvent ev) {
-	            XYItemEntity e = (XYItemEntity) selection;
+	            XYItemEntity e = (XYItemEntity) selectedEntity;
 	            XYDataset d = e.getDataset(); //TODO check selection for null
 	            int s = e.getSeriesIndex();
 	            int i = e.getItem();
@@ -86,100 +137,109 @@ public class JFCPanel extends ChartPanel implements ChartMouseListener{
 	            XYSeriesCollection dd = (XYSeriesCollection) e.getDataset();
 	            XYSeries ss =  dd.getSeries(0);
 	            
-	            System.out.println("rem:" + ss.getItems().get(i));
-	            double weight = 1;
-				String input = JOptionPane.showInputDialog(this  ,weight);
-				weight = Double.parseDouble(input); // try catch TODO parse error handle
+	            
+	            XYDataItem item =  (XYDataItem) ss.getItems().get(i);
+	            System.out.println("rem:" + item);
+	           
+				if (item instanceof SVMDataItem){
+					SVMDataItem svmItem = (SVMDataItem) item;
+		            double weight = svmItem.getWeight();
+					String input = JOptionPane.showInputDialog("Enter weight of the point"  ,weight);
+					weight = Double.parseDouble(input); // try catch TODO parse error handle
+					svmItem.setWeight(weight); 
+					thisChart.fireChartChanged();
+					System.out.println( svmItem);
+					
+				}
 			}
 		});
+		
+		
+		
+		
 	}
-	double clx =0;
-	double cly=0;
-	XYItemEntity selection = null;
+
 	
 	
 	@Override
 	public void mouseReleased(MouseEvent event) {
 		super.mouseReleased(event);
-		 System.out.println("rel:[" + event.getX() + "," + event.getY() + "]");
-//		 Point2D p = this.translateScreenToJava2D(event.getTrigger().getPoint());
-			Rectangle2D plotArea = this.getScreenDataArea();
-			XYPlot plot = (XYPlot) getChart().getPlot(); // your plot
-			double chartX = plot.getDomainAxis().java2DToValue(event.getX(), plotArea, plot.getDomainAxisEdge());
-			double chartY = plot.getRangeAxis().java2DToValue(event.getY(), plotArea, plot.getRangeAxisEdge());
-			
-	        ChartEntity entity = null;
-	        List list = null;
-	        if (getChartRenderingInfo() != null) {
-	            EntityCollection entities = getChartRenderingInfo().getEntityCollection();
-	            if (entities != null) {
-	                entity = entities.getEntity(event.getX(), event.getY());
-	                //@shifaz 11/8/2014
-	                StandardEntityCollection sec = (StandardEntityCollection)
-	                getChartRenderingInfo().getEntityCollection();
-	                list = sec.getEntities(event.getX(), event.getY());
-	            }
-	        }
-			ChartMouseEvent chartEvent = new ChartMouseEvent(getChart(), event,
-	        		list,event.getX(),event.getY());
-			report(chartEvent);
-			 System.out.println("rel:[" + chartX + "," + chartX + "]");
-			 //addPoint((double)chartX, (double)chartY);
-			  clx = chartX;
-			  cly = chartY;
-			  
-			  
-			  
-			  
-			  
-			  
-			  
-			  selection = getSelection(chartEvent,chartX,chartY);
-//			  System.out.println("releasedb on:" + selection.toString());
-			  if (selection == null){
-				  popup.show(this, event.getX(), event.getY());
-			  }else{
-		            XYItemEntity e = selection;
-		            XYDataset d = e.getDataset();
-		            int s = e.getSeriesIndex();
-		            int i = e.getItem();
-		            System.out.println("Selection:" + i +" : "+ d.getX(s, i) + ", Y:" + d.getY(s, i));
-		            //d.g
-		            
-		            popup.show(this, event.getX(), event.getY());
-			  }
-			  
-			  
+
+		Rectangle2D plotArea = this.getScreenDataArea();
+		XYPlot plot = (XYPlot) getChart().getPlot(); // your plot
+		double chartX = plot.getDomainAxis().java2DToValue(event.getX(),
+				plotArea, plot.getDomainAxisEdge());
+		double chartY = plot.getRangeAxis().java2DToValue(event.getY(),
+				plotArea, plot.getRangeAxisEdge());
+
+		ChartEntity entity = null;
+		List list = null;
+		if (getChartRenderingInfo() != null) {
+			EntityCollection entities = getChartRenderingInfo()
+					.getEntityCollection();
+			if (entities != null) {
+				entity = entities.getEntity(event.getX(), event.getY());
+				// @shifaz 11/8/2014
+
+				StandardEntityCollection sec = (StandardEntityCollection) getChartRenderingInfo()
+						.getEntityCollection();
+				list = sec.getEntities(event.getX(), event.getY());
+			}
+		}
+		ChartMouseEvent chartEvent = new ChartMouseEvent(getChart(), event,
+				list, event.getX(), event.getY());
+		report(chartEvent);
+		// addPoint((double)chartX, (double)chartY);
+		xChart = chartX;
+		yChart = chartY;
+
+		// System.out.println("Mouse Released [Panel]: "
+		// + event.getX() + "," + event.getY());
+		// System.out.println("Mouse Released [Chart]: "
+		// + xChart + "," + yChart);
+		Point2D p = chartToPanel(new Point2D.Double(chartX, chartY));
+		System.out.println("Point: " + p);
+
+		Point2D p2 = panelToChart(new Point(event.getX(), event.getY()));
+		System.out.println("Point2: " + p2);
+
+		selectedEntity = getSelectedEntity(chartEvent, chartX, chartY);
+		// System.out.println("releasedb on:" + selection.toString());
+		if (selectedEntity == null) {
+
+			if (event.isPopupTrigger()) {
+				popup.removeAll();
+				popup.add(itp);
+				popup.add(itn);
+				popup.pack();
+				popup.show(this, event.getX(), event.getY());
+			}
+
+		} else {
+			popup.removeAll();
+			popup.add(itr);
+			popup.add(itw);
+			popup.pack();
+			XYItemEntity e = selectedEntity;
+			XYDataset d = e.getDataset();
+			int s = e.getSeriesIndex();
+			int i = e.getItem();
+			// System.out.println("Mouse Released : " + i +" : "+ d.getX(s, i) +
+			// "," + d.getY(s, i));
+			// d.g
+
+			if (event.isPopupTrigger()) {
+				popup.show(this, event.getX(), event.getY());
+			}
+
+		}
+
 	}
 	
 	@Override
 	public void chartMouseClicked(ChartMouseEvent event) {
-		// TODO Auto-generated method stub
-		Point2D p = this.translateScreenToJava2D(event.getTrigger().getPoint());
-		Rectangle2D plotArea = this.getScreenDataArea();
-		XYPlot plot = (XYPlot) getChart().getPlot(); // your plot
-		double chartX = plot.getDomainAxis().java2DToValue(p.getX(), plotArea, plot.getDomainAxisEdge());
-		double chartY = plot.getRangeAxis().java2DToValue(p.getY(), plotArea, plot.getRangeAxisEdge());
-		report(event);
-		 System.out.println("Pos:[" + chartX + "," + chartX + "]");
-		 //addPoint((double)chartX, (double)chartY);
-		  clx = chartX;
-		  cly = chartY;
-		  
-		  
-//		  selection = getSelection(event,chartX,chartY);
-//		  if (selection == null){
-//			  popup.show(this, event.getX(), event.getY());
-//		  }else{
-//	            XYItemEntity e = selection;
-//	            XYDataset d = e.getDataset();
-//	            int s = e.getSeriesIndex();
-//	            int i = e.getItem();
-//	            System.out.println("Selection:" + i +" : "+ d.getX(s, i) + ", Y:" + d.getY(s, i));
-//	            //d.g
-//	            
-//	            popup.show(this, event.getX(), event.getY());
-//		  }
+		//clicks
+
 		 
 		 
 	}
@@ -187,21 +247,25 @@ public class JFCPanel extends ChartPanel implements ChartMouseListener{
 	@Override
 	public void chartMouseMoved(ChartMouseEvent event) {
 		// TODO Auto-generated method stub
-	List l = event.getEntities();
+		List l = event.getEntities();
 		// System.out.println("#:" + l.size());
 		report(event);
 	}
 	
+	private SVMDataItem getSelectedDataItem(ChartMouseEvent event, double x, double y){
+		XYItemEntity ent = getSelectedEntity(event, x, y);
+		return getDataItem(ent);
+	}
 	
-	private XYItemEntity getSelection(ChartMouseEvent event, double x, double y){
+	private XYItemEntity getSelectedEntity(ChartMouseEvent event, double x, double y){
 		ChartEntity ce = event.getEntity();
 		List list = event.getEntities();
 		
 		
 		if (list == null){
-			selection = null;
+			selectedEntity = null;
 		}
-		selection = null;
+		selectedEntity = null;
 		for (int j = 0; j < list.size(); j++){
 			ce = (ChartEntity) list.get(j);
 			if (ce instanceof XYItemEntity) {
@@ -217,25 +281,101 @@ public class JFCPanel extends ChartPanel implements ChartMouseListener{
 		            //System.out.println("X:" + d.getX(s, i) + ", Y:" + d.getY(s, i));
 		            
 		            XYSeriesCollection dd = (XYSeriesCollection) e.getDataset();
-		            XYSeries ss =  dd.getSeries(0);
+		            XYSeries ss =  dd.getSeries(s);
 		            
-		            System.out.println("SS:" + ss.getItems().get(i));
+		            
 		            //ss.remove(i);
-		            selection = e; 	
+		            selectedSeries = ss;
+		            selectedEntity = e;
+		            System.out.format("Selected Item:%s:%s\n",i, ss.getItems().get(i));
 		            break;
 	            }
 			}
 		}
         
-		return selection;
+		return selectedEntity;
 		
 	}
 	
+	private double toChartX(int x){
+		//TODO translate function not used *ScaleFactor not done
+		Rectangle2D plotArea = this.getScreenDataArea();
+		XYPlot plot = (XYPlot) getChart().getPlot(); // your plot
+		return  plot.getDomainAxis().java2DToValue(x,
+				plotArea, plot.getDomainAxisEdge());
+	}
 	
-	private void addPoint(double x, double y){
+	private double toChartY(int y){
+		//TODO translate function not used *ScaleFactor not done
+		Rectangle2D plotArea = this.getScreenDataArea();
+		XYPlot plot = (XYPlot) getChart().getPlot(); // your plot
+		return  plot.getRangeAxis().java2DToValue(y,
+				plotArea, plot.getRangeAxisEdge());
+	}
+	
+	
+	private int toPanelX(double x){
+		//TODO translate function not used *ScaleFactor not done
+		Rectangle2D plotArea = this.getScreenDataArea();
+		XYPlot plot = (XYPlot) getChart().getPlot(); // your plot
+		return  (int) plot.getDomainAxis().valueToJava2D(x,
+				plotArea, plot.getDomainAxisEdge());
+	}
+	
+	private int toPanelY(double y){
+		//TODO translate function not used *ScaleFactor not done
+		Rectangle2D plotArea = this.getScreenDataArea();
+		XYPlot plot = (XYPlot) getChart().getPlot(); // your plot
+		return  (int) plot.getRangeAxis().valueToJava2D(y,
+				plotArea, plot.getRangeAxisEdge());
+	}
+	
+	private Point2D panelToChart(Point p){
+		Point2D pp = this.translateScreenToJava2D(p);
+		Rectangle2D plotArea = this.getScreenDataArea();
+		XYPlot plot = (XYPlot) getChart().getPlot(); // your plot
+		double chartX = plot.getDomainAxis().java2DToValue(pp.getX(),
+				plotArea, plot.getDomainAxisEdge());
+		double chartY = plot.getRangeAxis().java2DToValue(pp.getY(),
+				plotArea, plot.getRangeAxisEdge());
+		return new Point2D.Double(chartX, chartY);	
+	}
+	
+	private Point chartToPanel (Point2D pp){
+		//Point2D pp = this.translateScreenToJava2D(p);
+		Rectangle2D plotArea = this.getScreenDataArea();
+		XYPlot plot = (XYPlot) getChart().getPlot(); // your plot
+		double panelX = plot.getDomainAxis().valueToJava2D(pp.getX(),
+				plotArea, plot.getDomainAxisEdge());
+		double panelY = plot.getRangeAxis().valueToJava2D(pp.getY(),
+				plotArea, plot.getRangeAxisEdge());
+		Point2D p2 =new Point2D.Double(panelX, panelY);
+		return this.translateJava2DToScreen(p2);
+	}
+	
+	private SVMDataItem getDataItem(XYItemEntity entity){
+	
+	    if (entity != null){
+	        XYSeriesCollection sc = (XYSeriesCollection) entity.getDataset();
+	        XYSeries s =  sc.getSeries(entity.getSeriesIndex());
+	        int i = entity.getItem();
+	        
+	    	XYDataItem item =  (XYDataItem) s.getItems().get(i);
+	    	if (item instanceof SVMDataItem){
+	    		SVMDataItem svmItem = (SVMDataItem) item;
+	    		return svmItem;
+	    	}
+	    }
+	    
+		return null;
+	}
+
+
+
+	private void addPoint(int series, double x, double y){
 		
 		XYSeriesCollection d = (XYSeriesCollection) getChart().getXYPlot().getDataset();
-		XYSeries s =  d.getSeries(0);
+		XYSeries s =  d.getSeries(series);
 		
 		XYDataItem i = new XYDataItem(x, y);
 		s.add(i);
@@ -252,5 +392,209 @@ public class JFCPanel extends ChartPanel implements ChartMouseListener{
             //System.out.println("X:" + d.getX(s, i) + ", Y:" + d.getY(s, i));
         }
     }
+    
+    
+    public void solveSVM(){
+    	System.out.println("solving SVM...");
+    	
+		XYSeriesCollection sc = (XYSeriesCollection) getChart().getXYPlot().getDataset();
+		XYSeries s1 = sc.getSeries(0);
+		XYSeries s2 = sc.getSeries(1);
+		model.setSeries1(s1);
+		model.setSeries2(s2);
+		
+		//model.compute();
+		
+    	
+        XYPlot p = getChart().getXYPlot();
+        if (hyperPlane != null){
+        	p.removeAnnotation(hyperPlane);
+        }
+        Line2D line = SK.getLine(model.w, model.b);
+        hyperPlane = new XYLineAnnotation(line.getX1(), line.getY2(),
+        		line.getX2(), line.getY2());
+    	p.addAnnotation(hyperPlane);
+    	
+    	System.out.format("SVM found w:%s b:%s ", model.w, model.b );
+    }
+    
+	public void findCH(){
+		System.out.println("finding CH...");
+		
+		XYSeriesCollection sc = (XYSeriesCollection) getChart().getXYPlot().getDataset();
+		XYSeries s1 = sc.getSeries(0);
+		XYSeries s2 = sc.getSeries(1);
+		model.setSeries1(s1);
+		model.setSeries2(s2);
+		model.compute();
+		
+		
+		  final Shape[] shapes = new Shape[4];
+		  
+		  
+	        int[] xPoints = new int[model.ch1.size()];
+	        int[] yPoints =  new int[model.ch1.size()];
+	        
+	        int[] xPoints2 = new int[model.ch1.size()];
+	        int[] yPoints2 =  new int[model.ch1.size()];
+	        
+	        double[] xPoints3 = new double[model.ch1.size()];
+	        double[] yPoints3 =  new double[model.ch1.size()];
+	        
+	        for (int i = 0; i < model.ch1.size(); i++){
+	        	xPoints[i] = (int) model.ch1.get(i).getXValue();
+	        	yPoints[i] = (int) model.ch1.get(i).getYValue();
+	        	xPoints2[i] = toPanelX(model.ch1.get(i).getXValue());
+	        	yPoints2[i] = toPanelY(model.ch1.get(i).getYValue());
+	        	xPoints3[i] = model.ch1.get(i).getXValue();
+	        	yPoints3[i] = model.ch1.get(i).getYValue();
+	        }
+	        shapes[0] = new Polygon(xPoints, yPoints, model.ch1.size());
+	        shapes[1] = new Polygon(xPoints2, yPoints2, model.ch1.size());
+	       
+	        
+	        Path2D path = new Path2D.Double();
 
+	        path.moveTo(xPoints3[0], yPoints3[0]);
+	        for(int i = 1; i < xPoints3.length; ++i) {
+	           path.lineTo(xPoints3[i], yPoints3[i]);
+	        }
+	        path.closePath();
+	        shapes[2] = path;
+	        
+	        
+	        XYPlot p = getChart().getXYPlot();
+	        if (anoHull1 != null){
+	        	p.removeAnnotation(anoHull1);
+	        }
+	        
+	        anoHull1 = new XYPolyAnnotation(shapes[2]);
+	        p.addAnnotation(anoHull1);
+	        
+	        Rectangle2D bounds = shapes[1].getBounds2D();
+	        
+	        anoHull1.xa = bounds.getMinX();
+	        anoHull1.xb = bounds.getMaxX();
+	        anoHull1.ya = bounds.getMinY();
+	        anoHull1.yb = bounds.getMaxY();
+	        
+	        
+    
+//	        this.getGraphics().drawPolygon(new 
+//	        		Polygon(xPoints2, yPoints2, model.ch1.size()));
+    
+		//DP[] res = RHull.rhull(points, 1.0);
+		
+	        
+	        xPoints3 = new double[model.ch2.size()];
+	        yPoints3 =  new double[model.ch2.size()];
+	        
+	        for (int i = 0; i < model.ch2.size(); i++){
+	        	xPoints3[i] = model.ch2.get(i).getXValue();
+	        	yPoints3[i] = model.ch2.get(i).getYValue();
+	        }
+	        path = new Path2D.Double();
+
+	        path.moveTo(xPoints3[0], yPoints3[0]);
+	        for(int i = 1; i < xPoints3.length; ++i) {
+	           path.lineTo(xPoints3[i], yPoints3[i]);
+	        }
+	        path.closePath();
+	        shapes[3] = path;
+	        
+	        if (anoHull2 != null){
+	        	p.removeAnnotation(anoHull2);
+	        }
+	        
+	        anoHull2 = new XYPolyAnnotation(shapes[3]);
+	        p.addAnnotation(anoHull2);
+	        
+	        
+	        
+	        
+	        
+		System.out.println("CH found");
+	}
+	
+	public void findRCH(){
+		System.out.println("finding RCH...");
+		
+		XYSeriesCollection sc = (XYSeriesCollection) getChart().getXYPlot().getDataset();
+		XYSeries s1 = sc.getSeries(0);
+		XYSeries s2 = sc.getSeries(1);
+		model.setSeries1(s1);
+		model.setSeries2(s2);
+		double m1 = model.getMu1();
+		double m2 = model.getMu2();
+		model.setMu(m1, m2);
+		model.compute();
+		
+		
+		  final Shape[] shapes = new Shape[3];
+		  
+		  
+	        double[] xPoints = new double[model.rch1.size()];
+	        double[] yPoints =  new double[model.rch1.size()];
+	        
+	        for (int i = 0; i < model.rch1.size(); i++){
+	        	xPoints[i] =  model.rch1.get(i).getXValue();
+	        	yPoints[i] =  model.rch1.get(i).getYValue();
+	        }
+	        Path2D path = new Path2D.Double();
+
+	        path.moveTo(xPoints[0], yPoints[0]);
+	        for(int i = 1; i < xPoints.length; ++i) {
+	           path.lineTo(xPoints[i], yPoints[i]);
+	        }
+	        path.closePath();
+	        shapes[0] = path;
+	        
+	        
+	        XYPlot p = getChart().getXYPlot();
+	        if (anoRHull1 != null){
+	        	p.removeAnnotation(anoRHull1);
+	        }
+	        final float dash1[] = {2.0f, 2.0f};
+	        final BasicStroke dashed =
+	            new BasicStroke(1.0f,
+	                            BasicStroke.CAP_BUTT,
+	                            BasicStroke.JOIN_MITER,
+	                            10.0f, dash1, 0.0f);
+	        anoRHull1 = new XYShapeAnnotation(shapes[0],
+	        		dashed, Color.blue);
+	        //anoRHull.
+	        p.addAnnotation(anoRHull1);
+    
+    
+		//DP[] res = RHull.rhull(points, 1.0);
+		
+	        
+	        double[] xPoints3 = new double[model.rch2.size()];
+	        double[] yPoints3 =  new double[model.rch2.size()];
+	        
+	        for (int i = 0; i < model.rch2.size(); i++){
+	        	xPoints3[i] = model.rch2.get(i).getXValue();
+	        	yPoints3[i] = model.rch2.get(i).getYValue();
+	        }
+	        path = new Path2D.Double();
+
+	        path.moveTo(xPoints3[0], yPoints3[0]);
+	        for(int i = 1; i < xPoints3.length; ++i) {
+	           path.lineTo(xPoints3[i], yPoints3[i]);
+	        }
+	        path.closePath();
+	        shapes[1] = path;
+	        
+	        if (anoRHull2 != null){
+	        	p.removeAnnotation(anoRHull2);
+	        }
+
+	        anoRHull2 = new XYShapeAnnotation(shapes[1],
+	        		dashed, Color.blue);
+	        //anoRHull.
+	        p.addAnnotation(anoRHull2);
+	        
+	        
+		System.out.println("RCH found");
+	}
 }

@@ -1,336 +1,351 @@
 package app.model.algorithms;
 
+
 import java.awt.Point;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.math3.ode.EquationsMapper;
 
 import app.model.data.DataPoint;
+import app.model.data.SVMDataItem;
 
+//
 
+/*
+ * 
+ * RECURSION TOO DEEP IF P IS IN STACK, USE CLASS STATIC
+ * 
+ */
 public class RCH {
 	
-	public static double [] weights;
-	public static Point normal;
+	
+	static SVMDataItem [] Z;
+	static double weights[];
+	static ArrayList<SVMDataItem> PP;
 
-	//function vert = qrh(X, mu, l, r)
-	public static ArrayList<Point> qrh(ArrayList<Point> X, double mu, 
-			ArrayList<Point> l, ArrayList<Point> r,
-			boolean first){
-
-		//nfl = floor(1/mu);
-		//n = ceil(1/mu);
+	public static void main(String[] args) {
+		int np = 5;
+		SVMDataItem[] points = new SVMDataItem[np];
+		SVMDataItem[] wh;
 		
-		int nfl = (int) Math.floor(1/mu);
-		int n = (int) Math.ceil(1/mu);
+//		points[0] = new DP(0,0);
+//		points[1] =  new DP(1,0);
+//		points[2] = new DP(0, 1);
+//		points[3] = new DP(1, 1);
+//		points[4] = new DP(1, 2);
 		
-		if (X.size() == nfl){
-			System.out.println("Hull reduced to center " + findCentroid(X));
-			ArrayList<Point> res = new ArrayList<Point>();
-			res.add(findCentroid(X));
-			return  res;
+		
+		points[0] = new SVMDataItem(0,0);
+		points[1] =  new SVMDataItem(100, 0);
+		points[2] = new SVMDataItem(184, 40);
+		points[3] = new SVMDataItem(109, 103);
+		points[4] = new SVMDataItem(0, 100);
+		
+		PP = new ArrayList<SVMDataItem>();
+		for(int i = 0; i < points.length; i++){
+			PP.add(i,points[i]);
 		}
 		
-		
-		ArrayList<Point> h = new ArrayList<Point>();
-		
-		if (first == true){
-			//[npts ndims] = size(X);
-			int npts = X.size();
-			int ndims = 2;
-			
-			//[abscissa i] = sort(X(:,1));
-			int[] i = sortmin(X);
-			
-		    //l = X(i(1:n),:);
-		    //h = X(i(npts:-1:(npts-nfl)),:);
-		    //r = l; 
-			l = new ArrayList<Point>();
-			for (int a = 0; a < n; a++){
-				l.add(X.get(i[a]));
-			}
-			for (int a = npts - 1; a >= (npts - nfl - 1); a--){
-				h.add(X.get(i[a]));
-			}
-			r = (ArrayList<Point>) l.clone();
-
-			
-			normal = new Point(-1,0);
-			Point hpt = new Point(0,0);
-			hpt = alg7(X, weights, mu, normal);
-			
-			normal = new Point(1,0);
-			Point lpt = new Point(0,0);
-			lpt = alg7(X, weights, mu, normal);
-			
-			normal = new Point(-1,0);
-			Point rpt = new Point(0,0);
-			rpt = alg7(X, weights, mu, normal);
-			
-			
-		}else{
-			 //h = X(1:n,:);
-			for (int a = 0; a < n; a++){
-				h.add(X.get(a));
-			}
+		weights = new double[points.length];
+		for(int i = 0; i < points.length; i++){
+			weights[i] = 1;
 		}
-		
-		
-		
-		//hpt = mu*sum(h(1:nfl,:),1) + (1-mu*nfl)*h(n,:);
-		//lpt = mu*sum(l(1:nfl,:),1) + (1-mu*nfl)*l(n,:);
-		//rpt = mu*sum(r(1:nfl,:),1) + (1-mu*nfl)*r(n,:);
-		
-		///Point lh = new Point(hpt.x-lpt.x, hpt.y-lpt.y);
-		//Point hr = new Point(rpt.x-hpt.x, rpt.y-hpt.y);
-		//Point wlh = new Point(-lh.y, lh.x);
-		//Point whr = new Point(-hr.y, hr.x);
-		
-		
-		normal = new Point(-1,0);
-		Point hpt = new Point(0,0);
-		hpt = alg7(X, weights, mu, normal);
-		
-		normal = new Point(1,0);
-		Point lpt = new Point(0,0);
-		lpt = alg7(X, weights, mu, normal);
-		
-		normal = new Point(-1,0);
-		Point rpt = new Point(0,0);
-		rpt = alg7(X, weights, mu, normal);
-		
-		/*
-		
-		Point hpt = new Point(0,0);
-		double sumX = 0, sumY = 0;
-		for (int a = 0; a < nfl; a++){
-			sumX += h.get(a).x;
+		weights[0] = 0.5;
+		wh = rhull(points, (double)1);
+		for (int i = 0; i < wh.length; i++){
+			System.out.println("wh Point  = " + wh[i]);
 		}
-		for (int a = 0; a < nfl; a++){
-			sumY += h.get(a).y;
-		}
-		hpt.x = (int) (mu * sumX);	//use double Point
-		hpt.y = (int) (mu * sumY);
-		
-		hpt.x += (1-mu*nfl) * h.get(n - 1).x;
-		hpt.y += (1-mu*nfl) * h.get(n - 1).y;
-		
-		
-		Point lpt = new Point(0,0);
-		sumX = 0; sumY = 0;
-		for (int a = 0; a < nfl; a++){
-			sumX += l.get(a).x;
-		}
-		for (int a = 0; a < nfl; a++){
-			sumY += l.get(a).y;
-		}
-		lpt.x = (int) (mu * sumX);	//use double Point
-		lpt.y = (int) (mu * sumY);
-		
-		lpt.x += (1-mu*nfl) * l.get(n - 1).x;
-		lpt.y += (1-mu*nfl) * l.get(n - 1).y;
-		
-		
-		Point rpt = new Point(0,0);
-		sumX = 0; sumY = 0;
-		for (int a = 0; a < nfl; a++){
-			sumX += r.get(a).x;
-		}
-		for (int a = 0; a < nfl; a++){
-			sumY += r.get(a).y;
-		}
-		rpt.x = (int) (mu * sumX);	//use double Point
-		rpt.y = (int) (mu * sumY);
-		
-		rpt.x += (1-mu*nfl) * r.get(n - 1).x;
-		rpt.y += (1-mu*nfl) * r.get(n - 1).y;	
-		*/
-		
-		
-		
-		//if(norm(hpt - lpt) < 1e-12 || norm(hpt - rpt) < 1e-12)
-		//   vert = [lpt; rpt];
-		//    return;
-		//end
-		ArrayList<Point> result = new ArrayList<Point>();
-		if ( Math.abs((hpt.x - lpt.x)) < 1e-12 &&  Math.abs((hpt.y - lpt.y)) < 1e-12
-		  || Math.abs((hpt.x - rpt.x)) < 1e-12 &&  Math.abs((hpt.y - rpt.y)) < 1e-12){
-			result.add(lpt);
-			result.add(rpt);
-			return result;
-		}
-		
-		//lh = hpt - lpt;
-		//hr = rpt - hpt;
-		Point lh = new Point(hpt.x-lpt.x, hpt.y-lpt.y);
-		Point hr = new Point(rpt.x-hpt.x, rpt.y-hpt.y);
-		
-		//wlh = [-lh(2); lh(1)];
-		//whr = [-hr(2); hr(1)];
-		Point wlh = new Point(-lh.y, lh.x);
-		Point whr = new Point(-hr.y, hr.x);
-		
-		
-		
-		//projlh = [l; h] * wlh;
-		//projhr = [h; r] * whr;
-		
-		//lthresh = min(projlh);
-		//rthresh = min(projhr);
-
-		//projlh = X * wlh;
-		//projhr = X * whr;
-		
-		ArrayList<Integer> projlh = new ArrayList<Integer>();
-		ArrayList<Integer> projhr = new ArrayList<Integer>();
-		for (int a = 0; a < X.size(); a++){
-			Integer e = new Integer (X.get(a).x * wlh.x + X.get(a).y *  wlh.y);
-			projlh.add(e);
-		}
-		for (int a = 0; a < X.size(); a++){
-			Integer e = new Integer (X.get(a).x * whr.x + X.get(a).y *  whr.y);
-			projhr.add(e);
-		}
-		
-		//[sprojlh iprojlh] = sort(projlh, 'descend');
-		//[sprojhr iprojhr] = sort(projhr, 'descend');
-		
-		//Collections.sort(projlh,Collections.reverseOrder());
-		//Collections.sort(projhr,Collections.reverseOrder());
-		
-		int[] iprojlh = sortmax(projlh);
-		int[] iprojhr = sortmax(projhr);
-		
-		//A = X(iprojlh,:);
-		//B = X(iprojhr,:);
-		ArrayList<Point> A = new ArrayList<Point>();
-		ArrayList<Point> B = new ArrayList<Point>();
-		for (int a = 0; a < iprojlh.length; a++){
-			A.add(X.get(iprojlh[a]));
-		}
-		for (int a = 0; a < iprojhr.length; a++){
-			B.add(X.get(iprojhr[a]));
-		}
-		
-		//vl = qrh(A, mu, l, h);
-		//vh = qrh(B, mu, h, r);
-		ArrayList<Point> vl = new ArrayList<Point>();
-		ArrayList<Point> vh = new ArrayList<Point>();
-		
-		vl = RCH.qrh(A, mu, l, h, false);
-		vh = RCH.qrh(B, mu, h, r, false);
-		
-		if (vl.addAll(vh) == false){
-			throw new RuntimeException("add all failed qrh");
-		}
-		
-		return vl;
 	}
 	
-	public static Point findCentroid(ArrayList<Point> P){
-		Point c = new Point();
-		
-		for (int i = 0; i < P.size(); i++){
-			c.x += P.get(i).x;
-		}
-		//TODO
-		if (P.size() == 0){
-			return null;
-		}
-		c.x /= P.size();	//if p.size = 0 division by 0 throw
 
-		for (int i = 0; i < P.size(); i++){
-			c.y += P.get(i).y;
-		}
-		c.y /= P.size();
+	
+	public static ArrayList<SVMDataItem> rhull(ArrayList<SVMDataItem> dataset1, double mu) {
 		
-		return c;
+		SVMDataItem[] P =  new SVMDataItem[dataset1.size()];
+		SVMDataItem t =null;
+		PP = new ArrayList<SVMDataItem>();
+		weights = new double[dataset1.size()];
+		for (int i=0; i< dataset1.size(); i++){
+			t = new SVMDataItem(0,0);
+			t.setX(dataset1.get(i).getX());
+			t.setY(dataset1.get(i).getY());
+			P[i] = t;
+			PP.add(i,t);
+			weights[i] = 1;
+		}
+		//weights[0]=2;
+		
+		
+		SVMDataItem[] res = rhull(P, mu);
+		
+		ArrayList<SVMDataItem> r = new ArrayList<SVMDataItem>();
+		SVMDataItem p;
+		for (int i=0; i< res.length; i++){
+			p = new SVMDataItem(0,0);
+			p.setX(res[i].getXValue());
+			p.setY(res[i].getYValue());
+			r.add(p);
+		}
+		//r.addAll(Arrays.asList(res));
+		
+		return r;
 	}
 	
-	public static int[] sortmin(ArrayList<Point> X){
-		int [] result = new int[X.size()];
-		int mini = 0;
-		double min = 0;
-		double temp;
-		int i = 0;
-		int j = 0;
-		boolean found = false;
+	
+	public static SVMDataItem[] rhull(SVMDataItem[] P, double mu){
+		SVMDataItem n = new SVMDataItem(-1,0);
+		//DP l = theorem32(P, n, mu);
+		SVMDataItem l =  alg8(PP, weights, mu, n);
+		n.setX(1);
+		//DP r = theorem32(P, n, mu);
+		SVMDataItem r =  alg8(PP, weights, mu,  n);
 		
-		for (int a = 0; a < result.length; a++) {
-			result[a] = -1;
+		SVMDataItem [] A = rhull_h(P, l ,r, mu);
+		SVMDataItem [] B = rhull_h(P, r, l, mu);
+		
+		Set<SVMDataItem> set = new LinkedHashSet<SVMDataItem>();
+		set.addAll(Arrays.asList(A));
+		set.addAll(Arrays.asList(B));
+
+		SVMDataItem[] Ret = new SVMDataItem[set.size()];
+		Ret = set.toArray(Ret);
+		
+		return Ret;
+	}
+	
+	public static SVMDataItem[] rhull_h(SVMDataItem[] P, SVMDataItem l, SVMDataItem r, double mu){
+		SVMDataItem n = new SVMDataItem(0,0);
+		SVMDataItem h = new SVMDataItem(0,0);
+		
+		n = normal(r, l);
+		//h = theorem32(P, n, mu);
+		h =  alg8(PP, weights, mu,  n);
+		
+		if (h.equals(l) || h.equals(r)){
+			SVMDataItem[] res = new SVMDataItem[2];
+			res[0]= l;
+			res[1]= r;
+			return res;
 		}
 		
+		SVMDataItem nl = new SVMDataItem(0,0);
+		SVMDataItem nr = new SVMDataItem(0,0);
+		nl = normal(h, l);
+		nr = normal(r, h);
+		
+		int m = (int) Math.ceil(1.0/mu);
+		SVMDataItem[] S = new SVMDataItem[m];
+		for (int i = 0; i < m ; i++){
+			S[i] = Z[i];
+		}
+		double sc[] = new double [m];
+		double tmp;
+		
+		for (int i = 0; i < m; i++){
+			sc[i] = nl.getXValue() * S[i].getXValue() 
+			+ nl.getYValue() * S[i].getYValue();
+		}
 
-		for (i = 0; i < result.length; i++) {
-			min  = Integer.MAX_VALUE;
-			for (j = 0; j < X.size(); j++) {
-				temp = X.get(j).x;
-
-				found = false;
-				for (int a = 0; a < result.length && !found; a++) {
-					if (result[a] == j) {
-						found = true;
-					}
-				}
-				if (!found) {
-					if (temp <= min) {
-						min = temp;
-						mini = j;
-					}
+		SVMDataItem[] TMP = new SVMDataItem[P.length];	//too big
+		for (int i = 0, k = 0; i < P.length; i++){
+			tmp = nl.getXValue() * P[i].getXValue() 
+			+ nl.getYValue() * P[i].getYValue();
+			for (int j = 0; j < sc.length; j++){
+				if (tmp >= sc[j]){
+					TMP[k] = P[i];	//index wrong
+					k++;
+					break;
 				}
 			}
-			result[i] = mini;
 		}
-		return result;
+		int c = 0;
+		for (int i = 0; i < TMP.length; i++){
+			if (TMP[i] != null){
+				c++;
+			}
+		}
+		SVMDataItem[] L = new SVMDataItem [c];
+		for (int i = 0; i < TMP.length; i++){
+			if (TMP[i] != null){
+				L[i] = TMP[i];
+			}
+		}
+
+		for (int i = 0; i < m; i++){
+			sc[i] = nr.getXValue() * S[i].getXValue() 
+			+ nr.getYValue() * S[i].getYValue();
+		}
+		TMP = new SVMDataItem[P.length];
+		for (int i = 0, k = 0; i < P.length; i++){
+			tmp = nr.getDotProduct(P[i]);
+			for (int j = 0; j < sc.length; j++){
+				if (tmp >= sc[j]){
+					TMP[k] = P[i];	//index wrong
+					k++;
+					break;
+				}
+			}
+		}
+		c = 0;
+		for (int i = 0; i < TMP.length; i++){
+			if (TMP[i] != null){
+				c++;
+			}
+		}
+		SVMDataItem[] R = new SVMDataItem [c];
+		for (int i = 0; i < TMP.length; i++){
+			if (TMP[i] != null){
+				R[i] = TMP[i];
+			}
+		}
+
+
+		
+		SVMDataItem [] A = rhull_h(L, l ,h, mu);
+		SVMDataItem [] B = rhull_h(R, h, r, mu);
+		
+		Set<SVMDataItem> set = new LinkedHashSet<SVMDataItem>();
+		set.addAll(Arrays.asList(A));
+		set.addAll(Arrays.asList(B));
+
+		SVMDataItem[] Ret = new SVMDataItem[set.size()];
+		Ret = set.toArray(Ret);
+		
+
+		return Ret;
+	}
+	
+	public static SVMDataItem normal(SVMDataItem p1, SVMDataItem p2){
+		double dx, dy;
+		dx = p1.getXValue() - p2.getXValue();
+		dy = p1.getYValue() - p2.getYValue();
+		
+		SVMDataItem n = new SVMDataItem(0,0);
+		n.setX(-dy);
+		n.setY(dx);
+
+		return n;
+	}
+	
+	
+	public static SVMDataItem theorem32(SVMDataItem[] P, SVMDataItem n, double mu){
+		SVMDataItem v = new SVMDataItem(0,0);
+		Z = new SVMDataItem[P.length];
+		double[] s = new double[P.length];	//scaler projection
+		int[] ind = new int[P.length];
+		double max;
+		int maxi;
+		double tmp;
+		int i, j, k;
+
+		for (i = 0; i < P.length; i++){
+			s[i] = P[i].getDotProduct(n);
+		}
+		
+		ind = sorti(s);
+		
+		for (i = 0; i < P.length; i++){
+			Z[i] = P[ind[i]];
+		}
+		
+		int m = (int) Math.ceil(1.0/mu);
+		
+		for (i = 0; i <= (m-1)-1; i++){
+			v.setX(v.getXValue() + mu * Z[i].getXValue());
+		}
+		v.setX(v.getXValue() + (1 - (m-1)*mu)* Z[(m-1)].getXValue());
+		
+		for (i = 0; i <= (m-1)-1; i++){
+			v.setY(v.getYValue() + mu * Z[i].getYValue());
+		}
+		v.setY(v.getYValue() + (1 - (m-1)*mu)* Z[(m-1)].getYValue());
+		
+		//S = 
+		return v;
 	}
 	
 	
 	
-	public static int[] sortmax(ArrayList<Integer> X){
-		int [] result = new int[X.size()];
-		int maxi = 0;
+	
+	public static int[] sorti(double[] s){
+		double max;
+		int maxi;
+		double tmp;
+		int i, j, k;
+		int[] ind = new int[s.length];
+		
+		max = s[0];
+		maxi  = 0;
+		int n = s.length;
+		for (j = 0,k = 0; j < n; j++,k++){
+			max =-1e8;
+			for (i = 0; i < n; i++){
+				if (!Double.isNaN(s[i]) && max < s[i]){
+					max = s[i];
+					maxi = i;
+				}
+			}
+			s[maxi] = Double.NaN;
+			ind[k] = maxi;
+		}
+		
+		return ind;
+	}
+	
+	
+	
+	
+
+	
+	
+	public static SVMDataItem argmax(SVMDataItem[] P, SVMDataItem n, double mu){
+		SVMDataItem[] points = getpoints(P);
+		double r = 0;
 		double max = 0;
-		double temp;
-		int i = 0;
-		int j = 0;
-		boolean found = false;
-		
-		for (int a = 0; a < result.length; a++) {
-			result[a] = -1;
-		}
-		
-
-		for (i = 0; i < result.length; i++) {
-			max  = Integer.MIN_VALUE;
-			for (j = 0; j < X.size(); j++) {
-				temp = X.get(j);
-
-				found = false;
-				for (int a = 0; a < result.length && !found; a++) {
-					if (result[a] == j) {
-						found = true;
-					}
-				}
-				if (!found) {
-					if (temp > max) {
-						max = temp;
-						maxi = j;
-					}
-				}
+		SVMDataItem maxPoint = null;
+		for (int i = 0; i < points.length; i++){
+			r = n.getDotProduct(points[i]);
+			if (max < r){
+				max = r;
+				maxPoint = points[i];
 			}
-			result[i] = maxi;
 		}
-		return result;
+		return maxPoint;
+	}
+	
+	private static SVMDataItem[] getpoints(SVMDataItem[] p) {
+		return p;
 	}
 	
 	
-	public static Point alg7(ArrayList<Point> P, double [] S,
-			double mu, Point n){
+	
+	
+	public static SVMDataItem alg8(ArrayList<SVMDataItem> Pl, double [] S,
+			double mu, SVMDataItem n){
 		
-		Point v = new Point();
+		ArrayList<SVMDataItem> P = new ArrayList<SVMDataItem>(Pl);
+		
+		SVMDataItem v = new SVMDataItem(0,0);
 		double [] A = new double[P.size()];
 		double [] dots = new double[P.size()];
+		int [] sortedInd = new int[P.size()];
 		ArrayList<Double> sc = new ArrayList<Double>();
+		
+		Z = new SVMDataItem[P.size()];
+		int ind[] = new int[P.size()]; 	//larger than need
+		
 		
 		double s = 0.0;
 		int i = 0;
@@ -340,23 +355,35 @@ public class RCH {
 		}
 		
 		for (i = 0; i < P.size(); i++){
-			//dots[i] = n.x * P.get(i).x + n.y * P.get(i).y;
-			sc.add(i, (double) (n.x * P.get(i).x + n.y * P.get(i).y));
+			dots[i] = n.getDotProduct(P.get(i));
+			//sc.add(i, (double) (n.x * P.get(i).x + n.y * P.get(i).y));
 		}
 		
+		//Collections.sort(sc);
+		sortedInd = sorti(dots);	
+		for (i = 0; i < P.size(); i++){
+			Z[i] = P.get(sortedInd[i]);
+		}
 		
 		i = 0;
+		int k = 0;
 		while ((1 - s) >0.000001 ){
-			if (A[i] == 0){
-				i = extractMax(sc);
+			for (; k < sortedInd.length; k++){
+				if (A[sortedInd[k]] == 0){
+					i = sortedInd[k];
+					break;
+				}
 			}
-			A[i] = Math.min(S[i] * mu, 1 - s);
+			A[i] = Math.min(S[i] * mu, 1 - s); //if s[i] = 0?? TEST
 			s = s + A[i];
 		}
 		
-		for (i = 0; i < P.size(); i++){
-			v.x += (int) (A[i] * P.get(i).x);
-			v.y += (int) (A[i] * P.get(i).y);
+		for (i = 0; i <= k; i++){
+			v.setX(v.getXValue() +
+				(A[sortedInd[i]] * P.get(sortedInd[i]).getXValue()));
+			//System.out.println(A[sortedInd[i]] * P.get(sortedInd[i]).y);
+			v.setY(v.getYValue() + 
+				(A[sortedInd[i]] * P.get(sortedInd[i]).getYValue()));
 		}
 		return v;
 	}
@@ -365,73 +392,35 @@ public class RCH {
 	public static int extractMax(ArrayList<Double> list){
 		
 		int maxi = 0;
-		Double max = list.get(maxi);
+		Double max = null; // = list.get(maxi);
 		
-		for (int i = 1; i < list.size(); i++){
-			if (max < list.get(i)){
-				max = list.get(i);
-				maxi = i;
-			}
+		for (int i = 0; i < list.size(); i++){
+			System.out.println(max + " " +(max < list.get(i)) + " " + list.get(i));
+			
+				if (max == null && Double.isNaN(list.get(i))){
+					max = list.get(i);
+				}
+				
+				if (max < list.get(i)){
+					max = list.get(i);
+					maxi = i;
+				}
+			
 		}
 		
 		//list.remove(maxi);
-		list.set(maxi, Double.MIN_VALUE);
+		list.set(maxi, Double.NaN);
 		return maxi;
 	}
+
+
+	
+	
+	
+	
 	
 	
 	
 	
 	
 }
-
-
-
-
-
-
-
-
-/*
- * 
- * 
-	public static int[] sortmax(ArrayList<Point> X){
-		int [] result = new int[X.size()];
-		int maxi = 0;
-		double max = 0;
-		double temp;
-		int i = 0;
-		int j = 0;
-		boolean found = false;
-		
-		for (int a = 0; a < result.length; a++) {
-			result[a] = -1;
-		}
-		
-
-		for (i = 0; i < result.length; i++) {
-			max  = 0;
-			for (j = 0; j < X.size(); j++) {
-				temp = X.get(j).x;
-
-				found = false;
-				for (int a = 0; a < result.length && !found; a++) {
-					if (result[a] == j) {
-						found = true;
-					}
-				}
-				if (!found) {
-					if (temp > max) {
-						max = temp;
-						maxi = j;
-					}
-				}
-			}
-			result[i] = maxi;
-		}
-		return result;
-	}
-	
- * 
- * 
-*/
