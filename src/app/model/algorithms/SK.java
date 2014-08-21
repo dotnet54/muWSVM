@@ -16,6 +16,9 @@ public class SK {
 	private static SVMDataItem finalW;
 	private static double finalB;
 
+	private static double[] pweights;	//TODO change from static
+	private static double[] nweights;
+	
 	public static void main(String[] args){
 		
 		ArrayList<SVMDataItem> Ppos = new ArrayList<SVMDataItem>();
@@ -80,27 +83,38 @@ public class SK {
 		
 		SVMDataItem[] Ppos;
 		SVMDataItem[] Pneg;
-		double mu = model.mu1;
+		double mu = model.getMu1();
 		
-		Ppos = new SVMDataItem[model.dataset1.size()];
-		Pneg = new SVMDataItem[model.dataset2.size()];
+		Ppos = new SVMDataItem[model.getSeries1().size()];
+		Pneg = new SVMDataItem[model.getSeries2().size()];
+		pweights = new double [Ppos.length];
+		nweights = new double [Pneg.length];
+		
+		
+		
+		if (Ppos.length <= 0 || Pneg.length <= 0){
+			return ;
+		}
+		
 		
 		for (int i = 0; i < Ppos.length; i++){
-			Ppos[i] = new SVMDataItem(model.dataset1.get(i).getXValue(),
-					model.dataset1.get(i).getYValue());
+			Ppos[i] = new SVMDataItem(model.getSeries1().get(i).getXValue(),
+					model.getSeries1().get(i).getYValue());
 			Ppos[i].setDataClass(1);
+			pweights[i] = Ppos[i].getWeight();
 		}
 		
 		for (int i = 0; i < Pneg.length; i++){
-			Pneg[i] = new SVMDataItem(model.dataset2.get(i).getXValue(),
-					model.dataset2.get(i).getYValue());
+			Pneg[i] = new SVMDataItem(model.getSeries2().get(i).getXValue(),
+					model.getSeries2().get(i).getYValue());
 			Pneg[i].setDataClass(-1);
+			nweights[i] = Pneg[i].getWeight();
 		}
 		
 		sk(Ppos, Pneg, mu);
 		
-		model.w = finalW;
-		model.b = finalB;
+		model.setW(finalW);
+		model.setB(finalB);
 	}
 	
 	public static Line2D getLine(SVMDataItem w, double b){
@@ -125,8 +139,11 @@ public class SK {
 		int MAXIT = 500;
 		int it = 0;
 		
-		p = RCH.theorem32(Ppos, new SVMDataItem(-1, 0), mu);
-		n = RCH.theorem32(Pneg, new SVMDataItem(1, 0), mu);
+		
+//		p = RCH.theorem32(Ppos, new SVMDataItem(-1, 0), mu);
+//		n = RCH.theorem32(Pneg, new SVMDataItem(1, 0), mu);
+		p = RCH.alg8(Ppos,pweights , mu,new SVMDataItem(-1, 0));
+		n = RCH.alg8(Pneg,nweights , mu,new SVMDataItem(1, 0));
 		
 		while(it < MAXIT){
 			w = new SVMDataItem(p.getXValue() - n.getXValue(),
@@ -134,10 +151,12 @@ public class SK {
 			
 			w.setX(w.getXValue() -1);
 			w.setY(w.getYValue() -1);
-			SVMDataItem vp = RCH.theorem32(Ppos, w, mu);
+//			SVMDataItem vp = RCH.theorem32(Ppos, w, mu);
+			SVMDataItem vp = RCH.alg8(Ppos,pweights , mu, w);
 			w.setX(w.getXValue() -1);
 			w.setY(w.getYValue() -1);
-			SVMDataItem vn = RCH.theorem32(Pneg, w, mu);
+//			SVMDataItem vn = RCH.theorem32(Pneg, w, mu);
+			SVMDataItem vn = RCH.alg8(Pneg,nweights , mu, w);
 			
 			SVMDataItem dvp = new SVMDataItem(vp.getXValue() - n.getXValue(), 
 					vp.getYValue() - n.getYValue());

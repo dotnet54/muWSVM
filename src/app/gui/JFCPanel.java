@@ -13,6 +13,7 @@ import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JMenuItem;
@@ -83,10 +84,10 @@ public class JFCPanel extends ChartPanel implements ChartMouseListener{
 //		popup.add(it);
 //		popup.add(itr);
 //		popup.add(itw);
-		
+		//zoomInBoth(1, 1);
 		setPopupMenu(popup);
 		setMouseWheelEnabled(true);
-		
+		setZoomTriggerDistance(20);
 		addChartMouseListener(this);
 		
 		//popup menu
@@ -135,7 +136,7 @@ public class JFCPanel extends ChartPanel implements ChartMouseListener{
 	            //System.out.println("X:" + d.getX(s, i) + ", Y:" + d.getY(s, i));
 	            
 	            XYSeriesCollection dd = (XYSeriesCollection) e.getDataset();
-	            XYSeries ss =  dd.getSeries(0);
+	            XYSeries ss =  dd.getSeries(s);
 	            
 	            
 	            XYDataItem item =  (XYDataItem) ss.getItems().get(i);
@@ -233,7 +234,11 @@ public class JFCPanel extends ChartPanel implements ChartMouseListener{
 			}
 
 		}
-
+		//TODO 
+        plot.getRangeAxis().setAutoRange(false);
+        plot.getDomainAxis().setAutoRange(false);
+       // plot.getRangeAxis().setRange(0, 10);
+        //plot.getDomainAxis().setRange(0, 20);
 	}
 	
 	@Override
@@ -377,7 +382,7 @@ public class JFCPanel extends ChartPanel implements ChartMouseListener{
 		XYSeriesCollection d = (XYSeriesCollection) getChart().getXYPlot().getDataset();
 		XYSeries s =  d.getSeries(series);
 		
-		XYDataItem i = new XYDataItem(x, y);
+		SVMDataItem i = new SVMDataItem(x, y);
 		s.add(i);
 	}
 	
@@ -410,115 +415,112 @@ public class JFCPanel extends ChartPanel implements ChartMouseListener{
         if (hyperPlane != null){
         	p.removeAnnotation(hyperPlane);
         }
-        Line2D line = SK.getLine(model.w, model.b);
+        Line2D line = SK.getLine(model.getW(), model.getB());
         hyperPlane = new XYLineAnnotation(line.getX1(), line.getY2(),
         		line.getX2(), line.getY2());
     	p.addAnnotation(hyperPlane);
     	
-    	System.out.format("SVM found w:%s b:%s ", model.w, model.b );
+    	System.out.format("SVM found w:%s b:%s ", model.getW(), model.getB() );
     }
     
 	public void findCH(){
 		System.out.println("finding CH...");
-		
-		XYSeriesCollection sc = (XYSeriesCollection) getChart().getXYPlot().getDataset();
+
+		Path2D path;
+
+		XYPlot p = getChart().getXYPlot();
+		XYSeriesCollection sc = (XYSeriesCollection) getChart().getXYPlot()
+				.getDataset();
 		XYSeries s1 = sc.getSeries(0);
 		XYSeries s2 = sc.getSeries(1);
 		model.setSeries1(s1);
 		model.setSeries2(s2);
 		model.compute();
-		
-		
-		  final Shape[] shapes = new Shape[4];
-		  
-		  
-	        int[] xPoints = new int[model.ch1.size()];
-	        int[] yPoints =  new int[model.ch1.size()];
-	        
-	        int[] xPoints2 = new int[model.ch1.size()];
-	        int[] yPoints2 =  new int[model.ch1.size()];
-	        
-	        double[] xPoints3 = new double[model.ch1.size()];
-	        double[] yPoints3 =  new double[model.ch1.size()];
-	        
-	        for (int i = 0; i < model.ch1.size(); i++){
-	        	xPoints[i] = (int) model.ch1.get(i).getXValue();
-	        	yPoints[i] = (int) model.ch1.get(i).getYValue();
-	        	xPoints2[i] = toPanelX(model.ch1.get(i).getXValue());
-	        	yPoints2[i] = toPanelY(model.ch1.get(i).getYValue());
-	        	xPoints3[i] = model.ch1.get(i).getXValue();
-	        	yPoints3[i] = model.ch1.get(i).getYValue();
-	        }
-	        shapes[0] = new Polygon(xPoints, yPoints, model.ch1.size());
-	        shapes[1] = new Polygon(xPoints2, yPoints2, model.ch1.size());
-	       
-	        
-	        Path2D path = new Path2D.Double();
 
-	        path.moveTo(xPoints3[0], yPoints3[0]);
-	        for(int i = 1; i < xPoints3.length; ++i) {
-	           path.lineTo(xPoints3[i], yPoints3[i]);
-	        }
-	        path.closePath();
-	        shapes[2] = path;
-	        
-	        
-	        XYPlot p = getChart().getXYPlot();
-	        if (anoHull1 != null){
-	        	p.removeAnnotation(anoHull1);
-	        }
-	        
-	        anoHull1 = new XYPolyAnnotation(shapes[2]);
-	        p.addAnnotation(anoHull1);
-	        
-	        Rectangle2D bounds = shapes[1].getBounds2D();
-	        
-	        anoHull1.xa = bounds.getMinX();
-	        anoHull1.xb = bounds.getMaxX();
-	        anoHull1.ya = bounds.getMinY();
-	        anoHull1.yb = bounds.getMaxY();
-	        
-	        
-    
-//	        this.getGraphics().drawPolygon(new 
-//	        		Polygon(xPoints2, yPoints2, model.ch1.size()));
-    
-		//DP[] res = RHull.rhull(points, 1.0);
+		final Shape[] shapes = new Shape[4];
 		
-	        
-	        xPoints3 = new double[model.ch2.size()];
-	        yPoints3 =  new double[model.ch2.size()];
-	        
-	        for (int i = 0; i < model.ch2.size(); i++){
-	        	xPoints3[i] = model.ch2.get(i).getXValue();
-	        	yPoints3[i] = model.ch2.get(i).getYValue();
-	        }
-	        path = new Path2D.Double();
+		p.clearAnnotations();
 
-	        path.moveTo(xPoints3[0], yPoints3[0]);
-	        for(int i = 1; i < xPoints3.length; ++i) {
-	           path.lineTo(xPoints3[i], yPoints3[i]);
-	        }
-	        path.closePath();
-	        shapes[3] = path;
-	        
-	        if (anoHull2 != null){
-	        	p.removeAnnotation(anoHull2);
-	        }
-	        
-	        anoHull2 = new XYPolyAnnotation(shapes[3]);
-	        p.addAnnotation(anoHull2);
-	        
-	        
-	        
-	        
+		ArrayList<SVMDataItem> ch1 = model.getCH1();
+
+		if (!ch1.isEmpty()) {
+			int[] xPoints = new int[ch1.size()];
+			int[] yPoints = new int[ch1.size()];
+
+			int[] xPoints2 = new int[ch1.size()];
+			int[] yPoints2 = new int[ch1.size()];
+
+			double[] xPoints3 = new double[ch1.size()];
+			double[] yPoints3 = new double[ch1.size()];
+
+			for (int i = 0; i < ch1.size(); i++) {
+				xPoints[i] = (int) ch1.get(i).getXValue();
+				yPoints[i] = (int) ch1.get(i).getYValue();
+				xPoints2[i] = toPanelX(ch1.get(i).getXValue());
+				yPoints2[i] = toPanelY(ch1.get(i).getYValue());
+				xPoints3[i] = ch1.get(i).getXValue();
+				yPoints3[i] = ch1.get(i).getYValue();
+			}
+			shapes[0] = new Polygon(xPoints, yPoints, ch1.size());
+			shapes[1] = new Polygon(xPoints2, yPoints2, ch1.size());
+
+			path = new Path2D.Double();
+
+			path.moveTo(xPoints3[0], yPoints3[0]);
+			for (int i = 1; i < xPoints3.length; ++i) {
+				path.lineTo(xPoints3[i], yPoints3[i]);
+			}
+			path.closePath();
+			shapes[2] = path;
+
+			if (anoHull1 != null) {
+				p.removeAnnotation(anoHull1);
+			}
+
+			anoHull1 = new XYPolyAnnotation(shapes[2]);
+			p.addAnnotation(anoHull1);
+		}
+
+		ArrayList<SVMDataItem> ch2 = model.getCH2();
+		if (!ch2.isEmpty()) {
+			double[] xPoints3 = new double[ch1.size()];
+			double[] yPoints3 = new double[ch1.size()];
+
+			for (int i = 0; i < ch2.size(); i++) {
+				xPoints3[i] = ch2.get(i).getXValue();
+				yPoints3[i] = ch2.get(i).getYValue();
+			}
+			path = new Path2D.Double();
+
+			path.moveTo(xPoints3[0], yPoints3[0]);
+			for (int i = 1; i < xPoints3.length; ++i) {
+				path.lineTo(xPoints3[i], yPoints3[i]);
+			}
+			path.closePath();
+			shapes[3] = path;
+
+			if (anoHull2 != null) {
+				p.removeAnnotation(anoHull2);
+			}
+
+			anoHull2 = new XYPolyAnnotation(shapes[3]);
+			p.addAnnotation(anoHull2);
+
+		}
 	        
 		System.out.println("CH found");
 	}
 	
 	public void findRCH(){
 		System.out.println("finding RCH...");
+
+		final float dash1[] = { 2.0f, 2.0f };
+		final BasicStroke dashed = new BasicStroke(1.0f, BasicStroke.CAP_BUTT,
+				BasicStroke.JOIN_MITER, 10.0f, dash1, 0.0f);
+
+		Path2D path;
 		
+		XYPlot p = getChart().getXYPlot();
 		XYSeriesCollection sc = (XYSeriesCollection) getChart().getXYPlot().getDataset();
 		XYSeries s1 = sc.getSeries(0);
 		XYSeries s2 = sc.getSeries(1);
@@ -528,73 +530,74 @@ public class JFCPanel extends ChartPanel implements ChartMouseListener{
 		double m2 = model.getMu2();
 		model.setMu(m1, m2);
 		model.compute();
-		
-		
-		  final Shape[] shapes = new Shape[3];
-		  
-		  
-	        double[] xPoints = new double[model.rch1.size()];
-	        double[] yPoints =  new double[model.rch1.size()];
-	        
-	        for (int i = 0; i < model.rch1.size(); i++){
-	        	xPoints[i] =  model.rch1.get(i).getXValue();
-	        	yPoints[i] =  model.rch1.get(i).getYValue();
-	        }
-	        Path2D path = new Path2D.Double();
 
-	        path.moveTo(xPoints[0], yPoints[0]);
-	        for(int i = 1; i < xPoints.length; ++i) {
-	           path.lineTo(xPoints[i], yPoints[i]);
-	        }
-	        path.closePath();
-	        shapes[0] = path;
-	        
-	        
-	        XYPlot p = getChart().getXYPlot();
-	        if (anoRHull1 != null){
-	        	p.removeAnnotation(anoRHull1);
-	        }
-	        final float dash1[] = {2.0f, 2.0f};
-	        final BasicStroke dashed =
-	            new BasicStroke(1.0f,
-	                            BasicStroke.CAP_BUTT,
-	                            BasicStroke.JOIN_MITER,
-	                            10.0f, dash1, 0.0f);
-	        anoRHull1 = new XYShapeAnnotation(shapes[0],
-	        		dashed, Color.blue);
-	        //anoRHull.
-	        p.addAnnotation(anoRHull1);
-    
-    
-		//DP[] res = RHull.rhull(points, 1.0);
-		
-	        
-	        double[] xPoints3 = new double[model.rch2.size()];
-	        double[] yPoints3 =  new double[model.rch2.size()];
-	        
-	        for (int i = 0; i < model.rch2.size(); i++){
-	        	xPoints3[i] = model.rch2.get(i).getXValue();
-	        	yPoints3[i] = model.rch2.get(i).getYValue();
-	        }
-	        path = new Path2D.Double();
+		final Shape[] shapes = new Shape[3];
+		p.clearAnnotations();
 
-	        path.moveTo(xPoints3[0], yPoints3[0]);
-	        for(int i = 1; i < xPoints3.length; ++i) {
-	           path.lineTo(xPoints3[i], yPoints3[i]);
-	        }
-	        path.closePath();
-	        shapes[1] = path;
-	        
-	        if (anoRHull2 != null){
-	        	p.removeAnnotation(anoRHull2);
-	        }
+		ArrayList<SVMDataItem> rch1 = model.getRCH1();
 
-	        anoRHull2 = new XYShapeAnnotation(shapes[1],
-	        		dashed, Color.blue);
-	        //anoRHull.
-	        p.addAnnotation(anoRHull2);
-	        
-	        
+		if (!rch1.isEmpty()) {
+
+			double[] xPoints = new double[rch1.size()];
+			double[] yPoints = new double[rch1.size()];
+
+			for (int i = 0; i < rch1.size(); i++) {
+				xPoints[i] = rch1.get(i).getXValue();
+				yPoints[i] = rch1.get(i).getYValue();
+			}
+			path = new Path2D.Double();
+
+			path.moveTo(xPoints[0], yPoints[0]);
+			for (int i = 1; i < xPoints.length; ++i) {
+				path.lineTo(xPoints[i], yPoints[i]);
+			}
+			path.closePath();
+			shapes[0] = path;
+
+			
+			if (anoRHull1 != null) {
+				p.removeAnnotation(anoRHull1);
+			}
+
+			anoRHull1 = new XYShapeAnnotation(shapes[0], dashed, Color.blue);
+			p.addAnnotation(anoRHull1);
+
+			XYSeries s3 = sc.getSeries(2);
+			s3.clear();
+			for (int i = 0; i < rch1.size(); i++){
+				s3.add(rch1.get(i));
+			}
+			
+			
+		}
+
+		ArrayList<SVMDataItem> rch2 = model.getRCH2();
+
+		if (!rch2.isEmpty()) {
+			double[] xPoints3 = new double[rch2.size()];
+			double[] yPoints3 = new double[rch2.size()];
+
+			for (int i = 0; i < rch2.size(); i++) {
+				xPoints3[i] = rch2.get(i).getXValue();
+				yPoints3[i] = rch2.get(i).getYValue();
+			}
+			path = new Path2D.Double();
+
+			path.moveTo(xPoints3[0], yPoints3[0]);
+			for (int i = 1; i < xPoints3.length; ++i) {
+				path.lineTo(xPoints3[i], yPoints3[i]);
+			}
+			path.closePath();
+			shapes[1] = path;
+
+			if (anoRHull2 != null) {
+				p.removeAnnotation(anoRHull2);
+			}
+
+			anoRHull2 = new XYShapeAnnotation(shapes[1], dashed, Color.blue);
+			p.addAnnotation(anoRHull2);
+		}
+
 		System.out.println("RCH found");
 	}
 }

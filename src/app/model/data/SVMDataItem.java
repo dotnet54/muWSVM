@@ -14,12 +14,23 @@ public class SVMDataItem extends XYDataItem{
 	private int DataClass = 1;
 	private double weight = 1;//defaults
 	
+	public static double PRECISION = 0.001;
 	
 	public SVMDataItem(double x, double y) {
 		super(x, y);
 		setWeight(1);
 	}
 	
+	public SVMDataItem(double x, double y, double weight) {
+		super(x, y);
+		setWeight(weight);
+	}
+	
+	public SVMDataItem(double x, double y, double weight, int dclass) {
+		super(x, y);
+		setWeight(weight);
+		setDataClass(dclass);
+	}
 	
 	public Double getX(){
 		return super.getXValue();
@@ -35,8 +46,10 @@ public class SVMDataItem extends XYDataItem{
 	}
 	
 	public double getDotProduct(SVMDataItem p2){
-		return getXValue() * p2.getXValue() + 
-			getYValue() * p2.getYValue();
+		double dot1 = getXValue() * p2.getXValue(); //TODO double op
+		double dot2 = getYValue() * p2.getYValue(); //TODO double op
+		double dot = dot1+ dot2; //TODO double op
+		return  dot;
 	}
 
 	public double getWeight(){
@@ -51,8 +64,15 @@ public class SVMDataItem extends XYDataItem{
 		return DataClass;
 	}
 	
-	public void setDataClass(int newClass){
-		DataClass = newClass;
+	public void setDataClass(int dClass){
+		
+		//TODO two class
+		if (dClass < 0){
+			this.DataClass = -1;
+		}else{
+			this.DataClass = +1;
+		}
+		//DataClass = dClass;
 	}
 	
 	public Point toPoint(){
@@ -65,17 +85,89 @@ public class SVMDataItem extends XYDataItem{
 	
 	public boolean equals(Object obj){
 		SVMDataItem d= (SVMDataItem) obj;
-		if (this.getXValue() == d.getXValue() 
-				&& this.getYValue() == d.getYValue()){
+		if (this.getXValue() == d.getXValue()  //TODO double op
+				&& this.getYValue() == d.getYValue()){ //TODO double op
 			return true;
 		}else{
 			return false;
 		}
 	}
 	
+	public String toFormatedString(int dp){
+		String sdp = dp + "";
+		
+		
+		String str1 = String.format("%." + sdp +"f", getXValue());
+		String str2 = String.format("%." + sdp +"f", getYValue());
+		String str3 = String.format("%." + sdp +"f", getWeight());
+		return "[" + str1+ "," 
+		+ str2 + "]"+ ": " + str3 ;//  : " + getDataClass() ;
+	}
+	
 	public String toString(){
 		return "[" + getXValue() + "," 
-		+ getYValue() + "]";//  : " + getDataClass() + ": " + getWeight();
+		+ getYValue() + "]"+ ": " + getWeight();//  : " + getDataClass() ;
 	}
 //	toString
+	
+	
+	public static boolean isLessThan(double d1, double d2){
+		if (d1 < d2){
+			return true;
+		}else{
+			return false;
+		}
+	}
+	
+	public static boolean isLessThanOrEq(double d1, double d2){
+		if (d1 <= d2){
+			return true;
+		}else{
+			return false;
+		}
+	}
+	
+	public static boolean isGreaterThan(double d1, double d2){
+		if (d1 > d2){
+			return true;
+		}else{
+			return false;
+		}
+	}
+	
+	public static boolean isLessThanEq(double d1, double d2){
+		if (d1 >= d2){
+			return true;
+		}else{
+			return false;
+		}
+	}
+	
+	public static boolean isEqual(double d1, double d2){
+		if (d1 == d2){
+			return true;
+		}else{
+			return false;
+		}
+	}
+	
+	public static double dAdd(double d1, double d2){
+		double r = d1+d2;
+		return r;
+	}
+	
+	public static double dMinus(double d1, double d2){
+		double r = d1-d2;
+		return r;
+	}
+	
+	public static double dMult(double d1, double d2){
+		double r = d1*d2;
+		return r;
+	}
+	
+	
+	
+	
+	
 }

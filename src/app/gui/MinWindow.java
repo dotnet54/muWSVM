@@ -2,7 +2,11 @@ package app.gui;
 
 import java.awt.BasicStroke;
 import java.awt.EventQueue;
+import java.awt.Paint;
+import java.awt.PaintContext;
 import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.Polygon;
 import java.awt.Stroke;
@@ -34,15 +38,25 @@ import javax.swing.JButton;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.JTabbedPane;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.annotations.XYShapeAnnotation;
+import org.jfree.chart.labels.ItemLabelAnchor;
+import org.jfree.chart.labels.ItemLabelPosition;
+import org.jfree.chart.labels.StandardXYToolTipGenerator;
+import org.jfree.chart.labels.XYItemLabelGenerator;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.data.xy.XYDataItem;
+import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import org.jfree.ui.TextAnchor;
+import org.jfree.util.ShapeUtilities;
 
 import app.model.algorithms.RCH;
 import app.model.data.SVMDataItem;
@@ -55,16 +69,33 @@ import java.beans.PropertyChangeEvent;
 import javax.swing.JPopupMenu;
 import java.awt.Component;
 import java.awt.event.MouseAdapter;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
+import java.awt.image.ColorModel;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.FlowLayout;
 import java.awt.BorderLayout;
+import java.awt.Font;
+import javax.swing.UIManager;
+import javax.swing.BoxLayout;
+import java.awt.GridLayout;
+import java.awt.Insets;
+import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
+import javax.swing.LayoutStyle.ComponentPlacement;
 
 public class MinWindow 
 		implements ActionListener, MouseListener, ChangeListener{
 
 	//Model globals
 	private static SVMModel model = null;
+	XYSeriesCollection dataset = new XYSeriesCollection();
+	XYSeries series1 = new XYSeries("Positive Class");
+	XYSeries series2 = new XYSeries("Negative Class");	
+	XYSeries series3 = new XYSeries("Positive WRCH");
+	
+
 	
 	//GUI globals
 	private JFrame frame;
@@ -72,13 +103,21 @@ public class MinWindow
 	private JTextField textField;
 	private JTextField textField_1;
 	private JButton btnClear;
-	JLabel lblNewLabel_1 = new JLabel("New label");
-	JLabel lblNewLabel_2 = new JLabel("New label");
+	JLabel lblNewLabel_1 = new JLabel("1");
+	JLabel lblNewLabel_2 = new JLabel("1");
+	
+	
+
 	
 	/**
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
+		try {
+			UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
+		} catch (Throwable e) {
+			e.printStackTrace();
+		}
 		System.out.println("start main");
 		
 		SwingUtilities.invokeLater(new Runnable() {
@@ -103,45 +142,53 @@ public class MinWindow
 		
 		model = new SVMModel();
 		
+		initializeData();
+		
 		//init GUI
 		initialize();
 		btnClear.addActionListener(this);
 	}
 	
+	private void initializeData(){
+		
+		series1.add(new SVMDataItem(1, 1));
+		series1.add(new SVMDataItem(2, 4));
+		series1.add(new SVMDataItem(7.5, 7.5));
+		series1.add(new SVMDataItem(8, 4, 2));
+
+		series2.add(new SVMDataItem(1.0, 5.0));
+		series2.add(new SVMDataItem(3.0, 5.0));
+		series2.add(new SVMDataItem(5.0, 5.0));
+		series2.add(new SVMDataItem(4.0, 8.0));
+		
+		model.setSeries1(series1);
+		model.setSeries2(series2);
+	}
+	
+    private static class LabelGenerator implements XYItemLabelGenerator {
+
+        @Override
+        public String generateLabel(XYDataset dataset, int series, int item) {
+        	XYSeriesCollection dd = (XYSeriesCollection) dataset;
+            XYSeries ss =  dd.getSeries(series);
+	    	XYDataItem ditem =  (XYDataItem) ss.getItems().get(item);
+	    	if (ditem instanceof SVMDataItem){
+	    		SVMDataItem svmItem = (SVMDataItem) ditem;
+	    		//return svmItem.toFormatedString(2);
+	    		return svmItem.getWeight() + "";
+	    	}
+            return "";
+        }
+
+
+    }
 	
 	private JFCPanel createChartPanel(){
-		
-		
-		model.compute();
-		
-		
-		XYSeries series1 = new XYSeries("Positive Class");
-		series1.add(1.0, 1.0);
-		series1.add(2.0, 4.0);
-//		series1.add(3.0, 3.0);
-//		series1.add(3.0, 3.0);
-//		series1.add(5.0, 5.0);
-//		series1.add(6.0, 7.0);
-//		series1.add(1.0, 7.0);
-//		series1.add(4.0, 2.0);
-		
-		series1.add(new SVMDataItem(7.5, 7.5));
-		series1.add(new SVMDataItem(8, 4));
-		XYSeries series2 = new XYSeries("Negative Class");
-		series2.add(1.0, 5.0);
-		series2.add(2.0, 7.0);
-		series2.add(3.0, 6.0);
-		series2.add(4.0, 8.0);
-//		series2.add(5.0, 4.0);
-//		series2.add(6.0, 4.0);
-//		series2.add(7.0, 2.0);
-//		series2.add(8.0, 1.0);
-//		series2.add(1.0, 5.0);
 
-		XYSeriesCollection dataset = new XYSeriesCollection();
-		
 		dataset.addSeries(series1);
 		dataset.addSeries(series2);
+		dataset.addSeries(series3);
+		
 
 		JFreeChart chart = ChartFactory.createScatterPlot
 		("XY Scatter Plot", "X", "Y", dataset);
@@ -149,7 +196,22 @@ public class MinWindow
 		XYPlot plot = chart.getXYPlot();
         plot.setDomainPannable(true);
         plot.setRangePannable(true);
-        XYLineAndShapeRenderer rr = (XYLineAndShapeRenderer) plot.getRenderer();
+        plot.getRangeAxis().setAutoRange(false);
+        plot.getDomainAxis().setAutoRange(false);
+        plot.getRangeAxis().setRange(0, 10);
+        plot.getDomainAxis().setRange(0, 20);
+        XYLineAndShapeRenderer renderer = (XYLineAndShapeRenderer) plot.getRenderer();
+        renderer.setBaseItemLabelGenerator(new LabelGenerator());
+        renderer.setBaseItemLabelPaint(Color.black);
+        renderer.setBasePositiveItemLabelPosition(
+            new ItemLabelPosition(ItemLabelAnchor.OUTSIDE1, TextAnchor.BOTTOM_LEFT));
+        renderer.setBaseItemLabelFont(
+            renderer.getBaseItemLabelFont().deriveFont(8f));
+        renderer.setBaseItemLabelsVisible(true);
+        renderer.setBaseToolTipGenerator(new StandardXYToolTipGenerator());
+        
+        renderer.setSeriesShape(2, ShapeUtilities.createDiagonalCross(1, 1));
+        renderer.setSeriesPaint(2, Color.RED.brighter());
         return new JFCPanel(chart, model);
 	}
 
@@ -168,12 +230,9 @@ public class MinWindow
 	    labelTable.put(new Integer(75), new JLabel("0.75"));  
 	    labelTable.put(new Integer(50), new JLabel("0.50"));  
 	    labelTable.put(new Integer(25), new JLabel("0.25"));  
-	    labelTable.put(new Integer(0), new JLabel("0.0"));  
-		frame.getContentPane().setLayout(null);
+	    labelTable.put(new Integer(0), new JLabel("0.0"));
 		
 		JPanel pContainer1 = new JPanel();
-		pContainer1.setBounds(10, 130, 555, 326);
-		frame.getContentPane().add(pContainer1);
         
 
         pContainer1.setLayout(new BorderLayout(0, 0));
@@ -190,58 +249,17 @@ public class MinWindow
 		JPanel pContainer2 = new JPanel();
 		FlowLayout flowLayout = (FlowLayout) pContainer2.getLayout();
 		flowLayout.setAlignment(FlowLayout.LEFT);
-		pContainer2.setBounds(0, 0, 687, 119);
-		frame.getContentPane().add(pContainer2);
 		
 		JPanel pClass1 = new JPanel();
 		pContainer2.add(pClass1);
 		
-		JRadioButton rdbtnClass = new JRadioButton("Class 1");
-		pClass1.add(rdbtnClass);
-		
-		JLabel label = new JLabel("Select Property");
-		pClass1.add(label);
-		
-		JComboBox comboBox = new JComboBox();
-		pClass1.add(comboBox);
-		comboBox.setModel(new DefaultComboBoxModel(new String[] {"mu"}));
-		
 		JSlider slider = new JSlider();
-		pClass1.add(slider);
+		slider.setValue(73);
+		slider.setFont(new Font("Tahoma", Font.PLAIN, 8));
 		slider.setMajorTickSpacing(25);
 		slider.setPaintTicks(true);
 		slider.setLabelTable( labelTable );  
 		slider.setPaintLabels(true);
-		
-		JLabel lblValue = new JLabel("Value");
-		pClass1.add(lblValue);
-		
-		textField = new JTextField();
-		pClass1.add(textField);
-		textField.addPropertyChangeListener(new PropertyChangeListener() {
-			public void propertyChange(PropertyChangeEvent arg0) {
-				System.out.println("propertyChange");
-			}
-		});
-		textField.addInputMethodListener(new InputMethodListener() {
-			public void caretPositionChanged(InputMethodEvent arg0) {
-				System.out.println("inputMethodTextChanged");
-			}
-			public void inputMethodTextChanged(InputMethodEvent arg0) {
-				System.out.println("inputMethodTextChanged");
-			}
-		});
-		textField.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				JSlider j = (JSlider) arg0.getSource();
-				model.mu1 = (double)j.getValue()/100;
-				System.out.println("actionPerformed " + model.mu1 + arg0.getActionCommand());
-				//panel.setMu(mu1,mu2);
-			}
-		});
-		textField.setText("0.5");
-		textField.setColumns(10);
-		pClass1.add(lblNewLabel_1);
 		slider.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent arg0) {
 				JSlider j = (JSlider) arg0.getSource();
@@ -263,28 +281,120 @@ public class MinWindow
 
 		});
 		
+		JLabel lblValue = new JLabel("mu");
+		
+		textField = new JTextField();
+		textField.addPropertyChangeListener(new PropertyChangeListener() {
+			public void propertyChange(PropertyChangeEvent arg0) {
+				System.out.println("propertyChange");
+			}
+		});
+		textField.addInputMethodListener(new InputMethodListener() {
+			public void caretPositionChanged(InputMethodEvent arg0) {
+				System.out.println("inputMethodTextChanged");
+			}
+			public void inputMethodTextChanged(InputMethodEvent arg0) {
+				System.out.println("inputMethodTextChanged");
+			}
+		});
+		textField.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				Object src = arg0.getSource();
+				if (src instanceof JSlider){
+					JSlider j = (JSlider) src;
+					model.setMu1((double)j.getValue()/100) ;
+					System.out.println("actionPerformed " + model.getMu1() + arg0.getActionCommand());
+				}
+			}
+		});
+		
+		
+		
+		textField.getDocument().addDocumentListener(new DocumentListener() {
+			  	  public void changedUpdate(DocumentEvent e) {
+				   // warn();
+				  }
+				  public void removeUpdate(DocumentEvent e) {
+				    warn();
+				  }
+				  public void insertUpdate(DocumentEvent e) {
+				    warn();
+				  }
+
+				  public void warn() {
+					System.out.println(textField.getText());  
+//				     if (Integer.parseInt(textField.getText())<=0){
+//				       JOptionPane.showMessageDialog(null,
+//				          "Error: Please enter number bigger than 0", "Error Massage",
+//				          JOptionPane.ERROR_MESSAGE);
+//				     }
+				  }
+				});
+		textField.setText("1");
+		textField.setColumns(10);
+		
+		
+		
+		JLabel lblNewLabel = new JLabel("1/mu");
+		
+		JLabel lblNewLabel_4 = new JLabel("Class1");
+		GroupLayout gl_pClass1 = new GroupLayout(pClass1);
+		gl_pClass1.setHorizontalGroup(
+			gl_pClass1.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_pClass1.createSequentialGroup()
+					.addContainerGap()
+					.addGroup(gl_pClass1.createParallelGroup(Alignment.LEADING)
+						.addComponent(lblNewLabel_4)
+						.addComponent(lblValue))
+					.addGap(13)
+					.addGroup(gl_pClass1.createParallelGroup(Alignment.LEADING)
+						.addGroup(Alignment.TRAILING, gl_pClass1.createSequentialGroup()
+							.addGap(38)
+							.addComponent(slider, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+							.addGap(0, 0, Short.MAX_VALUE))
+						.addGroup(gl_pClass1.createSequentialGroup()
+							.addGap(48)
+							.addComponent(textField, GroupLayout.PREFERRED_SIZE, 49, GroupLayout.PREFERRED_SIZE)
+							.addGap(38)
+							.addComponent(lblNewLabel)
+							.addPreferredGap(ComponentPlacement.UNRELATED)
+							.addComponent(lblNewLabel_1, GroupLayout.DEFAULT_SIZE, 69, Short.MAX_VALUE)))
+					.addGap(31))
+		);
+		gl_pClass1.setVerticalGroup(
+			gl_pClass1.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_pClass1.createSequentialGroup()
+					.addGroup(gl_pClass1.createParallelGroup(Alignment.LEADING)
+						.addGroup(gl_pClass1.createSequentialGroup()
+							.addComponent(slider, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+							.addPreferredGap(ComponentPlacement.RELATED)
+							.addGroup(gl_pClass1.createParallelGroup(Alignment.BASELINE)
+								.addComponent(textField, GroupLayout.PREFERRED_SIZE, 16, GroupLayout.PREFERRED_SIZE)
+								.addComponent(lblNewLabel)
+								.addComponent(lblNewLabel_1)))
+						.addGroup(gl_pClass1.createSequentialGroup()
+							.addContainerGap()
+							.addComponent(lblNewLabel_4)
+							.addPreferredGap(ComponentPlacement.RELATED)
+							.addComponent(lblValue, GroupLayout.PREFERRED_SIZE, 36, GroupLayout.PREFERRED_SIZE)))
+					.addContainerGap(65, Short.MAX_VALUE))
+		);
+		pClass1.setLayout(gl_pClass1);
+		
 		JPanel pClass2 = new JPanel();
 		pContainer2.add(pClass2);
 		
-		JRadioButton rdbtnClass_1 = new JRadioButton("Class 2");
-		pClass2.add(rdbtnClass_1);
-		
-		JLabel lblNewLabel = new JLabel("Select Property");
-		pClass2.add(lblNewLabel);
-		
-		JComboBox comboBox_1 = new JComboBox();
-		pClass2.add(comboBox_1);
-		comboBox_1.setModel(new DefaultComboBoxModel(new String[] {"mu"}));
-		
 		JSlider slider_1 = new JSlider();
-		pClass2.add(slider_1);
+		slider_1.setValue(100);
+		slider_1.setMajorTickSpacing(25);
+		slider_1.setFont(new Font("Tahoma", Font.PLAIN, 8));
 		slider_1.setLabelTable( labelTable );  
 		slider_1.setPaintLabels(true);
 		slider_1.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent arg0) {
 				JSlider j = (JSlider) arg0.getSource();
 				textField_1.setText(String.valueOf((double) j.getValue() / 100));
-				lblNewLabel_2.setText((1 / Double.parseDouble(textField.getText()))  + "");
+				lblNewLabel_2.setText((1 / Double.parseDouble(textField_1.getText()))  + "");
 				panel.findRCH();
 				
 				
@@ -304,28 +414,71 @@ public class MinWindow
 		slider_1.setPaintLabels(true);
 		slider_1.setPaintTicks(true);
 		
-		JLabel label_1 = new JLabel("Value");
-		pClass2.add(label_1);
+		JLabel lblMu = new JLabel("mu");
 		
 		textField_1 = new JTextField();
-		pClass2.add(textField_1);
 		textField_1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				JSlider j = (JSlider) arg0.getSource();
-				model.mu2 = (double)j.getValue()/100;
-				System.out.println("actionPerformed " + model.mu2 + arg0.getActionCommand());
-				//panel.setMu(mu1,mu2);
+				Object src = arg0.getSource();
+				if (src instanceof JSlider){
+					JSlider j = (JSlider) src;
+					model.setMu2((double)j.getValue()/100) ;
+					
+				}
+				
+				System.out.println("actionPerformed " + model.getMu2() + arg0.getActionCommand());
 			}
 		});
-		textField_1.setText("0.5");
+		textField_1.setText("1");
 		textField_1.setColumns(10);
-		pClass2.add(lblNewLabel_2);
+		
+		JLabel lblNewLabel_3 = new JLabel("1/mu");
+		
+		JLabel lblNewLabel_5 = new JLabel("Class2");
+		GroupLayout gl_pClass2 = new GroupLayout(pClass2);
+		gl_pClass2.setHorizontalGroup(
+			gl_pClass2.createParallelGroup(Alignment.TRAILING)
+				.addGroup(gl_pClass2.createSequentialGroup()
+					.addContainerGap()
+					.addGroup(gl_pClass2.createParallelGroup(Alignment.LEADING)
+						.addGroup(gl_pClass2.createSequentialGroup()
+							.addComponent(lblMu)
+							.addGap(18)
+							.addComponent(textField_1, GroupLayout.PREFERRED_SIZE, 54, GroupLayout.PREFERRED_SIZE)
+							.addGap(41)
+							.addComponent(lblNewLabel_3)
+							.addGap(18)
+							.addComponent(lblNewLabel_2, GroupLayout.DEFAULT_SIZE, 86, Short.MAX_VALUE))
+						.addGroup(gl_pClass2.createSequentialGroup()
+							.addComponent(lblNewLabel_5)
+							.addPreferredGap(ComponentPlacement.RELATED)
+							.addComponent(slider_1, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)))
+					.addContainerGap())
+		);
+		gl_pClass2.setVerticalGroup(
+			gl_pClass2.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_pClass2.createSequentialGroup()
+					.addGroup(gl_pClass2.createParallelGroup(Alignment.LEADING)
+						.addGroup(gl_pClass2.createSequentialGroup()
+							.addContainerGap()
+							.addComponent(lblNewLabel_5))
+						.addComponent(slider_1, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+					.addGap(11)
+					.addGroup(gl_pClass2.createParallelGroup(Alignment.LEADING)
+						.addGroup(gl_pClass2.createParallelGroup(Alignment.BASELINE)
+							.addComponent(lblNewLabel_3)
+							.addComponent(lblNewLabel_2))
+						.addGroup(gl_pClass2.createParallelGroup(Alignment.BASELINE)
+							.addComponent(lblMu)
+							.addComponent(textField_1, 0, 0, Short.MAX_VALUE)))
+					.addGap(67))
+		);
+		pClass2.setLayout(gl_pClass2);
 		
 		JPanel pContainer3 = new JPanel();
-		pContainer3.setBounds(575, 299, 112, 157);
-		frame.getContentPane().add(pContainer3);
 		
 		btnClear = new JButton("Random Data");
+		btnClear.setEnabled(false);
 		pContainer3.add(btnClear);
 		
 		JButton btnNewButton = new JButton("find CH");
@@ -335,13 +488,47 @@ public class MinWindow
 		pContainer3.add(btnNewButton_1);
 		
 		JButton btnNewButton_2 = new JButton("Solve");
+		btnNewButton_2.setEnabled(false);
 		pContainer3.add(btnNewButton_2);
 		
 		JButton btnNewButton_3 = new JButton("Clear");
 		pContainer3.add(btnNewButton_3);
+		GroupLayout groupLayout = new GroupLayout(frame.getContentPane());
+		groupLayout.setHorizontalGroup(
+			groupLayout.createParallelGroup(Alignment.LEADING)
+				.addGroup(Alignment.TRAILING, groupLayout.createSequentialGroup()
+					.addGap(12)
+					.addComponent(pContainer1, GroupLayout.DEFAULT_SIZE, 553, Short.MAX_VALUE)
+					.addGap(28)
+					.addComponent(pContainer3, GroupLayout.PREFERRED_SIZE, 112, GroupLayout.PREFERRED_SIZE))
+				.addGroup(groupLayout.createSequentialGroup()
+					.addComponent(pContainer2, GroupLayout.PREFERRED_SIZE, 687, GroupLayout.PREFERRED_SIZE)
+					.addContainerGap(18, Short.MAX_VALUE))
+		);
+		groupLayout.setVerticalGroup(
+			groupLayout.createParallelGroup(Alignment.LEADING)
+				.addGroup(groupLayout.createSequentialGroup()
+					.addComponent(pContainer2, GroupLayout.PREFERRED_SIZE, 81, GroupLayout.PREFERRED_SIZE)
+					.addGroup(groupLayout.createParallelGroup(Alignment.TRAILING, false)
+						.addGroup(groupLayout.createSequentialGroup()
+							.addGap(206)
+							.addComponent(pContainer3, GroupLayout.PREFERRED_SIZE, 157, GroupLayout.PREFERRED_SIZE)
+							.addGap(35))
+						.addGroup(groupLayout.createSequentialGroup()
+							.addGap(18)
+							.addComponent(pContainer1, 0, 0, Short.MAX_VALUE)
+							.addGap(23))))
+		);
+		frame.getContentPane().setLayout(groupLayout);
 		btnNewButton_3.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				model.dataset1.clear();
+				XYPlot p = panel.getChart().getXYPlot();
+				p.clearAnnotations();
+				series1.clear();
+				series2.clear();
+				
+				
+				model.clearDataSet(0);
 			}
 		});
 		btnNewButton_2.addActionListener(new ActionListener() {
@@ -351,6 +538,9 @@ public class MinWindow
 		});
 		btnNewButton_1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				//TODO debug code3
+				model.setMu1(0.72);
+				
 				panel.findRCH();
 			}
 		});
@@ -451,5 +641,16 @@ public class MinWindow
 			panel.getGraphics().drawRect(0, 0, 200, 200);
 			panel.repaint();
 		}
+	}
+	
+	
+	
+	
+	
+	
+	
+	//TODO helper
+	private void print(String str){
+		System.out.println(str);
 	}
 }
