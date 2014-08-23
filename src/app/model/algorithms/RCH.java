@@ -32,6 +32,7 @@ public class RCH {
 	
 	
 	static SVMDataItem [] Z;
+	static int numSupportPoints;	//varies depending on weight
 	static double weights[];
 	static ArrayList<SVMDataItem> PP;
 //
@@ -97,8 +98,10 @@ public class RCH {
 		}
 		//weights[0]=2;
 		
+		try{
+			SVMDataItem[] res = rhull(P, mu);
+
 		
-		SVMDataItem[] res = rhull(P, mu);
 		
 		
 		SVMDataItem p;
@@ -110,11 +113,16 @@ public class RCH {
 		}
 		//r.addAll(Arrays.asList(res));
 		
+		}catch (StackOverflowError e){
+			System.out.println("Stack over flow in RCH!");
+			return null;
+		}
+		
 		return r;
 	}
 	
 	
-	public static SVMDataItem[] rhull(SVMDataItem[] P, double mu){
+	public static SVMDataItem[] rhull(SVMDataItem[] P, double mu) throws StackOverflowError{
 		
 		int m = (int) Math.ceil(1.0/mu);
 		if (m > P.length){
@@ -142,7 +150,8 @@ public class RCH {
 		return Ret;
 	}
 	
-	public static SVMDataItem[] rhull_aux(SVMDataItem[] P, SVMDataItem l, SVMDataItem r, double mu){
+	public static SVMDataItem[] rhull_aux(SVMDataItem[] P, 
+			SVMDataItem l, SVMDataItem r, double mu) throws StackOverflowError{
 		SVMDataItem n = new SVMDataItem(0,0);
 		SVMDataItem h = new SVMDataItem(0,0);
 		
@@ -163,26 +172,26 @@ public class RCH {
 		
 		SVMDataItem nl = new SVMDataItem(0,0);
 		SVMDataItem nr = new SVMDataItem(0,0);
-		nl = normal(h, l);
-		nr = normal(r, h);
+		nl = normal(h, l);		//left partition normal
+		nr = normal(r, h);		//right partition normal
 		
-		int m = (int) Math.ceil(1.0/mu);
-		SVMDataItem[] S = new SVMDataItem[m];
-		for (int i = 0; i < m ; i++){
-			S[i] = Z[i];
+		SVMDataItem[] supportPoints = new SVMDataItem[numSupportPoints];
+		for (int i = 0; i < numSupportPoints ; i++){
+			supportPoints[i] = Z[i];
 		}
-		double scalerpro[] = new double [m];
+		double scalerProjections[] = new double [numSupportPoints];
 		double tmp;
 		
-		for (int i = 0; i < m; i++){
-			scalerpro[i] = nl.getDotProduct(S[i]);//TODO double op
+		for (int i = 0; i < numSupportPoints; i++){
+			scalerProjections[i] = nl.getDotProduct(supportPoints[i]);//TODO double op
 		}
 
 		SVMDataItem[] TMP = new SVMDataItem[P.length];	//too big
 		for (int i = 0, k = 0; i < P.length; i++){
 			tmp = nl.getDotProduct(P[i]);
-			for (int j = 0; j < scalerpro.length; j++){
-				if (tmp >= scalerpro[j]){//TODO double op
+			for (int j = 0; j < scalerProjections.length; j++){
+//				if (tmp >= scalerpro[j]){//TODO double op
+				if (SVMDataItem.isGreaterThanEq(tmp, scalerProjections[j])){
 					TMP[k] = P[i];	//index wrong
 					k++;
 					break;
@@ -202,14 +211,15 @@ public class RCH {
 			}
 		}
 
-		for (int i = 0; i < m; i++){
-			scalerpro[i] = nr.getDotProduct(S[i]);
+		for (int i = 0; i < numSupportPoints; i++){
+			scalerProjections[i] = nr.getDotProduct(supportPoints[i]);
 		}
 		TMP = new SVMDataItem[P.length];
 		for (int i = 0, k = 0; i < P.length; i++){
 			tmp = nr.getDotProduct(P[i]);
-			for (int j = 0; j < scalerpro.length; j++){
-				if (tmp >= scalerpro[j]){ //TODO double op
+			for (int j = 0; j < scalerProjections.length; j++){
+//				if (tmp >= scalerpro[j]){ //TODO double op
+				if (SVMDataItem.isGreaterThanEq(tmp, scalerProjections[j])){
 					TMP[k] = P[i];	//index wrong
 					k++;
 					break;
@@ -247,8 +257,10 @@ public class RCH {
 	
 	public static SVMDataItem normal(SVMDataItem p1, SVMDataItem p2){
 		double dx, dy;
-		dx = p1.getXValue() - p2.getXValue(); //TODO double op
-		dy = p1.getYValue() - p2.getYValue(); //TODO double op
+//		dx = p1.getXValue() - p2.getXValue(); //TODO double op
+//		dy = p1.getYValue() - p2.getYValue(); //TODO double op
+		dx = SVMDataItem.dMinus(p1.getXValue(), p2.getXValue());
+		dy = SVMDataItem.dMinus(p1.getYValue(), p2.getYValue());
 		
 		SVMDataItem n = new SVMDataItem(0,0);
 		n.setX(-dy);
@@ -261,39 +273,28 @@ public class RCH {
 	public static SVMDataItem alg8(SVMDataItem[] Pl, double [] S,
 			double mu, SVMDataItem n){
 		
-		int m = (int) Math.ceil(1.0/mu);
-		if (m > Pl.length){
-			System.out.println("alg8: m (or ceil(1/mu)) must be greater than number of points");
-			return null;
-		}
+//		int m = (int) Math.ceil(1.0/mu);
+//		if (m > Pl.length){
+//			System.out.println("alg8: m (or ceil(1/mu)) must be greater than number of points");
+//			return null;
+//		}
 		
 		
 		ArrayList<SVMDataItem> P = new ArrayList<SVMDataItem>(Arrays.asList(Pl));
 		
-		SVMDataItem v = new SVMDataItem(0,0);
+		SVMDataItem v = new SVMDataItem(0,0);//TODO NULL
 		double [] A = new double[P.size()];
 		double [] dots = new double[P.size()];
 		int [] sortedInd = new int[P.size()];
-		ArrayList<Double> sc = new ArrayList<Double>();
-		
 		Z = new SVMDataItem[P.size()];
-		int ind[] = new int[P.size()]; 	//larger than need
-		
-		
-		
 		double s = 0.0;
 		int i = 0;
 		
-		for (i = 0; i < A.length; i++){
-			A[i] = 0;	//redundant java initializes to 0
-		}
-		
 		for (i = 0; i < P.size(); i++){
 			dots[i] = n.getDotProduct(P.get(i));
-			//sc.add(i, (double) (n.x * P.get(i).x + n.y * P.get(i).y));
 		}
 		
-		//Collections.sort(sc);
+
 		sortedInd = sorti(dots);	
 		for (i = 0; i < P.size(); i++){
 			Z[i] = P.get(sortedInd[i]);
@@ -303,6 +304,7 @@ public class RCH {
 		int k = 0;//kth maximum 
 		while ((1 - s) >0.000001 ){//TODO double op
 			for (; k < sortedInd.length; k++){
+				;
 				if (A[sortedInd[k]] == 0){
 					i = sortedInd[k];
 					break;
@@ -318,9 +320,19 @@ public class RCH {
 				System.out.println("index out of bounds");
 			}
 			//TODO double op
-			v.setX(v.getXValue() + (A[sortedInd[i]] * P.get(sortedInd[i]).getXValue()));
-			v.setY(v.getYValue() + (A[sortedInd[i]] * P.get(sortedInd[i]).getYValue()));
+//			v.setX(v.getXValue() + (A[sortedInd[i]] * P.get(sortedInd[i]).getXValue()));
+//			v.setY(v.getYValue() + (A[sortedInd[i]] * P.get(sortedInd[i]).getYValue()));
+			v.setX(SVMDataItem.dAdd(v.getXValue(),
+					SVMDataItem.dMult(A[sortedInd[i]], 
+							P.get(sortedInd[i]).getXValue())));
+			
+			v.setY(SVMDataItem.dAdd(v.getYValue(),
+					SVMDataItem.dMult(A[sortedInd[i]], 
+							P.get(sortedInd[i]).getYValue())));
+	
 		}
+		
+		numSupportPoints = k+1;
 		return v;
 	}
 	

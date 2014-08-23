@@ -155,6 +155,18 @@ public class MinWindow
 		series1.add(new SVMDataItem(2, 4));
 		series1.add(new SVMDataItem(7.5, 7.5));
 		series1.add(new SVMDataItem(8, 4, 2));
+		
+//		series1.add(new SVMDataItem(4, 4));
+//		series1.add(new SVMDataItem(8, 8));
+//		series1.add(new SVMDataItem(8, 1));
+		
+		
+//		series1.add(new SVMDataItem(4, 4));
+//		series1.add(new SVMDataItem(8, 8));
+//		series1.add(new SVMDataItem(8, 1));
+		
+		
+		
 
 		series2.add(new SVMDataItem(1.0, 5.0));
 		series2.add(new SVMDataItem(3.0, 5.0));
@@ -215,7 +227,15 @@ public class MinWindow
         return new JFCPanel(chart, model);
 	}
 
-
+	public void clearPlot(){
+		XYPlot p = panel.getChart().getXYPlot();
+		p.clearAnnotations();
+		series1.clear();
+		series2.clear();
+		
+		
+		model.clearDataSet(0);
+	}
 	/**
 	 * Initialize the contents of the frame.
 	 */
@@ -522,13 +542,7 @@ public class MinWindow
 		frame.getContentPane().setLayout(groupLayout);
 		btnNewButton_3.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				XYPlot p = panel.getChart().getXYPlot();
-				p.clearAnnotations();
-				series1.clear();
-				series2.clear();
-				
-				
-				model.clearDataSet(0);
+				clearPlot();
 			}
 		});
 		btnNewButton_2.addActionListener(new ActionListener() {
@@ -539,7 +553,9 @@ public class MinWindow
 		btnNewButton_1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				//TODO debug code3
-				model.setMu1(0.72);
+				//model.setMu1(0.91);
+				model.setMu1(0.49);
+				//model.setMu1(1);
 				
 				panel.findRCH();
 			}
@@ -575,8 +591,82 @@ public class MinWindow
 		JMenu mnData = new JMenu("Data");
 		menuBar.add(mnData);
 		
-		JMenuItem mntmDataViewer = new JMenuItem("Data Viewer");
-		mnData.add(mntmDataViewer);
+		JMenuItem mntmTwoPoints = new JMenuItem("Two points 1");
+		mntmTwoPoints.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				clearPlot();
+				series1.add(new SVMDataItem(1, 1));
+				series1.add(new SVMDataItem(4, 1));
+				model.setSeries1(series1);
+			}
+		});
+		mnData.add(mntmTwoPoints);
+		
+		JMenuItem mntmCollinearPoints = new JMenuItem("Collinear Points 1");
+		mntmCollinearPoints.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				clearPlot();
+				series1.add(new SVMDataItem(1, 1));
+				series1.add(new SVMDataItem(4, 1));
+				series1.add(new SVMDataItem(7, 1.01));
+				series1.add(new SVMDataItem(11, 1));
+				
+				model.setSeries1(series1);
+			}
+		});
+		mnData.add(mntmCollinearPoints);
+		
+		JMenuItem mntmTriangle = new JMenuItem("Triangle 1");
+		mntmTriangle.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				clearPlot();
+				series1.add(new SVMDataItem(1, 1));
+				series1.add(new SVMDataItem(8, 1));
+				series1.add(new SVMDataItem(1, 8));
+				model.setSeries1(series1);
+			}
+		});
+		mnData.add(mntmTriangle);
+		
+		JMenuItem mntmRombus = new JMenuItem("Parallelogram");
+		mntmRombus.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				clearPlot();
+				series1.add(new SVMDataItem(1, 1));
+				series1.add(new SVMDataItem(4, 4));
+				series1.add(new SVMDataItem(4, 1));
+				series1.add(new SVMDataItem(7, 4));
+				model.setSeries1(series1);
+			}
+		});
+		mnData.add(mntmRombus);
+		
+		JMenuItem mntmTrapezium = new JMenuItem("Trapezium");
+		mntmTrapezium.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				clearPlot();
+				series1.add(new SVMDataItem(1, 1));
+				series1.add(new SVMDataItem(4, 4));
+				series1.add(new SVMDataItem(8, 4));
+				series1.add(new SVMDataItem(11, 1));
+				model.setSeries1(series1);
+			}
+		});
+		mnData.add(mntmTrapezium);
+		
+		JMenuItem mntmRandom = new JMenuItem("Random");
+		mntmRandom.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				clearPlot();
+				series1.add(new SVMDataItem(1, 1));
+				series1.add(new SVMDataItem(4, 4));
+				series1.add(new SVMDataItem(8, 4));
+				series1.add(new SVMDataItem(11, 1));
+				series1.add(new SVMDataItem(6, 0.5));
+				model.setSeries1(series1);
+			}
+		});
+		mnData.add(mntmRandom);
 		
 		JMenu mnHelp = new JMenu("Help");
 		menuBar.add(mnHelp);
