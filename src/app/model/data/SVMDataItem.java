@@ -13,22 +13,29 @@ public class SVMDataItem extends XYDataItem{
 	private static final long serialVersionUID = 1L;
 	private int DataClass = 1;
 	private double weight = 1;//defaults
+	private double scProjection = 0;
 	
 	public static double PRECISION = 0.001; //provide a set precision function
 	public static int DP = 2;
 	
 	public SVMDataItem(double x, double y) {
 		super(x, y);
+		setX(x);//TODO rounding
+		setY(y);
 		setWeight(1);
 	}
 	
 	public SVMDataItem(double x, double y, double weight) {
 		super(x, y);
+		setX(x);//TODO rounding
+		setY(y);
 		setWeight(weight);
 	}
 	
 	public SVMDataItem(double x, double y, double weight, int dclass) {
 		super(x, y);
+		setX(x);//TODO rounding
+		setY(y);
 		setWeight(weight);
 		setDataClass(dclass);
 	}
@@ -37,13 +44,13 @@ public class SVMDataItem extends XYDataItem{
 		return super.getXValue();
 	}
 	public void setX(double x){
-		 super.setX(x);
+		 super.setX(round(x, DP));
 	}
 	public Double getY(){
 		return super.getYValue();
 	}
 	public void setY(double y){
-		super.setY(y);
+		super.setY(round(y, DP));
 	}
 	
 	public double getDotProduct(SVMDataItem p2){
@@ -117,6 +124,21 @@ public class SVMDataItem extends XYDataItem{
 	}
 //	toString
 	
+	
+	public double project(SVMDataItem normal){
+		scProjection = this.getDotProduct(normal);
+		return scProjection;
+	}
+	
+	
+	public double getScProj(){
+		return scProjection;
+	}
+	
+//    @Override
+//    public int compareTo(Object o1) {
+//		return DataClass;
+//    }
 	
 	public static boolean isLessThan(double d1, double d2){
 		double df = (d1 - d2);

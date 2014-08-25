@@ -149,6 +149,22 @@ public class MinWindow
 		btnClear.addActionListener(this);
 	}
 	
+	public void addRandomData(){
+		clearPlot();
+		
+		//TODO use generator and set seed
+		Random r = new Random(System.currentTimeMillis());
+		
+		int max  = (int) (r.nextDouble() * 10);
+		
+		for (int i = 0; i < max; i++ ){
+			double randX  =  (r.nextDouble() * 10);
+			double randY  =  (r.nextDouble() * 10);
+			series1.add(new SVMDataItem(randX, randY));
+		}
+		model.setSeries1(series1);
+	}
+	
 	private void initializeData(){
 		
 		series1.add(new SVMDataItem(1, 1));
@@ -335,10 +351,10 @@ public class MinWindow
 				   // warn();
 				  }
 				  public void removeUpdate(DocumentEvent e) {
-				    warn();
+				    //warn();
 				  }
 				  public void insertUpdate(DocumentEvent e) {
-				    warn();
+				    //warn();
 				  }
 
 				  public void warn() {
@@ -498,7 +514,6 @@ public class MinWindow
 		JPanel pContainer3 = new JPanel();
 		
 		btnClear = new JButton("Random Data");
-		btnClear.setEnabled(false);
 		pContainer3.add(btnClear);
 		
 		JButton btnNewButton = new JButton("find CH");
@@ -554,8 +569,10 @@ public class MinWindow
 			public void actionPerformed(ActionEvent e) {
 				//TODO debug code3
 				//model.setMu1(0.91);
-				model.setMu1(0.49);
+				//model.setMu1(0.49);
 				//model.setMu1(1);
+				
+				model.setMu1(Double.parseDouble(textField.getText()));
 				
 				panel.findRCH();
 			}
@@ -572,6 +589,9 @@ public class MinWindow
 		
 		JMenu mnFile = new JMenu("File");
 		menuBar.add(mnFile);
+		
+		JMenuItem mntmAddPoint = new JMenuItem("Add Point");
+		mnFile.add(mntmAddPoint);
 		
 		JMenuItem mntmOpenFile = new JMenuItem("Open File");
 		mnFile.add(mntmOpenFile);
@@ -608,7 +628,7 @@ public class MinWindow
 				clearPlot();
 				series1.add(new SVMDataItem(1, 1));
 				series1.add(new SVMDataItem(4, 1));
-				series1.add(new SVMDataItem(7, 1.01));
+				series1.add(new SVMDataItem(7, 1));
 				series1.add(new SVMDataItem(11, 1));
 				
 				model.setSeries1(series1);
@@ -621,11 +641,36 @@ public class MinWindow
 			public void actionPerformed(ActionEvent e) {
 				clearPlot();
 				series1.add(new SVMDataItem(1, 1));
-				series1.add(new SVMDataItem(8, 1));
+				//series1.add(new SVMDataItem(1, 1));
+				
+				series1.add(new SVMDataItem(8, 1,2));
+				
+				//series1.add(new SVMDataItem(8, 1));
+				//series1.add(new SVMDataItem(8, 1));
+				
 				series1.add(new SVMDataItem(1, 8));
+				//series1.add(new SVMDataItem(1, 8));
+				
+				//series1.add(new SVMDataItem(4.5, 1));
+				//series1.add(new SVMDataItem(1, 1));
 				model.setSeries1(series1);
 			}
 		});
+		
+		JMenuItem mntmCollinearPoints_1 = new JMenuItem("Collinear Points 2");
+		mntmCollinearPoints_1.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				clearPlot();
+				series1.add(new SVMDataItem(1, 1));
+				series1.add(new SVMDataItem(4, 1));
+				series1.add(new SVMDataItem(7, 1.01));
+				series1.add(new SVMDataItem(11, 1));
+				
+				model.setSeries1(series1);
+				
+			}
+		});
+		mnData.add(mntmCollinearPoints_1);
 		mnData.add(mntmTriangle);
 		
 		JMenuItem mntmRombus = new JMenuItem("Parallelogram");
@@ -657,15 +702,27 @@ public class MinWindow
 		JMenuItem mntmRandom = new JMenuItem("Random");
 		mntmRandom.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				addRandomData();
+			}
+		});
+		
+		JMenuItem mntmTPoints = new JMenuItem("T points");
+		mntmTPoints.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
 				clearPlot();
+				//TODO answer the question is point adding order is dependent or independent of RCH produced
 				series1.add(new SVMDataItem(1, 1));
-				series1.add(new SVMDataItem(4, 4));
-				series1.add(new SVMDataItem(8, 4));
-				series1.add(new SVMDataItem(11, 1));
-				series1.add(new SVMDataItem(6, 0.5));
+				series1.add(new SVMDataItem(1, 3));
+				series1.add(new SVMDataItem(1, 5));
+				series1.add(new SVMDataItem(1, 7));
+				series1.add(new SVMDataItem(1, 9));
+//				series1.add(new SVMDataItem(2, 5));
+//				series1.add(new SVMDataItem(4, 5));
+				series1.add(new SVMDataItem(6, 5));
 				model.setSeries1(series1);
 			}
 		});
+		mnData.add(mntmTPoints);
 		mnData.add(mntmRandom);
 		
 		JMenu mnHelp = new JMenu("Help");
@@ -717,19 +774,21 @@ public class MinWindow
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		// TODO Auto-generated method stub
+		
+		
 		System.out.println(e.getSource().toString());
 		if (e.getSource().equals(btnClear)){
-			
+			addRandomData();
 			//initializeData();
 			
-			panel.setBackground(Color.WHITE);
+			//panel.setBackground(Color.WHITE);
 			//
 			//panel.setForeground(Color.WHITE);
 			
 			//panel.getGraphics().fillRect(0, 0, panel.getWidth(), panel.getHeight());
 			//panel.getGraphics().clearRect(0, 0, panel.getWidth(), panel.getHeight());
-			panel.getGraphics().drawRect(0, 0, 200, 200);
-			panel.repaint();
+			//panel.getGraphics().drawRect(0, 0, 200, 200);
+			//panel.repaint();
 		}
 	}
 	

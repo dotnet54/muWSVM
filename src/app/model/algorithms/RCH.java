@@ -77,12 +77,12 @@ public class RCH {
 		ArrayList<SVMDataItem> r = new ArrayList<SVMDataItem>();
 		
 		double m = 1.0/mu;
-		if (m >= dataset.size()){//TODO double comparison error if m=4.000001 ??check
-			System.out.println("calcReducedCHull: m (or ceil(1/mu)) must be greater than number of points");
-			r.add(findCentroid(dataset));
-			return r;
-		}
-		
+//		if (m >= dataset.size()){//TODO double comparison error if m=4.000001 ??check
+//			System.out.println("calcReducedCHull: m (or ceil(1/mu)) must be greater than number of points");
+//			r.add(findCentroid(dataset));
+//			return r;
+//		}
+//		
 		
 		SVMDataItem[] P =  new SVMDataItem[dataset.size()];
 		SVMDataItem t =null;
@@ -92,6 +92,8 @@ public class RCH {
 			t = new SVMDataItem(0,0);
 			t.setX(dataset.get(i).getX());
 			t.setY(dataset.get(i).getY());
+			t.setWeight(dataset.get(i).getWeight());
+			t.setDataClass(dataset.get(i).getDataClass());
 			P[i] = t;
 			//PP.add(i,t);
 			weights[i] = dataset.get(i).getWeight();
@@ -125,17 +127,17 @@ public class RCH {
 	public static SVMDataItem[] rhull(SVMDataItem[] P, double mu) throws StackOverflowError{
 		
 		int m = (int) Math.ceil(1.0/mu);
-		if (m > P.length){
-			System.out.println("rhull_aux: m (or ceil(1/mu)) must be greater than number of points");
-			return null;//TODO return centroid??
-		}
+//		if (m > P.length){
+//			System.out.println("rhull_aux: m (or ceil(1/mu)) must be greater than number of points");
+//			return null;//TODO return centroid??
+//		}
 		
 		SVMDataItem n = new SVMDataItem(-1,0);
 		//DP l = theorem32(P, n, mu);
-		SVMDataItem l =  alg8(P, weights, mu, n);
+		SVMDataItem l =  alg9(P, weights, mu, n);
 		n.setX(1);
 		//DP r = theorem32(P, n, mu);
-		SVMDataItem r =  alg8(P, weights, mu,  n);
+		SVMDataItem r =  alg9(P, weights, mu,  n);
 		
 		SVMDataItem [] A = rhull_aux(P, l ,r, mu);
 		SVMDataItem [] B = rhull_aux(P, r, l, mu);
@@ -157,10 +159,9 @@ public class RCH {
 		
 		n = normal(r, l);
 		//h = theorem32(P, n, mu);
-		h =  alg8(P, weights, mu,  n);
+		h =  alg9(P, weights, mu,  n);
 		
-		SVMDataItem nprime = normal(new SVMDataItem(0,0),n);
-		System.out.format("n:%s nprime:%s\n", n.toFormatedString(2), nprime.toFormatedString(2));
+		System.out.format("h:%s \n", h.toFormatedString(2));
 		
 		
 		if (h.equals(l) || h.equals(r)){//TODO double op
@@ -270,6 +271,95 @@ public class RCH {
 	}
 	
 	
+	
+	
+	
+	
+	
+	
+	
+	public static SVMDataItem alg9(SVMDataItem[] P, double[] S, double mu, SVMDataItem n){
+		//TODO S not used
+
+		ArrayList<SVMDataItem> X = new ArrayList<SVMDataItem>(Arrays.asList(P));
+		
+		//TODO debug code
+		double [] dots = new double[X.size()];
+		for (int i = 0; i < X.size(); i++){
+			dots[i] = X.get(i).project(n);
+		}
+		
+		Collections.sort(X,Collections.reverseOrder( new Comparator<SVMDataItem>() {
+
+			@Override
+			public int compare(SVMDataItem o1, SVMDataItem o2) {
+				if (SVMDataItem.isLessThan(o1.getScProj(), o2.getScProj())){
+					return -1;
+				}else if (SVMDataItem.isEqual(o1.getScProj(), o2.getScProj())){
+					if (SVMDataItem.isLessThan(o1.getWeight(), o2.getWeight())){
+						return -1;
+					}else if(SVMDataItem.isEqual(o1.getWeight(), o2.getWeight())){
+						return 0;
+					}else{
+						return +1;
+					}
+				}else{
+					return +1;
+				}
+			}
+		}));
+		
+		
+		double [] A = new double[X.size()];
+		double s = 0;
+		int k = 0;
+		
+		int count = 0;
+		
+		while (SVMDataItem.isLessThan(s, 1.0)){
+			for (k = 0; k < X.size(); k++){
+				if (A[k] == 0){
+					A[k] = Math.min(X.get(k).getWeight() * mu, 1 - s);
+					count++;
+					break;
+				}
+			}		
+			//last k will be index out of bounds so
+			if (k >= A.length){
+				System.out.println("k fixed");
+				k--;
+			}
+			
+			s += A[k];
+		}
+		
+		SVMDataItem v = new SVMDataItem(0,0);
+		int i = 0;
+		for (i = 0; i < count; i++){
+			if (i >= P.length){
+				System.out.println("index out of bounds");
+			}
+
+			v.setX(SVMDataItem.dAdd(v.getXValue(), SVMDataItem.dMult(A[i], X.get(i).getXValue())));
+			v.setY(SVMDataItem.dAdd(v.getYValue(), SVMDataItem.dMult(A[i], X.get(i).getYValue())));
+	
+		}
+		
+		
+		numSupportPoints = count;
+		
+		//TODO redundant
+		Z = new SVMDataItem[X.size()];
+		for (int j = 0; j < X.size(); j++){
+			Z[j] = X.get(j); //copy support points
+		}
+		
+		return v;
+	}
+	
+	
+	
+	
 	public static SVMDataItem alg8(SVMDataItem[] Pl, double [] S,
 			double mu, SVMDataItem n){
 		
@@ -301,20 +391,22 @@ public class RCH {
 		}
 		
 		i = 0;
-		int k = 0;//kth maximum 
+		//int k = 0;//kth maximum
+		int count = 0;
 		while ((1 - s) >0.000001 ){//TODO double op
-			for (; k < sortedInd.length; k++){
-				;
+			for (int k = 0; k < sortedInd.length; k++){
 				if (A[sortedInd[k]] == 0){
 					i = sortedInd[k];
+					count++;
 					break;
 				}
 			}
 			A[i] = Math.min(S[i] * mu, 1 - s); //if s[i] = 0?? TEST
 			s = s + A[i];
 		}
+		int gg = 4;
 		
-		for (i = 0; i <= k; i++){
+		for (i = 0; i < count; i++){
 			
 			if (i >= P.size()){
 				System.out.println("index out of bounds");
@@ -332,7 +424,7 @@ public class RCH {
 	
 		}
 		
-		numSupportPoints = k+1;
+		numSupportPoints = count;
 		return v;
 	}
 	

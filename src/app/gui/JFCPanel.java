@@ -218,6 +218,7 @@ public class JFCPanel extends ChartPanel implements ChartMouseListener{
 
 		} else {
 			popup.removeAll();
+			popup.add(itp);// TODO duplicate point
 			popup.add(itr);
 			popup.add(itw);
 			popup.pack();
