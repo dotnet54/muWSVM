@@ -19,63 +19,63 @@ public class SK {
 	private static double[] pweights;	//TODO change from static
 	private static double[] nweights;
 	
-	public static void main(String[] args){
-		
-		ArrayList<SVMDataItem> Ppos = new ArrayList<SVMDataItem>();
-		
-		SVMDataItem d = new SVMDataItem(0,0);
-		d.setDataClass(1);
-		Ppos.add(d);
-		d = new SVMDataItem(0,0);
-		d.setDataClass(1);
-		Ppos.add(d);
-		d = new SVMDataItem(0,0);
-		d.setDataClass(1);
-		Ppos.add(d);
-		
-		ArrayList<SVMDataItem> Pneg = new ArrayList<SVMDataItem>();
-		d = new SVMDataItem(0,0);
-		d.setDataClass(-1);
-		Pneg.add(d);
-		d = new SVMDataItem(0,0);
-		d.setDataClass(-1);
-		Pneg.add(d);
-		d = new SVMDataItem(0,0);
-		d.setDataClass(-1);
-		Pneg.add(d);
-		
-		
-		
-		SVMDataItem a = null;
-		SVMDataItem[] aa = new SVMDataItem[3];
-		
-		a = new SVMDataItem(0,0);
-		d.setDataClass(1);
-		aa[0] = a;
-		a =  new SVMDataItem(1,0);
-		d.setDataClass(1);
-		aa[1] = a;
-		a =  new SVMDataItem(0,1);
-		d.setDataClass(1);
-		aa[2] = a;
-		
-		SVMDataItem[] bb = new SVMDataItem[3];
-		
-		a = new SVMDataItem(6,0);
-		d.setDataClass(-1);
-		bb[0] = a;
-		a =  new SVMDataItem(7,0);
-		d.setDataClass(-1);
-		bb[1] = a;
-		a =  new SVMDataItem(7,1);
-		d.setDataClass(-1);
-		bb[2] = a;
-		
-		
-		
-		sk(aa,bb,0.5);
-		
-	}
+//	public static void main(String[] args){
+//		
+//		ArrayList<SVMDataItem> Ppos = new ArrayList<SVMDataItem>();
+//		
+//		SVMDataItem d = new SVMDataItem(0,0);
+//		d.setDataClass(1);
+//		Ppos.add(d);
+//		d = new SVMDataItem(0,0);
+//		d.setDataClass(1);
+//		Ppos.add(d);
+//		d = new SVMDataItem(0,0);
+//		d.setDataClass(1);
+//		Ppos.add(d);
+//		
+//		ArrayList<SVMDataItem> Pneg = new ArrayList<SVMDataItem>();
+//		d = new SVMDataItem(0,0);
+//		d.setDataClass(-1);
+//		Pneg.add(d);
+//		d = new SVMDataItem(0,0);
+//		d.setDataClass(-1);
+//		Pneg.add(d);
+//		d = new SVMDataItem(0,0);
+//		d.setDataClass(-1);
+//		Pneg.add(d);
+//		
+//		
+//		
+//		SVMDataItem a = null;
+//		SVMDataItem[] aa = new SVMDataItem[3];
+//		
+//		a = new SVMDataItem(0,0);
+//		d.setDataClass(1);
+//		aa[0] = a;
+//		a =  new SVMDataItem(1,0);
+//		d.setDataClass(1);
+//		aa[1] = a;
+//		a =  new SVMDataItem(0,1);
+//		d.setDataClass(1);
+//		aa[2] = a;
+//		
+//		SVMDataItem[] bb = new SVMDataItem[3];
+//		
+//		a = new SVMDataItem(6,0);
+//		d.setDataClass(-1);
+//		bb[0] = a;
+//		a =  new SVMDataItem(7,0);
+//		d.setDataClass(-1);
+//		bb[1] = a;
+//		a =  new SVMDataItem(7,1);
+//		d.setDataClass(-1);
+//		bb[2] = a;
+//		
+//		
+//		
+//		sk(aa,bb,0.5);
+//		
+//	}
 	
 	public static void solve(SVMModel model){
 		//TODO solve using different mu? mekae GUI less confusing
@@ -83,7 +83,6 @@ public class SK {
 		
 		SVMDataItem[] Ppos;
 		SVMDataItem[] Pneg;
-		double mu = model.getMu1();
 		
 		Ppos = new SVMDataItem[model.getSeries1().size()];
 		Pneg = new SVMDataItem[model.getSeries2().size()];
@@ -111,7 +110,7 @@ public class SK {
 			nweights[i] = Pneg[i].getWeight();
 		}
 		
-		sk(Ppos, Pneg, mu);
+		sk(Ppos, Pneg, model.getMu1(), model.getMu2());
 		
 		model.setW(finalW);
 		model.setB(finalB);
@@ -123,13 +122,21 @@ public class SK {
         double xMin = ((b-(w.getYValue()*yMin))/w.getXValue());
         double xMax =   ((b-(w.getYValue()*yMax))/w.getXValue());
         
+//        double mx = w.getXValue();
+//        double my = w.getYValue();
+//        double m = w.getMagnitude();
+//        
+//        double xMin = yMin / m;
+//        double xMax = yMax / m;
+        
         Point.Double p1= new Point.Double(xMin, yMin);
         Point.Double p2= new Point.Double(xMax, yMax);
+        System.out.format("Line points:\np1:%s\np2:%s\n", p1, p2 );
         return new Line2D.Double(p1, p2);
 	}
 	
 	public static void sk(SVMDataItem[] Ppos, SVMDataItem[] Pneg
-			,double mu){
+			,double mu1,double mu2){
 
 		SVMDataItem p = null;
 		SVMDataItem n = null;
@@ -142,21 +149,25 @@ public class SK {
 		
 //		p = RCH.theorem32(Ppos, new SVMDataItem(-1, 0), mu);
 //		n = RCH.theorem32(Pneg, new SVMDataItem(1, 0), mu);
-		p = RCH.alg8(Ppos,pweights , mu,new SVMDataItem(-1, 0));
-		n = RCH.alg8(Pneg,nweights , mu,new SVMDataItem(1, 0));
+		p = RCH.alg9(Ppos,pweights , mu1,new SVMDataItem(-1, 0));
+		n = RCH.alg9(Pneg,nweights , mu2,new SVMDataItem(1, 0));
 		
 		while(it < MAXIT){
 			w = new SVMDataItem(p.getXValue() - n.getXValue(),
 					p.getYValue() - n.getYValue());
 			
-			w.setX(w.getXValue() -1);
-			w.setY(w.getYValue() -1);
+			SVMDataItem wprime = new SVMDataItem(w.getXValue(), w.getYValue());
+			
+			wprime.setX(w.getXValue() -1);
+			wprime.setY(w.getYValue() -1);
 //			SVMDataItem vp = RCH.theorem32(Ppos, w, mu);
-			SVMDataItem vp = RCH.alg8(Ppos,pweights , mu, w);
-			w.setX(w.getXValue() -1);
-			w.setY(w.getYValue() -1);
+			SVMDataItem vp = RCH.alg9(Ppos,pweights , mu1, w);
+			
+			wprime = new SVMDataItem(w.getXValue(), w.getYValue());
+			wprime.setX(w.getXValue());
+			wprime.setY(w.getYValue());
 //			SVMDataItem vn = RCH.theorem32(Pneg, w, mu);
-			SVMDataItem vn = RCH.alg8(Pneg,nweights , mu, w);
+			SVMDataItem vn = RCH.alg9(Pneg,nweights , mu2, w);
 			
 			SVMDataItem dvp = new SVMDataItem(vp.getXValue() - n.getXValue(), 
 					vp.getYValue() - n.getYValue());

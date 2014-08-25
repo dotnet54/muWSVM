@@ -94,7 +94,8 @@ public class MinWindow
 	XYSeries series1 = new XYSeries("Positive Class");
 	XYSeries series2 = new XYSeries("Negative Class");	
 	XYSeries series3 = new XYSeries("Positive WRCH");
-	
+	XYSeries series4 = new XYSeries("Negative WRCH");
+	XYSeries series5 = new XYSeries("Centroids");
 
 	
 	//GUI globals
@@ -102,7 +103,7 @@ public class MinWindow
 	private JFCPanel panel;
 	private JTextField textField;
 	private JTextField textField_1;
-	private JButton btnClear;
+	private JButton btnRandom;
 	JLabel lblNewLabel_1 = new JLabel("1");
 	JLabel lblNewLabel_2 = new JLabel("1");
 	
@@ -146,7 +147,7 @@ public class MinWindow
 		
 		//init GUI
 		initialize();
-		btnClear.addActionListener(this);
+		btnRandom.addActionListener(this);
 	}
 	
 	public void addRandomData(){
@@ -155,14 +156,23 @@ public class MinWindow
 		//TODO use generator and set seed
 		Random r = new Random(System.currentTimeMillis());
 		
-		int max  = (int) (r.nextDouble() * 10);
+		int max  = (int) (r.nextDouble() * 50) + 0;
 		
 		for (int i = 0; i < max; i++ ){
-			double randX  =  (r.nextDouble() * 10);
-			double randY  =  (r.nextDouble() * 10);
+			double randX  =  (r.nextDouble() * 20);
+			double randY  =  (r.nextDouble() * 20);
 			series1.add(new SVMDataItem(randX, randY));
 		}
+		for (int i = 0; i < max/8; i++ ){
+			double randX  =  (r.nextDouble() * 20);
+			double randY  =  (r.nextDouble() * 20);
+			series2.add(new SVMDataItem(randX, randY));
+		}
+		
 		model.setSeries1(series1);
+		model.setSeries2(series2);
+        panel.thisPlot.getRangeAxis().setRange(0, 20);
+        panel.thisPlot.getDomainAxis().setRange(0, 20);
 	}
 	
 	private void initializeData(){
@@ -203,7 +213,7 @@ public class MinWindow
 	    	if (ditem instanceof SVMDataItem){
 	    		SVMDataItem svmItem = (SVMDataItem) ditem;
 	    		//return svmItem.toFormatedString(2);
-	    		return svmItem.getWeight() + "";
+	    		return svmItem.getLabel();
 	    	}
             return "";
         }
@@ -216,7 +226,8 @@ public class MinWindow
 		dataset.addSeries(series1);
 		dataset.addSeries(series2);
 		dataset.addSeries(series3);
-		
+		dataset.addSeries(series4);
+		dataset.addSeries(series5);
 
 		JFreeChart chart = ChartFactory.createScatterPlot
 		("XY Scatter Plot", "X", "Y", dataset);
@@ -240,6 +251,13 @@ public class MinWindow
         
         renderer.setSeriesShape(2, ShapeUtilities.createDiagonalCross(1, 1));
         renderer.setSeriesPaint(2, Color.RED.brighter());
+        
+        renderer.setSeriesShape(3, ShapeUtilities.createDiagonalCross(1, 1));
+        renderer.setSeriesPaint(3, Color.BLUE.brighter());
+        
+        renderer.setSeriesShape(4, ShapeUtilities.createDiagonalCross(2, 2));
+        renderer.setSeriesPaint(4, Color.GREEN.brighter());
+        
         return new JFCPanel(chart, model);
 	}
 
@@ -248,7 +266,9 @@ public class MinWindow
 		p.clearAnnotations();
 		series1.clear();
 		series2.clear();
-		
+		series3.clear();
+		series4.clear();
+		series5.clear();
 		
 		model.clearDataSet(0);
 	}
@@ -290,7 +310,7 @@ public class MinWindow
 		pContainer2.add(pClass1);
 		
 		JSlider slider = new JSlider();
-		slider.setValue(73);
+		slider.setValue(100);
 		slider.setFont(new Font("Tahoma", Font.PLAIN, 8));
 		slider.setMajorTickSpacing(25);
 		slider.setPaintTicks(true);
@@ -301,7 +321,12 @@ public class MinWindow
 				JSlider j = (JSlider) arg0.getSource();
 				textField.setText(String.valueOf((double) j.getValue() / 100));
 				lblNewLabel_1.setText((1 / Double.parseDouble(textField.getText()))  + "");
+				//TODO
+				model.setMu1(Double.parseDouble(textField.getText()));
+				model.setMu2(Double.parseDouble(textField_1.getText()));
 				panel.findRCH();
+				panel.solveSVM();
+				
 
 				for (ActionListener a : textField.getActionListeners()) {
 					a.actionPerformed(new ActionEvent(j,
@@ -431,7 +456,13 @@ public class MinWindow
 				JSlider j = (JSlider) arg0.getSource();
 				textField_1.setText(String.valueOf((double) j.getValue() / 100));
 				lblNewLabel_2.setText((1 / Double.parseDouble(textField_1.getText()))  + "");
+				
+				//TODO temp do same for other slider
+				model.setMu1(Double.parseDouble(textField.getText()));
+				model.setMu2(Double.parseDouble(textField_1.getText()));
 				panel.findRCH();
+				panel.solveSVM();
+				
 				
 				
 				for (ActionListener a : textField_1.getActionListeners()) {
@@ -513,21 +544,20 @@ public class MinWindow
 		
 		JPanel pContainer3 = new JPanel();
 		
-		btnClear = new JButton("Random Data");
+		btnRandom = new JButton("Random Data");
+		pContainer3.add(btnRandom);
+		
+		JButton btnFindCH = new JButton("find CH");
+		pContainer3.add(btnFindCH);
+		
+		JButton btnFindWRCH = new JButton("find WRCH");
+		pContainer3.add(btnFindWRCH);
+		
+		JButton btnSolveSVM = new JButton("Solve");
+		pContainer3.add(btnSolveSVM);
+		
+		JButton btnClear = new JButton("Clear");
 		pContainer3.add(btnClear);
-		
-		JButton btnNewButton = new JButton("find CH");
-		pContainer3.add(btnNewButton);
-		
-		JButton btnNewButton_1 = new JButton("find RCH");
-		pContainer3.add(btnNewButton_1);
-		
-		JButton btnNewButton_2 = new JButton("Solve");
-		btnNewButton_2.setEnabled(false);
-		pContainer3.add(btnNewButton_2);
-		
-		JButton btnNewButton_3 = new JButton("Clear");
-		pContainer3.add(btnNewButton_3);
 		GroupLayout groupLayout = new GroupLayout(frame.getContentPane());
 		groupLayout.setHorizontalGroup(
 			groupLayout.createParallelGroup(Alignment.LEADING)
@@ -555,17 +585,20 @@ public class MinWindow
 							.addGap(23))))
 		);
 		frame.getContentPane().setLayout(groupLayout);
-		btnNewButton_3.addActionListener(new ActionListener() {
+		btnClear.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				clearPlot();
 			}
 		});
-		btnNewButton_2.addActionListener(new ActionListener() {
+		btnSolveSVM.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				model.setMu1(Double.parseDouble(textField.getText()));
+				model.setMu2(Double.parseDouble(textField.getText()));
+				
 				panel.solveSVM();
 			}
 		});
-		btnNewButton_1.addActionListener(new ActionListener() {
+		btnFindWRCH.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				//TODO debug code3
 				//model.setMu1(0.91);
@@ -573,11 +606,12 @@ public class MinWindow
 				//model.setMu1(1);
 				
 				model.setMu1(Double.parseDouble(textField.getText()));
+				model.setMu2(Double.parseDouble(textField.getText()));
 				
 				panel.findRCH();
 			}
 		});
-		btnNewButton.addActionListener(new ActionListener() {
+		btnFindCH.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				
 				panel.findCH();
@@ -725,6 +759,23 @@ public class MinWindow
 		mnData.add(mntmTPoints);
 		mnData.add(mntmRandom);
 		
+		JMenuItem mntmNewMenuItem = new JMenuItem("SK");
+		mntmNewMenuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				clearPlot();
+				//TODO answer the question is point adding order is dependent or independent of RCH produced
+				series1.add(new SVMDataItem(1, 1));
+				series1.add(new SVMDataItem(6, 1));
+				series1.add(new SVMDataItem(1, 6));
+				series2.add(new SVMDataItem(8, 1));
+				series2.add(new SVMDataItem(13, 1));
+				series2.add(new SVMDataItem(13, 6));
+				model.setSeries1(series1);
+				model.setSeries2(series2);
+			}
+		});
+		mnData.add(mntmNewMenuItem);
+		
 		JMenu mnHelp = new JMenu("Help");
 		menuBar.add(mnHelp);
 		
@@ -743,52 +794,29 @@ public class MinWindow
 
 	@Override
 	public void mouseClicked(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public void mouseEntered(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public void mouseExited(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public void mousePressed(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		// TODO Auto-generated method stub
-		
-		
 		System.out.println(e.getSource().toString());
-		if (e.getSource().equals(btnClear)){
+		if (e.getSource().equals(btnRandom)){
 			addRandomData();
-			//initializeData();
-			
-			//panel.setBackground(Color.WHITE);
-			//
-			//panel.setForeground(Color.WHITE);
-			
-			//panel.getGraphics().fillRect(0, 0, panel.getWidth(), panel.getHeight());
-			//panel.getGraphics().clearRect(0, 0, panel.getWidth(), panel.getHeight());
-			//panel.getGraphics().drawRect(0, 0, 200, 200);
-			//panel.repaint();
 		}
 	}
 	

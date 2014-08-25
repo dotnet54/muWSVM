@@ -34,6 +34,8 @@ public class SVMModel {
 	private SVMDataItem w = new SVMDataItem(0,1);
 	private double b = 0;
 		
+	public SVMDataItem centroid1;
+	public SVMDataItem centroid2;
 	
 	//TODO sync problem, run bgtask in debugger, before 1 task finishes 
 	public SVMModel(){
@@ -44,7 +46,7 @@ public class SVMModel {
 	
 	public void compute(){
 		calculateHull(0);
-		//solveSVM();
+		solveSVM();
 	}
 	
 	public boolean calculateHull(int series){
@@ -76,9 +78,14 @@ public class SVMModel {
 			}//else return false TODO
 			if (dataset2.size() != 0){
 				//ch2 = RCH.calcReducedCHull(dataset2, 1.0);
-				//rch2 = RCH.calcReducedCHull(dataset2, mu2);
+				rch2 = RCH.calcReducedCHull(dataset2, mu2);
 			}
 		}
+		
+		centroid1 = RCH.findCentroid(dataset1);
+		centroid1.setLabel("+");
+		centroid2 = RCH.findCentroid(dataset2);
+		centroid2.setLabel("-");
 		return true;
 	}
 	

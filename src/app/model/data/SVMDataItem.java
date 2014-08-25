@@ -14,15 +14,25 @@ public class SVMDataItem extends XYDataItem{
 	private int DataClass = 1;
 	private double weight = 1;//defaults
 	private double scProjection = 0;
+	private String label = "";
 	
+	public String getLabel() {
+		return label;
+	}
+
+	public void setLabel(String label) {
+		this.label = label;
+	}
+
 	public static double PRECISION = 0.001; //provide a set precision function
-	public static int DP = 2;
+	public static int DP = 4;
 	
 	public SVMDataItem(double x, double y) {
 		super(x, y);
 		setX(x);//TODO rounding
 		setY(y);
 		setWeight(1);
+		setLabel(getWeight() + "");
 	}
 	
 	public SVMDataItem(double x, double y, double weight) {
@@ -30,6 +40,7 @@ public class SVMDataItem extends XYDataItem{
 		setX(x);//TODO rounding
 		setY(y);
 		setWeight(weight);
+		setLabel(getWeight() + "");
 	}
 	
 	public SVMDataItem(double x, double y, double weight, int dclass) {
@@ -38,6 +49,7 @@ public class SVMDataItem extends XYDataItem{
 		setY(y);
 		setWeight(weight);
 		setDataClass(dclass);
+		setLabel(getWeight() + "");
 	}
 	
 	public Double getX(){
@@ -53,6 +65,8 @@ public class SVMDataItem extends XYDataItem{
 		super.setY(round(y, DP));
 	}
 	
+	
+	
 	public double getDotProduct(SVMDataItem p2){
 //		double dot1 = getXValue() * p2.getXValue(); //TODO double op
 //		double dot2 = getYValue() * p2.getYValue(); //TODO double op
@@ -62,6 +76,10 @@ public class SVMDataItem extends XYDataItem{
 		double dot2 = dMult(getYValue(), p2.getYValue());
 		double dot = dAdd(dot1, dot2); 
 		return  dot;
+	}
+	
+	public double getMagnitude(){
+		return Math.sqrt(Math.pow(getX(), 2) + Math.pow(getY(), 2)) ;
 	}
 
 	public double getWeight(){

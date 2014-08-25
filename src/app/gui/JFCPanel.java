@@ -37,6 +37,7 @@ import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
+import app.model.algorithms.RCH;
 import app.model.algorithms.SK;
 import app.model.data.SVMDataItem;
 import app.model.data.SVMModel;
@@ -267,6 +268,7 @@ public class JFCPanel extends ChartPanel implements ChartMouseListener{
 		ChartEntity ce = event.getEntity();
 		List list = event.getEntities();
 		
+		//TODO selectable layer?? cant select and delete centroid
 		
 		if (list == null){
 			selectedEntity = null;
@@ -409,15 +411,19 @@ public class JFCPanel extends ChartPanel implements ChartMouseListener{
 		model.setSeries1(s1);
 		model.setSeries2(s2);
 		
-		//model.compute();
+		model.compute();
 		
+    	SVMDataItem myW = new SVMDataItem(-6, -6);
+    	double myB = -36;
+		
+    	
     	
         XYPlot p = getChart().getXYPlot();
         if (hyperPlane != null){
         	p.removeAnnotation(hyperPlane);
         }
         Line2D line = SK.getLine(model.getW(), model.getB());
-        hyperPlane = new XYLineAnnotation(line.getX1(), line.getY2(),
+        hyperPlane = new XYLineAnnotation(line.getX1(), line.getY1(),
         		line.getX2(), line.getY2());
     	p.addAnnotation(hyperPlane);
     	
@@ -597,7 +603,18 @@ public class JFCPanel extends ChartPanel implements ChartMouseListener{
 
 			anoRHull2 = new XYShapeAnnotation(shapes[1], dashed, Color.blue);
 			p.addAnnotation(anoRHull2);
+			
+			XYSeries s4= sc.getSeries(3);
+			s4.clear();
+			for (int i = 0; i < rch2.size(); i++){
+				s4.add(rch2.get(i));
+			}
 		}
+		
+		XYSeries s5= sc.getSeries(4);
+		s5.clear();
+		s5.add(model.centroid1);
+		s5.add(model.centroid2);
 
 		System.out.println("RCH found");
 	}
