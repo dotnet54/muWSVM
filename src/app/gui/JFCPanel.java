@@ -49,6 +49,7 @@ public class JFCPanel extends ChartPanel implements ChartMouseListener{
 	private JPopupMenu popup = new JPopupMenu();
 	private JMenuItem itp = new JMenuItem("Add to Positive Class");
 	private JMenuItem itn = new JMenuItem("Add to Negative Class");
+	private JMenuItem itd = new JMenuItem("Duplicate Point");
 	private JMenuItem itr = new JMenuItem("Remove Point");
 	private JMenuItem itw = new JMenuItem("Change Weight");
 		
@@ -106,6 +107,25 @@ public class JFCPanel extends ChartPanel implements ChartMouseListener{
 			}
 		});
 		
+		itd.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent ev) {
+				if (selectedEntity != null){
+					XYItemEntity e = (XYItemEntity) selectedEntity;
+		            XYDataset d = e.getDataset(); //TODO check selection for null
+		            int s = e.getSeriesIndex();
+		            int i = e.getItem();
+		            //System.out.println("X:" + d.getX(s, i) + ", Y:" + d.getY(s, i));
+		            
+		            XYSeriesCollection dd = (XYSeriesCollection) e.getDataset();
+		            XYSeries ss =  dd.getSeries(s);
+		            
+		            System.out.println("duplicated:" + ss.getItems().get(i));
+		            ss.add((XYDataItem) ss.getItems().get(i));
+				}
+			}
+		});
 		
 		itr.addActionListener(new ActionListener() {
 			@Override
@@ -147,10 +167,14 @@ public class JFCPanel extends ChartPanel implements ChartMouseListener{
 					SVMDataItem svmItem = (SVMDataItem) item;
 		            double weight = svmItem.getWeight();
 					String input = JOptionPane.showInputDialog("Enter weight of the point"  ,weight);
-					weight = Double.parseDouble(input); // try catch TODO parse error handle
-					svmItem.setWeight(weight); 
-					thisChart.fireChartChanged();
-					System.out.println( svmItem);
+					if (input != null){
+						weight = Double.parseDouble(input); // try catch TODO parse error handle
+						svmItem.setWeight(weight);
+						svmItem.setLabel(weight + "");
+						thisChart.fireChartChanged();
+						System.out.println( svmItem);
+					}
+					
 					
 				}
 			}
@@ -219,7 +243,7 @@ public class JFCPanel extends ChartPanel implements ChartMouseListener{
 
 		} else {
 			popup.removeAll();
-			popup.add(itp);// TODO duplicate point
+			popup.add(itd);// TODO duplicate point
 			popup.add(itr);
 			popup.add(itw);
 			popup.pack();

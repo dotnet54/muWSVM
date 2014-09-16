@@ -84,6 +84,10 @@ import java.awt.Insets;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.LayoutStyle.ComponentPlacement;
+import javax.swing.JCheckBox;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.ListSelectionModel;
 
 public class MinWindow 
 		implements ActionListener, MouseListener, ChangeListener{
@@ -106,6 +110,7 @@ public class MinWindow
 	private JButton btnRandom;
 	JLabel lblNewLabel_1 = new JLabel("1");
 	JLabel lblNewLabel_2 = new JLabel("1");
+	private JTable table;
 	
 	
 
@@ -175,6 +180,13 @@ public class MinWindow
         panel.thisPlot.getDomainAxis().setRange(0, 20);
 	}
 	
+	private void updateMatrix(){
+		table.getCellEditor(0, 0);
+		
+		
+		
+	}
+	
 	private void initializeData(){
 		
 		series1.add(new SVMDataItem(1, 1));
@@ -237,7 +249,7 @@ public class MinWindow
         plot.setRangePannable(true);
         plot.getRangeAxis().setAutoRange(false);
         plot.getDomainAxis().setAutoRange(false);
-        plot.getRangeAxis().setRange(0, 10);
+        plot.getRangeAxis().setRange(0, 20);
         plot.getDomainAxis().setRange(0, 20);
         XYLineAndShapeRenderer renderer = (XYLineAndShapeRenderer) plot.getRenderer();
         renderer.setBaseItemLabelGenerator(new LabelGenerator());
@@ -277,7 +289,7 @@ public class MinWindow
 	 */
 	private void initialize() {
 		frame = new JFrame();
-		frame.setBounds(100, 100, 721, 538);
+		frame.setBounds(100, 100, 996, 536);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		
@@ -558,32 +570,114 @@ public class MinWindow
 		
 		JButton btnClear = new JButton("Clear");
 		pContainer3.add(btnClear);
+		
+		JPanel panel_1 = new JPanel();
+		
+		JPanel panel_2 = new JPanel();
 		GroupLayout groupLayout = new GroupLayout(frame.getContentPane());
 		groupLayout.setHorizontalGroup(
-			groupLayout.createParallelGroup(Alignment.LEADING)
-				.addGroup(Alignment.TRAILING, groupLayout.createSequentialGroup()
-					.addGap(12)
-					.addComponent(pContainer1, GroupLayout.DEFAULT_SIZE, 553, Short.MAX_VALUE)
-					.addGap(28)
-					.addComponent(pContainer3, GroupLayout.PREFERRED_SIZE, 112, GroupLayout.PREFERRED_SIZE))
+			groupLayout.createParallelGroup(Alignment.TRAILING)
 				.addGroup(groupLayout.createSequentialGroup()
-					.addComponent(pContainer2, GroupLayout.PREFERRED_SIZE, 687, GroupLayout.PREFERRED_SIZE)
-					.addContainerGap(18, Short.MAX_VALUE))
+					.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+						.addGroup(groupLayout.createSequentialGroup()
+							.addGap(12)
+							.addComponent(pContainer1, GroupLayout.PREFERRED_SIZE, 647, GroupLayout.PREFERRED_SIZE)
+							.addPreferredGap(ComponentPlacement.UNRELATED)
+							.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+								.addGroup(groupLayout.createSequentialGroup()
+									.addComponent(panel_1, GroupLayout.PREFERRED_SIZE, 126, GroupLayout.PREFERRED_SIZE)
+									.addGap(18)
+									.addComponent(pContainer3, GroupLayout.PREFERRED_SIZE, 112, GroupLayout.PREFERRED_SIZE))
+								.addComponent(panel_2, GroupLayout.PREFERRED_SIZE, 243, GroupLayout.PREFERRED_SIZE)))
+						.addGroup(groupLayout.createSequentialGroup()
+							.addComponent(pContainer2, GroupLayout.PREFERRED_SIZE, 687, GroupLayout.PREFERRED_SIZE)
+							.addGap(90)))
+					.addGap(55))
 		);
 		groupLayout.setVerticalGroup(
 			groupLayout.createParallelGroup(Alignment.LEADING)
 				.addGroup(groupLayout.createSequentialGroup()
 					.addComponent(pContainer2, GroupLayout.PREFERRED_SIZE, 81, GroupLayout.PREFERRED_SIZE)
-					.addGroup(groupLayout.createParallelGroup(Alignment.TRAILING, false)
+					.addGap(18)
+					.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
 						.addGroup(groupLayout.createSequentialGroup()
-							.addGap(206)
-							.addComponent(pContainer3, GroupLayout.PREFERRED_SIZE, 157, GroupLayout.PREFERRED_SIZE)
-							.addGap(35))
-						.addGroup(groupLayout.createSequentialGroup()
+							.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+								.addComponent(panel_1, GroupLayout.PREFERRED_SIZE, 217, GroupLayout.PREFERRED_SIZE)
+								.addComponent(pContainer3, GroupLayout.PREFERRED_SIZE, 157, GroupLayout.PREFERRED_SIZE))
 							.addGap(18)
-							.addComponent(pContainer1, 0, 0, Short.MAX_VALUE)
-							.addGap(23))))
+							.addComponent(panel_2, GroupLayout.PREFERRED_SIZE, 119, GroupLayout.PREFERRED_SIZE))
+						.addComponent(pContainer1, GroupLayout.PREFERRED_SIZE, 363, GroupLayout.PREFERRED_SIZE))
+					.addContainerGap(15, Short.MAX_VALUE))
 		);
+		
+		table = new JTable();
+		table.setEnabled(false);
+		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		table.setRowSelectionAllowed(false);
+		table.setModel(new DefaultTableModel(
+			new Object[][] {
+				{null, null, "PN", null},
+				{"AP", null, null, null},
+				{"AN", null, null, null},
+				{null, null, null, null},
+			},
+			new String[] {
+				"New column", "New column", "New column", "New column"
+			}
+		) {
+			Class[] columnTypes = new Class[] {
+				String.class, Integer.class, String.class, Object.class
+			};
+			public Class getColumnClass(int columnIndex) {
+				return columnTypes[columnIndex];
+			}
+			boolean[] columnEditables = new boolean[] {
+				false, true, true, true
+			};
+			public boolean isCellEditable(int row, int column) {
+				return columnEditables[column];
+			}
+		});
+		table.getColumnModel().getColumn(0).setResizable(false);
+		table.getColumnModel().getColumn(0).setPreferredWidth(51);
+		table.getColumnModel().getColumn(0).setMaxWidth(51);
+		table.getColumnModel().getColumn(1).setResizable(false);
+		table.getColumnModel().getColumn(1).setPreferredWidth(51);
+		table.getColumnModel().getColumn(1).setMaxWidth(51);
+		table.getColumnModel().getColumn(2).setResizable(false);
+		table.getColumnModel().getColumn(2).setPreferredWidth(46);
+		table.getColumnModel().getColumn(2).setMaxWidth(51);
+		table.getColumnModel().getColumn(3).setPreferredWidth(47);
+		table.getColumnModel().getColumn(3).setMaxWidth(51);
+		panel_2.add(table);
+		panel_1.setLayout(new BoxLayout(panel_1, BoxLayout.Y_AXIS));
+		
+		JLabel lblDisplay = new JLabel("Display");
+		panel_1.add(lblDisplay);
+		
+		JCheckBox chckbxCh = new JCheckBox("CH");
+		panel_1.add(chckbxCh);
+		
+		JCheckBox chckbxWrch = new JCheckBox("WRCH");
+		panel_1.add(chckbxWrch);
+		
+		JCheckBox chckbxWeights = new JCheckBox("Weights");
+		panel_1.add(chckbxWeights);
+		
+		JCheckBox chckbxCentroids = new JCheckBox("Centroids");
+		panel_1.add(chckbxCentroids);
+		
+		JCheckBox chckbxHyperplane = new JCheckBox("Hyperplane");
+		panel_1.add(chckbxHyperplane);
+		
+		JCheckBox chckbxMargins = new JCheckBox("Margins");
+		panel_1.add(chckbxMargins);
+		
+		JCheckBox chckbxPositiveClass = new JCheckBox("Positive Class");
+		panel_1.add(chckbxPositiveClass);
+		
+		JCheckBox chckbxNegativeClass = new JCheckBox("Negative Class");
+		panel_1.add(chckbxNegativeClass);
 		frame.getContentPane().setLayout(groupLayout);
 		btnClear.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -596,6 +690,11 @@ public class MinWindow
 				model.setMu2(Double.parseDouble(textField.getText()));
 				
 				panel.solveSVM();
+				
+				
+				updateMatrix();
+				
+				
 			}
 		});
 		btnFindWRCH.addActionListener(new ActionListener() {
@@ -759,7 +858,7 @@ public class MinWindow
 		mnData.add(mntmTPoints);
 		mnData.add(mntmRandom);
 		
-		JMenuItem mntmNewMenuItem = new JMenuItem("SK");
+		JMenuItem mntmNewMenuItem = new JMenuItem("Triangle 2");
 		mntmNewMenuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				clearPlot();
