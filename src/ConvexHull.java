@@ -2,8 +2,9 @@
 import java.awt.Point;
 import java.util.Arrays;
 
+import old.DataPoint;
+
 import app.model.algorithms.*;
-import app.model.data.DataPoint;
 
 // Sem 1 Week 5
 

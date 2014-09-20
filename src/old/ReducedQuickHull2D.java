@@ -3,7 +3,6 @@ package old;
 import java.awt.Point;
 import java.util.ArrayList;
 
-import app.model.data.DataPoint;
 
 public class ReducedQuickHull2D {
 	

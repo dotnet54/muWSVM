@@ -4,13 +4,13 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Random;
 
+import old.DataPoint;
 import old.QuickHull;
 import old.RCH_old;
 import old.ReducedQuickHull;
 import old.ReducedQuickHull2D;
 import old.ReducedQuickHull2D.Vector;
 
-import app.model.data.DataPoint;
 
 public class ReducedQuickHullTest {
 

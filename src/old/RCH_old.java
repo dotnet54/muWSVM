@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
-import app.model.data.DataPoint;
 
 
 public class RCH_old {

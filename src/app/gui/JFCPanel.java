@@ -20,6 +20,8 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 
+import old.XYPolyAnnotation;
+
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartMouseEvent;
 import org.jfree.chart.ChartMouseListener;
@@ -37,8 +39,8 @@ import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
-import app.model.algorithms.RCH;
-import app.model.algorithms.SK;
+import app.model.algorithms.WRCH;
+import app.model.algorithms.WSK;
 import app.model.data.SVMDataItem;
 import app.model.data.SVMModel;
 
@@ -403,7 +405,6 @@ public class JFCPanel extends ChartPanel implements ChartMouseListener{
 	}
 
 
-
 	private void addPoint(int series, double x, double y){
 		
 		XYSeriesCollection d = (XYSeriesCollection) getChart().getXYPlot().getDataset();
@@ -446,7 +447,7 @@ public class JFCPanel extends ChartPanel implements ChartMouseListener{
         if (hyperPlane != null){
         	p.removeAnnotation(hyperPlane);
         }
-        Line2D line = SK.getLine(model.getW(), model.getB());
+        Line2D line = WSK.getLine(model.getW(), model.getB());
         hyperPlane = new XYLineAnnotation(line.getX1(), line.getY1(),
         		line.getX2(), line.getY2());
     	p.addAnnotation(hyperPlane);

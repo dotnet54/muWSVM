@@ -1,6 +1,6 @@
 package app.test;
 
-import app.model.algorithms.RCH;
+import app.model.algorithms.WRCH;
 
 public class Test {
 

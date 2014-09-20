@@ -7,8 +7,8 @@ import java.util.Random;
 import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYSeries;
 
-import app.model.algorithms.RCH;
-import app.model.algorithms.SK;
+import app.model.algorithms.WRCH;
+import app.model.algorithms.WSK;
 
 public class SVMModel {
 	
@@ -59,38 +59,38 @@ public class SVMModel {
 			if (dataset1.size() == 0){
 				return false;
 			}else{
-				ch1 = RCH.calcReducedCHull(dataset1, 1.0);
-				rch1 = RCH.calcReducedCHull(dataset1, mu1);
+				ch1 = WRCH.calcReducedCHull(dataset1, 1.0);
+				rch1 = WRCH.calcReducedCHull(dataset1, mu1);
 			}
 			
 		}else if (series == 2){
 			if (dataset2.size() == 0){
 				return false;
 			}else{
-				ch2 = RCH.calcReducedCHull(dataset2, 1.0);
-				rch2 = RCH.calcReducedCHull(dataset2, mu2);
+				ch2 = WRCH.calcReducedCHull(dataset2, 1.0);
+				rch2 = WRCH.calcReducedCHull(dataset2, mu2);
 			}
 			
 		}else{
 			if (dataset1.size() != 0){
 				//ch1 = RCH.calcReducedCHull(dataset1, 1.0);
-				rch1 = RCH.calcReducedCHull(dataset1, mu1);
+				rch1 = WRCH.calcReducedCHull(dataset1, mu1);
 			}//else return false TODO
 			if (dataset2.size() != 0){
 				//ch2 = RCH.calcReducedCHull(dataset2, 1.0);
-				rch2 = RCH.calcReducedCHull(dataset2, mu2);
+				rch2 = WRCH.calcReducedCHull(dataset2, mu2);
 			}
 		}
 		
-		centroid1 = RCH.findCentroid(dataset1);
+		centroid1 = WRCH.findCentroid(dataset1);
 		centroid1.setLabel("+");
-		centroid2 = RCH.findCentroid(dataset2);
+		centroid2 = WRCH.findCentroid(dataset2);
 		centroid2.setLabel("-");
 		return true;
 	}
 	
 	public boolean solveSVM(){
-		SK.solve(this);
+		WSK.solve(this);
 		return true;
 	}
 
