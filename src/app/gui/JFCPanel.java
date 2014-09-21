@@ -20,8 +20,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 
-import old.XYPolyAnnotation;
-
 import org.jfree.chart.ChartMouseEvent;
 import org.jfree.chart.ChartMouseListener;
 import org.jfree.chart.ChartPanel;
@@ -62,9 +60,9 @@ public class JFCPanel extends ChartPanel implements ChartMouseListener{
 	
 	private SVMModel model = null;
 	
-	private  XYPolyAnnotation anoHull1 = null;
+	private  XYShapeAnnotation anoHull1 = null;
 	private  XYShapeAnnotation anoRHull1 = null;
-	private  XYPolyAnnotation anoHull2 = null;
+	private  XYShapeAnnotation anoHull2 = null;
 	private  XYShapeAnnotation anoRHull2 = null;
 	
 	private  XYLineAnnotation hyperPlane = null;
@@ -511,7 +509,7 @@ public class JFCPanel extends ChartPanel implements ChartMouseListener{
 				p.removeAnnotation(anoHull1);
 			}
 
-			anoHull1 = new XYPolyAnnotation(shapes[2]);
+			anoHull1 = new XYShapeAnnotation(shapes[2]);
 			p.addAnnotation(anoHull1);
 		}
 
@@ -537,7 +535,7 @@ public class JFCPanel extends ChartPanel implements ChartMouseListener{
 				p.removeAnnotation(anoHull2);
 			}
 
-			anoHull2 = new XYPolyAnnotation(shapes[3]);
+			anoHull2 = new XYShapeAnnotation(shapes[3]);
 			p.addAnnotation(anoHull2);
 
 		}
