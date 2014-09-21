@@ -37,6 +37,21 @@ public class SVMModel {
 	public SVMDataItem centroid1;
 	public SVMDataItem centroid2;
 	
+	public class inParam{
+		private double mu[];	//mu per class
+		private boolean useSameMu = false;
+		
+		private int maxIterationWSK = 50;
+		private int maxRecursionWRCH = 100;
+		private double epsilon = 0.001;
+		private int roundOff = 2;
+	}
+	
+	public class outParam{
+		private int numSV[];	//num SV per class
+		private double alphas[][];	//alphas per class
+	}
+	
 	//TODO sync problem, run bgtask in debugger, before 1 task finishes 
 	public SVMModel(){
 
@@ -59,26 +74,26 @@ public class SVMModel {
 			if (dataset1.size() == 0){
 				return false;
 			}else{
-				ch1 = WRCH.calcReducedCHull(dataset1, 1.0);
-				rch1 = WRCH.calcReducedCHull(dataset1, mu1);
+				ch1 = WRCH.calcWeightedReducedCHull(dataset1, 1.0);
+				rch1 = WRCH.calcWeightedReducedCHull(dataset1, mu1);
 			}
 			
 		}else if (series == 2){
 			if (dataset2.size() == 0){
 				return false;
 			}else{
-				ch2 = WRCH.calcReducedCHull(dataset2, 1.0);
-				rch2 = WRCH.calcReducedCHull(dataset2, mu2);
+				ch2 = WRCH.calcWeightedReducedCHull(dataset2, 1.0);
+				rch2 = WRCH.calcWeightedReducedCHull(dataset2, mu2);
 			}
 			
 		}else{
 			if (dataset1.size() != 0){
 				//ch1 = RCH.calcReducedCHull(dataset1, 1.0);
-				rch1 = WRCH.calcReducedCHull(dataset1, mu1);
+				rch1 = WRCH.calcWeightedReducedCHull(dataset1, mu1);
 			}//else return false TODO
 			if (dataset2.size() != 0){
 				//ch2 = RCH.calcReducedCHull(dataset2, 1.0);
-				rch2 = WRCH.calcReducedCHull(dataset2, mu2);
+				rch2 = WRCH.calcWeightedReducedCHull(dataset2, mu2);
 			}
 		}
 		

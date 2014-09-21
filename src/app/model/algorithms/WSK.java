@@ -20,64 +20,7 @@ public class WSK {
 	private static double[] pweights;	//TODO change from static
 	private static double[] nweights;
 	
-//	public static void main(String[] args){
-//		
-//		ArrayList<SVMDataItem> Ppos = new ArrayList<SVMDataItem>();
-//		
-//		SVMDataItem d = new SVMDataItem(0,0);
-//		d.setDataClass(1);
-//		Ppos.add(d);
-//		d = new SVMDataItem(0,0);
-//		d.setDataClass(1);
-//		Ppos.add(d);
-//		d = new SVMDataItem(0,0);
-//		d.setDataClass(1);
-//		Ppos.add(d);
-//		
-//		ArrayList<SVMDataItem> Pneg = new ArrayList<SVMDataItem>();
-//		d = new SVMDataItem(0,0);
-//		d.setDataClass(-1);
-//		Pneg.add(d);
-//		d = new SVMDataItem(0,0);
-//		d.setDataClass(-1);
-//		Pneg.add(d);
-//		d = new SVMDataItem(0,0);
-//		d.setDataClass(-1);
-//		Pneg.add(d);
-//		
-//		
-//		
-//		SVMDataItem a = null;
-//		SVMDataItem[] aa = new SVMDataItem[3];
-//		
-//		a = new SVMDataItem(0,0);
-//		d.setDataClass(1);
-//		aa[0] = a;
-//		a =  new SVMDataItem(1,0);
-//		d.setDataClass(1);
-//		aa[1] = a;
-//		a =  new SVMDataItem(0,1);
-//		d.setDataClass(1);
-//		aa[2] = a;
-//		
-//		SVMDataItem[] bb = new SVMDataItem[3];
-//		
-//		a = new SVMDataItem(6,0);
-//		d.setDataClass(-1);
-//		bb[0] = a;
-//		a =  new SVMDataItem(7,0);
-//		d.setDataClass(-1);
-//		bb[1] = a;
-//		a =  new SVMDataItem(7,1);
-//		d.setDataClass(-1);
-//		bb[2] = a;
-//		
-//		
-//		
-//		sk(aa,bb,0.5);
-//		
-//	}
-	
+
 	public static void solve(SVMModel model){
 		//TODO solve using different mu? mekae GUI less confusing
 		

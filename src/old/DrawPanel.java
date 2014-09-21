@@ -208,7 +208,7 @@ public class DrawPanel extends JPanel
 
     	 //ch2 = WRCH.WRCH(dataset1);
     	//ch2 = RCH.qrh(dataset2, 1.0, null, null, true);
-    	ch2 = WRCH.calcReducedCHull(model.dataset2, 1.0);
+    	ch2 = WRCH.calcWeightedReducedCHull(model.dataset2, 1.0);
         
         int[] xPoints = new int[ch2.size()];
         int[] yPoints =  new int[ch2.size()];
@@ -230,7 +230,7 @@ public class DrawPanel extends JPanel
 
     	//rch2 = WRCH.WRCH(dataset1);
         //rch2 = RCH.qrh(dataset2, mu2, null, null, true);
-        rch2 = WRCH.calcReducedCHull(model.dataset2, 0.5);
+        rch2 = WRCH.calcWeightedReducedCHull(model.dataset2, 0.5);
         
         xPoints = new int[rch2.size()];
         yPoints =  new int[rch2.size()];

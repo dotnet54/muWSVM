@@ -22,7 +22,6 @@ import javax.swing.JPopupMenu;
 
 import old.XYPolyAnnotation;
 
-import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartMouseEvent;
 import org.jfree.chart.ChartMouseListener;
 import org.jfree.chart.ChartPanel;
@@ -39,7 +38,6 @@ import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
-import app.model.algorithms.WRCH;
 import app.model.algorithms.WSK;
 import app.model.data.SVMDataItem;
 import app.model.data.SVMModel;
@@ -48,6 +46,10 @@ public class JFCPanel extends ChartPanel implements ChartMouseListener{
 //TODO BUG point is not added to click location but upper corner of popup menu
 	
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1667095001940958696L;
 	private JPopupMenu popup = new JPopupMenu();
 	private JMenuItem itp = new JMenuItem("Add to Positive Class");
 	private JMenuItem itn = new JMenuItem("Add to Negative Class");

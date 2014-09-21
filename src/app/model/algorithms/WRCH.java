@@ -1,24 +1,12 @@
 package app.model.algorithms;
 
 
-import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
-
-import old.DataPoint;
-
-import org.apache.commons.math3.ode.EquationsMapper;
 
 import app.model.data.SVMDataItem;
 
@@ -36,44 +24,9 @@ public class WRCH {
 	static int numSupportPoints;	//varies depending on weight
 	static double weights[];
 	static ArrayList<SVMDataItem> PP;
-//
-//	public static void main(String[] args) {
-//		int np = 5;
-//		SVMDataItem[] points = new SVMDataItem[np];
-//		SVMDataItem[] wh;
-//		
-////		points[0] = new DP(0,0);
-////		points[1] =  new DP(1,0);
-////		points[2] = new DP(0, 1);
-////		points[3] = new DP(1, 1);
-////		points[4] = new DP(1, 2);
-//		
-//		
-//		points[0] = new SVMDataItem(0,0);
-//		points[1] =  new SVMDataItem(100, 0);
-//		points[2] = new SVMDataItem(184, 40);
-//		points[3] = new SVMDataItem(109, 103);
-//		points[4] = new SVMDataItem(0, 100);
-//		
-//		PP = new ArrayList<SVMDataItem>();
-//		for(int i = 0; i < points.length; i++){
-//			PP.add(i,points[i]);
-//		}
-//		
-//		weights = new double[points.length];
-//		for(int i = 0; i < points.length; i++){
-//			weights[i] = 1;
-//		}
-//		weights[0] = 0.5;
-//		wh = rhull(points, (double)1);
-//		for (int i = 0; i < wh.length; i++){
-//			System.out.println("wh Point  = " + wh[i]);
-//		}
-//	}
-//	
 
 	
-	public static ArrayList<SVMDataItem> calcReducedCHull(ArrayList<SVMDataItem> dataset, double mu) {
+	public static ArrayList<SVMDataItem> calcWeightedReducedCHull(ArrayList<SVMDataItem> dataset, double mu) {
 		
 		ArrayList<SVMDataItem> r = new ArrayList<SVMDataItem>();
 		
@@ -546,51 +499,6 @@ public class WRCH {
 		cent.setY(cent.getYValue() / totalWeight);
 		
 		return cent;
-	}
-	
-	public static int extractMax(ArrayList<Double> list){
-		
-		int maxi = 0;
-		Double max = null; // = list.get(maxi);
-		
-		for (int i = 0; i < list.size(); i++){
-			System.out.println(max + " " +(max < list.get(i)) + " " + list.get(i));
-			
-				if (max == null && Double.isNaN(list.get(i))){
-					max = list.get(i);
-				}
-				
-				if (max < list.get(i)){
-					max = list.get(i);
-					maxi = i;
-				}
-			
-		}
-		
-		//list.remove(maxi);
-		list.set(maxi, Double.NaN);
-		return maxi;
-	}
-
-
-	public static SVMDataItem argmax(SVMDataItem[] P, SVMDataItem n, double mu){
-		SVMDataItem[] points = getpoints(P);
-		double r = 0;
-		double max = 0;
-		SVMDataItem maxPoint = null;
-		for (int i = 0; i < points.length; i++){
-			r = n.getDotProduct(points[i]);
-			if (max < r){
-				max = r;
-				maxPoint = points[i];
-			}
-		}
-		return maxPoint;
-	}
-
-
-	private static SVMDataItem[] getpoints(SVMDataItem[] p) {
-		return p;
 	}
 
 

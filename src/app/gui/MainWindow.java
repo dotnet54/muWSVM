@@ -1,30 +1,15 @@
 package app.gui;
 
-import java.awt.BasicStroke;
-import java.awt.EventQueue;
-import java.awt.Paint;
-import java.awt.PaintContext;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.RenderingHints;
-import java.awt.Shape;
-import java.awt.Polygon;
-import java.awt.Stroke;
-
 import javax.swing.JFrame;
-import javax.swing.SpringLayout;
 import javax.swing.JPanel;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.util.ArrayList;
 import java.util.Random;
 
 import javax.swing.ButtonGroup;
-import javax.swing.InputVerifier;
-import javax.swing.JComponent;
 import javax.swing.JMenuBar;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
@@ -47,7 +32,6 @@ import javax.swing.JTabbedPane;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.annotations.XYShapeAnnotation;
 import org.jfree.chart.labels.ItemLabelAnchor;
 import org.jfree.chart.labels.ItemLabelPosition;
 import org.jfree.chart.labels.StandardXYToolTipGenerator;
@@ -61,7 +45,6 @@ import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.TextAnchor;
 import org.jfree.util.ShapeUtilities;
 
-import app.model.algorithms.WRCH;
 import app.model.data.SVMDataItem;
 import app.model.data.SVMModel;
 
@@ -69,29 +52,13 @@ import java.awt.event.InputMethodListener;
 import java.awt.event.InputMethodEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeEvent;
-import javax.swing.JPopupMenu;
-import java.awt.Component;
-import java.awt.event.MouseAdapter;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Rectangle2D;
-import java.awt.image.ColorModel;
-import java.awt.GridBagLayout;
-import java.awt.GridBagConstraints;
-import java.awt.FlowLayout;
 import java.awt.BorderLayout;
 import java.awt.Font;
 import javax.swing.UIManager;
-import javax.swing.BoxLayout;
-import java.awt.GridLayout;
-import java.awt.Insets;
-import javax.swing.GroupLayout;
-import javax.swing.GroupLayout.Alignment;
-import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.JCheckBox;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.ListSelectionModel;
-import javax.swing.JToggleButton;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 
@@ -119,7 +86,6 @@ public class MainWindow
 	JLabel lblmuInvVal_class2 = new JLabel("1");
 	private JTable tableConfusion;
 	private JTextField textField_NewWeight;
-	private DataLoader dLoader; 
 	private JTextField textField_NumDataPoints;
 	private JTextField textField_PercentPos;
 	private JTextField textField_NumDuplications;
@@ -129,7 +95,6 @@ public class MainWindow
 	private JTextField textField_NumDP;
 	private JTextField textField_SeparationDelta;
 	
-	private String oldText = "";
 	private JTextField textField_11;
 	private JTextField textField_12;
 	
@@ -642,9 +607,9 @@ public class MainWindow
 		tabbedPane.addTab("Training Data", null, pContainerTrainingData, null);
 		pContainerTrainingData.setLayout(null);
 		
-		JComboBox cmbDataDistType = new JComboBox();
+		JComboBox<String> cmbDataDistType = new JComboBox<String>();
 		cmbDataDistType.setBounds(11, 221, 156, 23);
-		cmbDataDistType.setModel(new DefaultComboBoxModel(new String[] {"Hard Margin SVM", "Soft Margin SVM"}));
+		cmbDataDistType.setModel(new DefaultComboBoxModel<String>(new String[] {"Hard Margin SVM", "Soft Margin SVM"}));
 		pContainerTrainingData.add(cmbDataDistType);
 		
 		JButton btnGenerateData = new JButton("Generate Random Data");
@@ -683,8 +648,8 @@ public class MainWindow
 		btnClearPlot.setBounds(113, 11, 79, 23);
 		pContainerTrainingData.add(btnClearPlot);
 		
-		JComboBox cmbPredefinedData = new JComboBox();
-		cmbPredefinedData.setModel(new DefaultComboBoxModel(new String[] {"Triangle"}));
+		JComboBox<String> cmbPredefinedData = new JComboBox<String>();
+		cmbPredefinedData.setModel(new DefaultComboBoxModel<String>(new String[] {"Triangle"}));
 		cmbPredefinedData.setBounds(164, 45, 134, 20);
 		pContainerTrainingData.add(cmbPredefinedData);
 		
@@ -738,8 +703,8 @@ public class MainWindow
 		lblNumDuplications.setBounds(10, 201, 122, 14);
 		pContainerDataEditing.add(lblNumDuplications);
 		
-		JComboBox cmbNewClass = new JComboBox();
-		cmbNewClass.setModel(new DefaultComboBoxModel(new String[] {"Positive Class", "Negative Class"}));
+		JComboBox<String> cmbNewClass = new JComboBox<String>();
+		cmbNewClass.setModel(new DefaultComboBoxModel<String>(new String[] {"Positive Class", "Negative Class"}));
 		cmbNewClass.setBounds(142, 229, 90, 20);
 		pContainerDataEditing.add(cmbNewClass);
 		
@@ -821,6 +786,10 @@ public class MainWindow
 				"New column", "New column", "New column"
 			}
 		) {
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 3148195956415476019L;
 			Class[] columnTypes = new Class[] {
 				String.class, String.class, String.class
 			};
@@ -1178,16 +1147,5 @@ public class MainWindow
 		//if (e.getSource().equals(btnRandom)){
 		//	addRandomData();
 		//}
-	}
-	
-	
-	
-	
-	
-	
-	
-	//TODO helper
-	private void print(String str){
-		System.out.println(str);
 	}
 }

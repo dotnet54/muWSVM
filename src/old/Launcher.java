@@ -226,7 +226,7 @@ public class Launcher extends JPanel
 
         //ch = QuickHull.QH(vertices);
     	//ch = RCH.qrh(dataset1, 1.0, null, null, true);
-    	ch = WRCH.calcReducedCHull(dataset1, 1.0);
+    	ch = WRCH.calcWeightedReducedCHull(dataset1, 1.0);
         
         int[] xPoints = new int[ch.size()];
         int[] yPoints =  new int[ch.size()];
@@ -240,7 +240,7 @@ public class Launcher extends JPanel
         g.drawPolygon(xPoints, yPoints, ch.size());
         
         
-        rch = WRCH.calcReducedCHull(dataset1, 0.5);
+        rch = WRCH.calcWeightedReducedCHull(dataset1, 0.5);
         //rch = RCH.qrh(dataset1, mu, null, null, true);
         
         xPoints = new int[rch.size()];
@@ -276,7 +276,7 @@ public class Launcher extends JPanel
 
         //ch = QuickHull.QH(vertices);
     	//ch = RCH.qrh(dataset2, 1.0, null, null, true);
-    	ch = WRCH.calcReducedCHull(dataset2, 1.0);
+    	ch = WRCH.calcWeightedReducedCHull(dataset2, 1.0);
     	
     	
         int[] xPoints = new int[ch.size()];
@@ -291,7 +291,7 @@ public class Launcher extends JPanel
         g.drawPolygon(xPoints, yPoints, ch.size());
         
         
-        rch = WRCH.calcReducedCHull(dataset2, 0.5);
+        rch = WRCH.calcWeightedReducedCHull(dataset2, 0.5);
         //rch = RCH.qrh(dataset2, mu, null, null, true);
         
         xPoints = new int[rch.size()];
