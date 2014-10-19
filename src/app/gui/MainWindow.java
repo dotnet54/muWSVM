@@ -67,17 +67,14 @@ public class MainWindow
 
 	//Model globals
 	private static SVMModel model = null;
-	XYSeriesCollection dataset = new XYSeriesCollection();
-	XYSeries series1 = new XYSeries("Positive Class");
-	XYSeries series2 = new XYSeries("Negative Class");	
-	XYSeries series3 = new XYSeries("Positive WRCH");
-	XYSeries series4 = new XYSeries("Negative WRCH");
-	XYSeries series5 = new XYSeries("Centroids");
-
+	//TODO we can remove centroid by right click, disable those
 	
 	//GUI globals
 	private JFrame frame;
+	JFreeChart chart;
 	private JFCPanel chartPanel;
+	
+	
 	private JTextField textField_class1;
 	private JTextField textField_class_2;
 	private JSlider slider_class1;
@@ -107,7 +104,7 @@ public class MainWindow
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}
-		System.out.println("start main");
+		System.out.println("starting GUI");
 		
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
@@ -115,12 +112,13 @@ public class MainWindow
 					MainWindow window = new MainWindow();
 					window.frame.setVisible(true);
 				} catch (Exception e) {
+					System.out.println("Unknown Error: Terminating");
 					e.printStackTrace();
 				}
 			}
 		});
 		
-		System.out.println("exit main");
+		System.out.println("exiting GUI");
 	}
 
 	/**
@@ -128,99 +126,17 @@ public class MainWindow
 	 */
 	public MainWindow() {
 		//init Model
-		
 		model = new SVMModel();
-		
-		initializeData();
-		
+
 		//init GUI
 		initialize();
 	}
 	
-	public void addRandomData(){
-		clearPlot();
-		
-		//TODO use generator and set seed
-		Random r = new Random(System.currentTimeMillis());
-		
-		int max  = (int) (r.nextDouble() * 50) + 0;
-		
-		for (int i = 0; i < max; i++ ){
-			double randX  =  (r.nextDouble() * 20);
-			double randY  =  (r.nextDouble() * 20);
-			series1.add(new SVMDataItem(randX, randY));
-		}
-		for (int i = 0; i < max/8; i++ ){
-			double randX  =  (r.nextDouble() * 20);
-			double randY  =  (r.nextDouble() * 20);
-			series2.add(new SVMDataItem(randX, randY));
-		}
-		
-		model.setSeries1(series1);
-		model.setSeries2(series2);
-        chartPanel.thisPlot.getRangeAxis().setRange(0, 20);
-        chartPanel.thisPlot.getDomainAxis().setRange(0, 20);
-	}
+
 	
 	private void updateMatrix(){
 		tableConfusion.getCellEditor(0, 0);
-		
-		
-		
 	}
-	
-	private void initializeData(){
-		
-		series1.add(new SVMDataItem(1, 1));
-		series1.add(new SVMDataItem(2, 4));
-		series1.add(new SVMDataItem(7.5, 7.5));
-		series1.add(new SVMDataItem(8, 4, 2));
-		
-//		series1.add(new SVMDataItem(4, 4));
-//		series1.add(new SVMDataItem(8, 8));
-//		series1.add(new SVMDataItem(8, 1));
-		
-		
-//		series1.add(new SVMDataItem(4, 4));
-//		series1.add(new SVMDataItem(8, 8));
-//		series1.add(new SVMDataItem(8, 1));
-		
-		
-		
-
-		series2.add(new SVMDataItem(1.0, 5.0));
-		series2.add(new SVMDataItem(3.0, 5.0));
-		series2.add(new SVMDataItem(5.0, 5.0));
-		series2.add(new SVMDataItem(4.0, 8.0));
-		
-		model.setSeries1(series1);
-		model.setSeries2(series2);
-	}
-	
-	
-
-//	private class IntegerInputVerifier extends InputVerifier {
-//
-//		@Override
-//		public boolean verify(JComponent input) {
-//            JTextField tf = (JTextField) input;
-//            String text = tf.getText();
-//            try{
-//            	Integer.parseInt(text);
-//            }catch (NumberFormatException nf) {
-//            	JOptionPane.showMessageDialog(null, "sdf", 
-//            			"InfoBox: " , JOptionPane.INFORMATION_MESSAGE);
-//            	return false;
-//            }
-//			return true;
-//		}
-		
-//		@Override
-//		public boolean shouldYieldFocus(JComponent input){
-//			return false;
-//			
-//		}
-//    }
 
 	
     public class LabelGenerator implements XYItemLabelGenerator {
@@ -241,22 +157,16 @@ public class MainWindow
 	
 	private JFCPanel createChartPanel(){
 
-		dataset.addSeries(series1);
-		dataset.addSeries(series2);
-		dataset.addSeries(series3);
-		dataset.addSeries(series4);
-		dataset.addSeries(series5);
-
-		JFreeChart chart = ChartFactory.createScatterPlot
-		("Weighted Support Vector Machine", "X", "Y", dataset);
+		chart = ChartFactory.createScatterPlot
+		("Weighted Support Vector Machine", "X", "Y", model.getModelDataSet());
 		
 		XYPlot plot = chart.getXYPlot();
         plot.setDomainPannable(true);
         plot.setRangePannable(true);
         plot.getRangeAxis().setAutoRange(false);
         plot.getDomainAxis().setAutoRange(false);
-        plot.getRangeAxis().setRange(0, 20);
-        plot.getDomainAxis().setRange(0, 20);
+        plot.getRangeAxis().setRange(0, 10);
+        plot.getDomainAxis().setRange(0, 10);
         XYLineAndShapeRenderer renderer = (XYLineAndShapeRenderer) plot.getRenderer();
         renderer.setBaseItemLabelGenerator(new LabelGenerator());
         renderer.setBaseItemLabelPaint(Color.black);
@@ -279,24 +189,13 @@ public class MainWindow
         return new JFCPanel(chart, model);
 	}
 
-	public void clearPlot(){
-		XYPlot p = chartPanel.getChart().getXYPlot();
-		p.clearAnnotations();
-		series1.clear();
-		series2.clear();
-		series3.clear();
-		series4.clear();
-		series5.clear();
-		
-		model.clearDataSet(0);
-	}
 	/**
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize() {
 		frame = new JFrame();
 		frame.setResizable(false);
-		frame.setBounds(100, 100, 996, 519);
+		frame.setBounds(100, 100, 845, 518);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		
@@ -308,7 +207,7 @@ public class MainWindow
 	    labelTable.put(new Integer(0), new JLabel("0.0"));
 		
 		JPanel pChartContainer = new JPanel();
-		pChartContainer.setBounds(10, 11, 647, 435);
+		pChartContainer.setBounds(10, 11, 450, 454);
         
 
         pChartContainer.setLayout(new BorderLayout(0, 0));
@@ -323,13 +222,21 @@ public class MainWindow
         chartPanel.setBackground(Color.WHITE);
 		
 		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-		tabbedPane.setBounds(667, 11, 313, 372);
+		tabbedPane.setBounds(514, 11, 313, 372);
 		
 		JPanel pSolveButtonsContainer = new JPanel();
-		pSolveButtonsContainer.setBounds(667, 394, 313, 52);
+		pSolveButtonsContainer.setBounds(514, 390, 313, 52);
 		pSolveButtonsContainer.setLayout(null);
 		
 		JButton btnFindWeightedReduced = new JButton("Find Weighted RCH");
+		btnFindWeightedReduced.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				model.setMu1(Double.parseDouble(textField_class1.getText()));
+				model.setMu2(Double.parseDouble(textField_class_2.getText()));
+				chartPanel.findRCH();
+				chartPanel.solveSVM();
+			}
+		});
 		btnFindWeightedReduced.setBounds(0, 0, 125, 23);
 		pSolveButtonsContainer.add(btnFindWeightedReduced);
 		
@@ -347,7 +254,6 @@ public class MainWindow
 		
 		slider_class1 = new JSlider();
 		slider_class1.setBounds(0, 26, 200, 40);
-		slider_class1.setValue(100);
 		slider_class1.setFont(new Font("Tahoma", Font.PLAIN, 8));
 		slider_class1.setMajorTickSpacing(25);
 		slider_class1.setPaintTicks(true);
@@ -470,7 +376,7 @@ public class MainWindow
 //				     }
 				  }
 				});
-		textField_class1.setText("1");
+		textField_class1.setText("0.5");
 		textField_class1.setColumns(10);
 		
 		
@@ -495,7 +401,6 @@ public class MainWindow
 		
 		slider_class2 = new JSlider();
 		slider_class2.setBounds(0, 19, 200, 40);
-		slider_class2.setValue(100);
 		slider_class2.setMajorTickSpacing(25);
 		slider_class2.setFont(new Font("Tahoma", Font.PLAIN, 8));
 		slider_class2.setLabelTable( labelTable );  
@@ -547,7 +452,7 @@ public class MainWindow
 				System.out.println("actionPerformed " + model.getMu2() + arg0.getActionCommand());
 			}
 		});
-		textField_class_2.setText("1");
+		textField_class_2.setText("0.5");
 		textField_class_2.setColumns(10);
 		textField_class_2.addFocusListener(new FocusAdapter() {
 			@Override
@@ -613,6 +518,12 @@ public class MainWindow
 		pContainerTrainingData.add(cmbDataDistType);
 		
 		JButton btnGenerateData = new JButton("Generate Random Data");
+		btnGenerateData.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				 model.generateRandomData();
+				chart.getXYPlot().setDataset(model.getModelDataSet()); 
+			}
+		});
 		btnGenerateData.setBounds(10, 294, 145, 23);
 		pContainerTrainingData.add(btnGenerateData);
 		
@@ -977,10 +888,10 @@ public class MainWindow
 		JMenuItem mntmTwoPoints = new JMenuItem("Two points 1");
 		mntmTwoPoints.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				clearPlot();
-				series1.add(new SVMDataItem(1, 1));
-				series1.add(new SVMDataItem(4, 1));
-				model.setSeries1(series1);
+				chartPanel.clearPlot();
+//				series1.add(new SVMDataItem(1, 1));
+//				series1.add(new SVMDataItem(4, 1));
+//				model.setSeries1(series1);
 			}
 		});
 		mnData.add(mntmTwoPoints);
@@ -988,13 +899,13 @@ public class MainWindow
 		JMenuItem mntmCollinearPoints = new JMenuItem("Collinear Points 1");
 		mntmCollinearPoints.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				clearPlot();
-				series1.add(new SVMDataItem(1, 1));
-				series1.add(new SVMDataItem(4, 1));
-				series1.add(new SVMDataItem(7, 1));
-				series1.add(new SVMDataItem(11, 1));
-				
-				model.setSeries1(series1);
+				chartPanel.clearPlot();
+//				series1.add(new SVMDataItem(1, 1));
+//				series1.add(new SVMDataItem(4, 1));
+//				series1.add(new SVMDataItem(7, 1));
+//				series1.add(new SVMDataItem(11, 1));
+//				
+//				model.setSeries1(series1);
 			}
 		});
 		mnData.add(mntmCollinearPoints);
@@ -1002,34 +913,34 @@ public class MainWindow
 		JMenuItem mntmTriangle = new JMenuItem("Triangle 1");
 		mntmTriangle.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				clearPlot();
-				series1.add(new SVMDataItem(1, 1));
-				//series1.add(new SVMDataItem(1, 1));
-				
-				series1.add(new SVMDataItem(8, 1,2));
-				
-				//series1.add(new SVMDataItem(8, 1));
-				//series1.add(new SVMDataItem(8, 1));
-				
-				series1.add(new SVMDataItem(1, 8));
-				//series1.add(new SVMDataItem(1, 8));
-				
-				//series1.add(new SVMDataItem(4.5, 1));
-				//series1.add(new SVMDataItem(1, 1));
-				model.setSeries1(series1);
+//				chartPanel.clearPlot();
+//				series1.add(new SVMDataItem(1, 1));
+//				//series1.add(new SVMDataItem(1, 1));
+//				
+//				series1.add(new SVMDataItem(8, 1,2));
+//				
+//				//series1.add(new SVMDataItem(8, 1));
+//				//series1.add(new SVMDataItem(8, 1));
+//				
+//				series1.add(new SVMDataItem(1, 8));
+//				//series1.add(new SVMDataItem(1, 8));
+//				
+//				//series1.add(new SVMDataItem(4.5, 1));
+//				//series1.add(new SVMDataItem(1, 1));
+//				model.setSeries1(series1);
 			}
 		});
 		
 		JMenuItem mntmCollinearPoints_1 = new JMenuItem("Collinear Points 2");
 		mntmCollinearPoints_1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				clearPlot();
-				series1.add(new SVMDataItem(1, 1));
-				series1.add(new SVMDataItem(4, 1));
-				series1.add(new SVMDataItem(7, 1.01));
-				series1.add(new SVMDataItem(11, 1));
-				
-				model.setSeries1(series1);
+				chartPanel.clearPlot();
+//				series1.add(new SVMDataItem(1, 1));
+//				series1.add(new SVMDataItem(4, 1));
+//				series1.add(new SVMDataItem(7, 1.01));
+//				series1.add(new SVMDataItem(11, 1));
+//				
+//				model.setSeries1(series1);
 				
 			}
 		});
@@ -1039,12 +950,12 @@ public class MainWindow
 		JMenuItem mntmRombus = new JMenuItem("Parallelogram");
 		mntmRombus.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				clearPlot();
-				series1.add(new SVMDataItem(1, 1));
-				series1.add(new SVMDataItem(4, 4));
-				series1.add(new SVMDataItem(4, 1));
-				series1.add(new SVMDataItem(7, 4));
-				model.setSeries1(series1);
+				chartPanel.clearPlot();
+//				series1.add(new SVMDataItem(1, 1));
+//				series1.add(new SVMDataItem(4, 4));
+//				series1.add(new SVMDataItem(4, 1));
+//				series1.add(new SVMDataItem(7, 4));
+//				model.setSeries1(series1);
 			}
 		});
 		mnData.add(mntmRombus);
@@ -1052,12 +963,12 @@ public class MainWindow
 		JMenuItem mntmTrapezium = new JMenuItem("Trapezium");
 		mntmTrapezium.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				clearPlot();
-				series1.add(new SVMDataItem(1, 1));
-				series1.add(new SVMDataItem(4, 4));
-				series1.add(new SVMDataItem(8, 4));
-				series1.add(new SVMDataItem(11, 1));
-				model.setSeries1(series1);
+				chartPanel.clearPlot();
+//				series1.add(new SVMDataItem(1, 1));
+//				series1.add(new SVMDataItem(4, 4));
+//				series1.add(new SVMDataItem(8, 4));
+//				series1.add(new SVMDataItem(11, 1));
+//				model.setSeries1(series1);
 			}
 		});
 		mnData.add(mntmTrapezium);
@@ -1065,24 +976,24 @@ public class MainWindow
 		JMenuItem mntmRandom = new JMenuItem("Random");
 		mntmRandom.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				addRandomData();
+//				addRandomData();
 			}
 		});
 		
 		JMenuItem mntmTPoints = new JMenuItem("T points");
 		mntmTPoints.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				clearPlot();
+				chartPanel.clearPlot();
 				//TODO answer the question is point adding order is dependent or independent of RCH produced
-				series1.add(new SVMDataItem(1, 1));
-				series1.add(new SVMDataItem(1, 3));
-				series1.add(new SVMDataItem(1, 5));
-				series1.add(new SVMDataItem(1, 7));
-				series1.add(new SVMDataItem(1, 9));
-//				series1.add(new SVMDataItem(2, 5));
-//				series1.add(new SVMDataItem(4, 5));
-				series1.add(new SVMDataItem(6, 5));
-				model.setSeries1(series1);
+//				series1.add(new SVMDataItem(1, 1));
+//				series1.add(new SVMDataItem(1, 3));
+//				series1.add(new SVMDataItem(1, 5));
+//				series1.add(new SVMDataItem(1, 7));
+//				series1.add(new SVMDataItem(1, 9));
+////				series1.add(new SVMDataItem(2, 5));
+////				series1.add(new SVMDataItem(4, 5));
+//				series1.add(new SVMDataItem(6, 5));
+//				model.setSeries1(series1);
 			}
 		});
 		mnData.add(mntmTPoints);
@@ -1091,16 +1002,16 @@ public class MainWindow
 		JMenuItem mntmNewMenuItem = new JMenuItem("Triangle 2");
 		mntmNewMenuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				clearPlot();
+				chartPanel.clearPlot();
 				//TODO answer the question is point adding order is dependent or independent of RCH produced
-				series1.add(new SVMDataItem(1, 1));
-				series1.add(new SVMDataItem(6, 1));
-				series1.add(new SVMDataItem(1, 6));
-				series2.add(new SVMDataItem(8, 1));
-				series2.add(new SVMDataItem(13, 1));
-				series2.add(new SVMDataItem(13, 6));
-				model.setSeries1(series1);
-				model.setSeries2(series2);
+//				series1.add(new SVMDataItem(1, 1));
+//				series1.add(new SVMDataItem(6, 1));
+//				series1.add(new SVMDataItem(1, 6));
+//				series2.add(new SVMDataItem(8, 1));
+//				series2.add(new SVMDataItem(13, 1));
+//				series2.add(new SVMDataItem(13, 6));
+//				model.setSeries1(series1);
+//				model.setSeries2(series2);
 			}
 		});
 		mnData.add(mntmNewMenuItem);

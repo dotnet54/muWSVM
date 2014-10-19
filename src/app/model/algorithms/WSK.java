@@ -1,23 +1,32 @@
 package app.model.algorithms;
 
 import java.awt.Point;
-import java.awt.Shape;
 import java.awt.geom.Line2D;
-import java.awt.geom.Path2D;
-import java.awt.geom.Point2D;
-import java.util.ArrayList;
-
 import app.model.data.SVMDataItem;
 import app.model.data.SVMModel;
 
 public class WSK {
 	
+	
+	//TODO CHANGE from static class to instance class, smae for RCH
+	
 	private static SVMDataItem finalW;
 	private static double finalB;
 
-	private static double[] pweights;	//TODO change from static
+	private static double[] pweights;	//TODO change from static BIG CHANGE
 	private static double[] nweights;
 	
+	private static SVMDataItem nearestPositivePoint = null;
+	public static SVMDataItem getNearestPositivePoint() {
+		return nearestPositivePoint;
+	}
+
+
+	private static SVMDataItem nearestNegativePoint = null;
+	public static SVMDataItem getNearestNegativePoint() {
+		return nearestNegativePoint;
+	}
+
 
 	public static void solve(SVMModel model){
 		//TODO solve using different mu? mekae GUI less confusing
@@ -40,44 +49,29 @@ public class WSK {
 		
 		for (int i = 0; i < Ppos.length; i++){
 			Ppos[i] = new SVMDataItem(model.getSeries1().get(i).getXValue(),
-					model.getSeries1().get(i).getYValue());
-			Ppos[i].setDataClass(1);
-			pweights[i] = Ppos[i].getWeight();
+					model.getSeries1().get(i).getYValue(),
+					model.getSeries1().get(i).getWeight());
+			Ppos[i].setDataClass(1);	//TODO
+			pweights[i] = model.getSeries1().get(i).getWeight();
 		}
 		
 		for (int i = 0; i < Pneg.length; i++){
 			Pneg[i] = new SVMDataItem(model.getSeries2().get(i).getXValue(),
-					model.getSeries2().get(i).getYValue());
+					model.getSeries2().get(i).getYValue(),
+					model.getSeries2().get(i).getWeight());
 			Pneg[i].setDataClass(-1);
-			nweights[i] = Pneg[i].getWeight();
+			nweights[i] = model.getSeries2().get(i).getWeight();
 		}
 		
-		sk(Ppos, Pneg, model.getMu1(), model.getMu2());
+		wsk(Ppos, Pneg, model.getMu1(), model.getMu2());
 		
 		model.setW(finalW);
 		model.setB(finalB);
 	}
 	
-	public static Line2D getLine(SVMDataItem w, double b){
-        double yMin = -500;
-        double yMax = 500;
-        double xMin = ((b-(w.getYValue()*yMin))/w.getXValue());
-        double xMax =   ((b-(w.getYValue()*yMax))/w.getXValue());
-        
-//        double mx = w.getXValue();
-//        double my = w.getYValue();
-//        double m = w.getMagnitude();
-//        
-//        double xMin = yMin / m;
-//        double xMax = yMax / m;
-        
-        Point.Double p1= new Point.Double(xMin, yMin);
-        Point.Double p2= new Point.Double(xMax, yMax);
-        System.out.format("Line points:\np1:%s\np2:%s\n", p1, p2 );
-        return new Line2D.Double(p1, p2);
-	}
+
 	
-	public static void sk(SVMDataItem[] Ppos, SVMDataItem[] Pneg
+	public static void wsk(SVMDataItem[] Ppos, SVMDataItem[] Pneg
 			,double mu1,double mu2){
 
 		SVMDataItem p = null;
@@ -95,15 +89,16 @@ public class WSK {
 		n = WRCH.alg9(Pneg,nweights , mu2,new SVMDataItem(1, 0));
 		
 		while(it < MAXIT){
-			w = new SVMDataItem(p.getXValue() - n.getXValue(),
+			w = new SVMDataItem(
+					p.getXValue() - n.getXValue(),
 					p.getYValue() - n.getYValue());
 			
 			SVMDataItem wprime = new SVMDataItem(w.getXValue(), w.getYValue());
 			
-			wprime.setX(w.getXValue() -1);
-			wprime.setY(w.getYValue() -1);
+			wprime.setX(w.getXValue() *-1);
+			wprime.setY(w.getYValue() *-1);
 //			SVMDataItem vp = RCH.theorem32(Ppos, w, mu);
-			SVMDataItem vp = WRCH.alg9(Ppos,pweights , mu1, w);
+			SVMDataItem vp = WRCH.alg9(Ppos,pweights , mu1, wprime);
 			
 			wprime = new SVMDataItem(w.getXValue(), w.getYValue());
 			wprime.setX(w.getXValue());
@@ -121,24 +116,36 @@ public class WSK {
 			if ( w1 < w2){
 				
 				double ws = Math.sqrt(Math.pow(w.getXValue(), 2)  
-						+ Math.pow(w.getXValue(), 2));
+						+ Math.pow(w.getYValue(), 2));
 				ws = Math.pow(ws, 2);
 				
 				
-				if ((1-w1/ws) < eps){
+				if ((1-(w1/ws)) < eps){
 					break;
 				}
 				
 				double temp;
 				
-				double x1 = n.getXValue() - p.getXValue();
-				double x2 = p.getXValue() - vp.getXValue();
+//				double x1 = n.getXValue() - p.getXValue();
+//				double x2 = p.getXValue() - vp.getXValue();
+//				
+//				double y1 = n.getYValue() - p.getYValue();
+//				double y2 = p.getYValue() - vp.getYValue();
+//				
+//				double top = (x1 * x2) + (y1 * y2);
+//				double bottom = (x2 * x2) + (y2 * y2);
 				
-				double y1 = n.getYValue() - p.getYValue();
-				double y2 = p.getYValue() - vp.getYValue();
 				
-				double top = (x1 * x2) + (y1 * y2);
-				double bottom = (x2 * x2) + (y2 * y2);
+				SVMDataItem dnp = new SVMDataItem(
+						p.getXValue() - n.getXValue(),
+						p.getYValue() - n.getYValue());
+				
+				SVMDataItem dpvp = new SVMDataItem(
+						p.getXValue() - vp.getXValue(),
+						p.getYValue() - vp.getYValue());
+				
+				double top = dnp.getDotProduct(dpvp);
+				double bottom = dpvp.getDotProduct(dpvp);
 				
 				temp = top / bottom;
 				
@@ -152,20 +159,32 @@ public class WSK {
 						+ Math.pow(w.getYValue(), 2));
 				ws = Math.pow(ws, 2);
 				
-				if ((1-w2/ws) < eps){
+				if ((1-(w2/ws)) < eps){
 					break;
 				}
 				
 				double temp;
 				
-				double x1 = p.getXValue() - n.getXValue();
-				double x2 = n.getXValue() - vn.getXValue();
+//				double x1 = p.getXValue() - n.getXValue();
+//				double x2 = n.getXValue() - vn.getXValue();
+//				
+//				double y1 = p.getYValue() - n.getYValue();
+//				double y2 = n.getYValue() - vn.getYValue();
+//				
+//				double top = (x1 * x2) + (y1 * y2);
+//				double bottom = (x2 * x2) + (y2 * y2);
 				
-				double y1 = p.getYValue() - n.getYValue();
-				double y2 = n.getYValue() - vn.getYValue();
 				
-				double top = (x1 * x2) + (y1 * y2);
-				double bottom = (x2 * x2) + (y2 * y2);
+				SVMDataItem dpn = new SVMDataItem(
+						n.getXValue() - p.getXValue(),
+						n.getYValue() - p.getYValue());
+				
+				SVMDataItem dpvn = new SVMDataItem(
+						n.getXValue() - vn.getXValue(),
+						n.getYValue() - vn.getYValue());
+				
+				double top = dpn.getDotProduct(dpvn);
+				double bottom = dpvn.getDotProduct(dpvn);
 				
 				temp = top / bottom;
 				
@@ -184,10 +203,13 @@ public class WSK {
 		
 		finalW = w;
 		finalB = b;
+		nearestPositivePoint = p;
+		nearestNegativePoint = n;
+		
 		System.out.println("w = " + finalW.getXValue() + ", "+finalW.getYValue());
 		System.out.println("b = " + finalB);
 		System.out.println("it = " + it);
-		
+		System.out.println("p = " + p + ", n = " + n);
 		
 	}
 	

@@ -116,7 +116,7 @@ public class WRCH {
 		//h = theorem32(P, n, mu);
 		h =  alg9(P, weights, mu,  n);
 		
-		System.out.format("h:%s \n", h.toFormatedString(2));
+		//System.out.format("h:%s \n", h.toFormatedString(2));
 		
 		
 		if (h.equals(l) || h.equals(r)){//TODO double op

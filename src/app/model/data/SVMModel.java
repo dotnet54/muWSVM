@@ -1,18 +1,17 @@
 package app.model.data;
 
-import java.awt.List;
+import java.awt.Point;
+import java.awt.geom.Line2D;
 import java.util.ArrayList;
 import java.util.Random;
 
-import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
 
 import app.model.algorithms.WRCH;
 import app.model.algorithms.WSK;
 
 public class SVMModel {
-	
-
 	
 	private ArrayList<SVMDataItem> dataset1 = new ArrayList<SVMDataItem>();
 	private ArrayList<SVMDataItem> dataset2 = new ArrayList<SVMDataItem>();	
@@ -51,13 +50,88 @@ public class SVMModel {
 		private int numSV[];	//num SV per class
 		private double alphas[][];	//alphas per class
 	}
+		
+	private SVMDataSet modelDataSet = null;
 	
+	public SVMDataSet getModelDataSet() {
+		return modelDataSet;
+	}
+
+	public void setModelDataSet(SVMDataSet modelDataSet) {
+		this.modelDataSet = modelDataSet;
+	}
+
 	//TODO sync problem, run bgtask in debugger, before 1 task finishes 
 	public SVMModel(){
-
-
+		
+		modelDataSet = new SVMDataSet();
+		initializeData();
 	}
 	
+	public void generateRandomData(){
+		SVMDataGenerator dataGen = new SVMDataGenerator(10, 0, 10);
+		modelDataSet = dataGen.getData();
+	}
+	
+	
+	private void initializeData(){
+		
+		
+		SVMDataGenerator dataGen = new SVMDataGenerator(3, 0, 10);
+
+		modelDataSet = dataGen.getData();
+		
+//		modelDataSet.getSeries(0).clear();
+//		modelDataSet.getSeries(1).clear();
+		
+		modelDataSet.getSeries(0).add(new SVMDataItem(6, 2));
+		modelDataSet.getSeries(0).add(new SVMDataItem(5, 3));
+		modelDataSet.getSeries(0).add(new SVMDataItem(6, 6));
+		//modelDataSet.getSeries(0).add(new SVMDataItem(8, 4, 2));
+		
+//		dataset.getSeries(0).add(new SVMDataItem(4, 4));
+//		dataset.getSeries(0).add(new SVMDataItem(8, 8));
+//		dataset.getSeries(0).add(new SVMDataItem(8, 1));
+		
+		
+//		dataset.getSeries(0).add(new SVMDataItem(4, 4));
+//		dataset.getSeries(0).add(new SVMDataItem(8, 8));
+//		dataset.getSeries(0).add(new SVMDataItem(8, 1));
+		
+		
+		
+////
+		modelDataSet.getSeries(1).add(new SVMDataItem(1.0, 5.0));
+		modelDataSet.getSeries(1).add(new SVMDataItem(3.0, 5.0));
+		modelDataSet.getSeries(1).add(new SVMDataItem(5.0, 5.0));
+		modelDataSet.getSeries(1).add(new SVMDataItem(4.0, 8.0));
+		
+	}
+	
+//	public void addRandomData(){
+//		clearPlot();
+//		
+//		//TODO use generator and set seed
+//		Random r = new Random(System.currentTimeMillis());
+//		
+//		int max  = (int) (r.nextDouble() * 50) + 0;
+//		
+//		for (int i = 0; i < max; i++ ){
+//			double randX  =  (r.nextDouble() * 20);
+//			double randY  =  (r.nextDouble() * 20);
+//			series1.add(new SVMDataItem(randX, randY));
+//		}
+//		for (int i = 0; i < max/8; i++ ){
+//			double randX  =  (r.nextDouble() * 20);
+//			double randY  =  (r.nextDouble() * 20);
+//			series2.add(new SVMDataItem(randX, randY));
+//		}
+//		
+//		model.setSeries1(series1);
+//		model.setSeries2(series2);
+//        chartPanel.thisPlot.getRangeAxis().setRange(0, 20);
+//        chartPanel.thisPlot.getDomainAxis().setRange(0, 20);
+//	}
 	
 	public void compute(){
 		calculateHull(0);
@@ -65,10 +139,6 @@ public class SVMModel {
 	}
 	
 	public boolean calculateHull(int series){
-		
-		
-		
-		
 		if (series == 1){
 			
 			if (dataset1.size() == 0){
@@ -164,6 +234,71 @@ public class SVMModel {
 			rch2.clear();
 		}
 	}
+	public Line2D getLine(SVMDataItem w, double b){
+        double yMin = -500;
+        double yMax = 500;
+        double xMin = ((b-(w.getYValue()*yMin))/w.getXValue());
+        double xMax = ((b-(w.getYValue()*yMax))/w.getXValue());
+        
+//        double mx = w.getXValue();
+//        double my = w.getYValue();
+//        double m = w.getMagnitude();
+//        
+//        double xMin = yMin / m;
+//        double xMax = yMax / m;
+		SVMDataItem p =  WSK.getNearestPositivePoint();
+		SVMDataItem n = WSK.getNearestNegativePoint();
+		SVMDataItem mid = new SVMDataItem(
+				(p.getXValue() + n.getXValue()) / 2,
+				(p.getYValue() + n.getYValue()) / 2);
+		
+        xMin = -500;
+        xMax = 500;
+        //yMix = w.getXValue() *  
+        
+        double f = 5000.0;
+        SVMDataItem normal = new SVMDataItem(-w.getYValue(), w.getXValue());
+       // SVMDataItem normal = new SVMDataItem(w.getXValue(), w.getYValue());
+        
+        getModelDataSet().getSeries(4).add(mid);
+        
+        
+        Point.Double p1= new Point.Double(
+        		(normal.getXValue() * f) + mid.getXValue(),
+        		(normal.getYValue() * f) + mid.getYValue());
+        Point.Double p2= new Point.Double(
+        		(normal.getXValue() * -f) + mid.getXValue(),
+        		(normal.getYValue() * -f) + mid.getYValue());
+        System.out.format("Line points:\np1:%s\np2:%s\n", p1, p2 );
+        return new Line2D.Double(p1, p2);
+	}
+	
+	public static Line2D getPerpendicularBisector(){
+		SVMDataItem p =  WSK.getNearestPositivePoint();
+		SVMDataItem n = WSK.getNearestNegativePoint();
+		
+		SVMDataItem mid = new SVMDataItem(
+			(p.getXValue() + p.getYValue()) / 2,
+			(n.getXValue() + n.getYValue()) / 2);
+		
+		double m =(p.getYValue() - n.getYValue())/
+				(p.getXValue() - n.getXValue());
+		double mp = -1.0/m;
+		
+		double b = mid.getYValue() / (mp * mid.getXValue());
+		
+		
+		double xMin = -500;
+        double xMax =   500;
+        double yMin = mp * xMin + b;
+        double yMax = mp * xMax + b;
+        
+		
+        Point.Double p1= new Point.Double(xMin, yMin);
+        Point.Double p2= new Point.Double(xMax, yMax);
+        return new Line2D.Double(p1, p2);
+	}
+	
 	
 	public void setSeries1(XYSeries s){
 		dataset1.clear();

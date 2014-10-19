@@ -38,6 +38,7 @@ import org.jfree.data.xy.XYSeriesCollection;
 
 import app.model.algorithms.WSK;
 import app.model.data.SVMDataItem;
+import app.model.data.SVMDataSet;
 import app.model.data.SVMModel;
 
 public class JFCPanel extends ChartPanel implements ChartMouseListener{
@@ -58,7 +59,9 @@ public class JFCPanel extends ChartPanel implements ChartMouseListener{
 	protected XYPlot thisPlot = null;
 	protected JFreeChart thisChart = null;
 	
+	
 	private SVMModel model = null;
+	SVMDataSet chartDataSet = null;
 	
 	private  XYShapeAnnotation anoHull1 = null;
 	private  XYShapeAnnotation anoRHull1 = null;
@@ -68,6 +71,7 @@ public class JFCPanel extends ChartPanel implements ChartMouseListener{
 	private  XYLineAnnotation hyperPlane = null;
 	private  XYLineAnnotation marginPos = null;
 	private  XYLineAnnotation marginNeg = null;
+	private  XYLineAnnotation nearestPointLine = null;
 	
 	private double xChart =0;
 	private double yChart=0;
@@ -84,6 +88,17 @@ public class JFCPanel extends ChartPanel implements ChartMouseListener{
 		this.model = model;
 		thisChart = chart;
 		thisPlot = chart.getXYPlot();
+		
+		//get a copy of Model Data Set, 
+		//and add new series to display additional information
+		chartDataSet = model.getModelDataSet();
+		XYSeries series3 = new XYSeries("Positive WRCH");
+		XYSeries series4 = new XYSeries("Negative WRCH");
+		XYSeries series5 = new XYSeries("Centroids");
+		chartDataSet.addSeries(series3);
+		chartDataSet.addSeries(series4);
+		chartDataSet.addSeries(series5);
+		
 		
 //		popup.add(it);
 //		popup.add(itr);
@@ -226,10 +241,10 @@ public class JFCPanel extends ChartPanel implements ChartMouseListener{
 		// System.out.println("Mouse Released [Chart]: "
 		// + xChart + "," + yChart);
 		Point2D p = chartToPanel(new Point2D.Double(chartX, chartY));
-		System.out.println("Point: " + p);
+		//System.out.println("Point: " + p);
 
 		Point2D p2 = panelToChart(new Point(event.getX(), event.getY()));
-		System.out.println("Point2: " + p2);
+		//System.out.println("Point2: " + p2);
 
 		selectedEntity = getSelectedEntity(chartEvent, chartX, chartY);
 		// System.out.println("releasedb on:" + selection.toString());
@@ -425,7 +440,23 @@ public class JFCPanel extends ChartPanel implements ChartMouseListener{
             //System.out.println("X:" + d.getX(s, i) + ", Y:" + d.getY(s, i));
         }
     }
+    public void clearPlot(){
+		XYPlot p = getChart().getXYPlot();
+		p.clearAnnotations();
+		//TODO
+//		series1.clear();
+//		series2.clear();
+//		series3.clear();
+//		series4.clear();
+//		series5.clear();
+		
+		model.clearDataSet(0);
+    }
     
+    public void drawBisector(){
+    	
+    	
+    }
     
     public void solveSVM(){
     	System.out.println("solving SVM...");
@@ -440,17 +471,29 @@ public class JFCPanel extends ChartPanel implements ChartMouseListener{
 		
     	SVMDataItem myW = new SVMDataItem(-6, -6);
     	double myB = -36;
-		
+		XYPlot p = getChart().getXYPlot();
     	
     	
-        XYPlot p = getChart().getXYPlot();
+        
         if (hyperPlane != null){
         	p.removeAnnotation(hyperPlane);
         }
-        Line2D line = WSK.getLine(model.getW(), model.getB());
+        Line2D line = model.getLine(model.getW(), model.getB());
+       // Line2D line = SVMModel.getPerpendicularBisector();
         hyperPlane = new XYLineAnnotation(line.getX1(), line.getY1(),
         		line.getX2(), line.getY2());
     	p.addAnnotation(hyperPlane);
+    	
+    	
+        if (nearestPointLine != null){
+        	p.removeAnnotation(nearestPointLine);
+        }
+        nearestPointLine = new XYLineAnnotation(
+        		WSK.getNearestPositivePoint().getXValue(), 
+        		WSK.getNearestPositivePoint().getYValue(),
+        		WSK.getNearestNegativePoint().getXValue(),
+        		WSK.getNearestNegativePoint().getYValue());
+    	p.addAnnotation(nearestPointLine);
     	
     	System.out.format("SVM found w:%s b:%s ", model.getW(), model.getB() );
     }
