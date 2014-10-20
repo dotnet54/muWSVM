@@ -1,6 +1,11 @@
-honours
-=======
+Weighted Support Vector Machine
+===============================
+Implementing a weighted support vector machine based on geometric concepts.
 
-honours project for Bch.Software Engineering 2014
+
+Honours project for Bch.Software Engineering @Monash - 2014 by Ahmed Shifaz
+
+its open source, so feel free to play around
+
 
 work in progress
