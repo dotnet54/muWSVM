@@ -33,8 +33,16 @@ public class SVMModel {
 	private SVMDataItem w = new SVMDataItem(0,1);
 	private double b = 0;
 		
-	public SVMDataItem centroid1;
-	public SVMDataItem centroid2;
+	private SVMDataItem centroid1;
+	public SVMDataItem getCentroid1() {
+		return centroid1;
+	}
+
+	public SVMDataItem getCentroid2() {
+		return centroid2;
+	}
+
+	private SVMDataItem centroid2;
 	
 	public class inParam{
 		private double mu[];	//mu per class
@@ -65,6 +73,13 @@ public class SVMModel {
 	public SVMModel(){
 		
 		modelDataSet = new SVMDataSet();
+		SVMDataSeries series3 = new SVMDataSeries("Positive WRCH");
+		SVMDataSeries series4 = new SVMDataSeries("Negative WRCH");
+		SVMDataSeries series5 = new SVMDataSeries("Centroids");
+		modelDataSet.addSeries(series3);
+		modelDataSet.addSeries(series4);
+		modelDataSet.addSeries(series5);
+		
 		initializeData();
 	}
 	

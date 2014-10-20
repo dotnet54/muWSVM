@@ -1,9 +1,6 @@
 package app.model.data;
 
-import java.util.ArrayList;
 import java.util.Random;
-
-import org.jfree.data.xy.XYSeries;
 
 public class SVMDataGenerator {
 	
@@ -26,15 +23,12 @@ public class SVMDataGenerator {
 		
 		data = new SVMDataSet();
 		
-		SVMDataSeries series1 = new SVMDataSeries("Positive Class");
-		SVMDataSeries series2 = new SVMDataSeries("Negative Class");	
-		
 		for (int i = 0; i < numItems/2; i++){
 			double x = randGen.nextDouble() * maxVal;
 			double y = randGen.nextDouble() * maxVal;
 			double weight = 1;
 			int dclass = randGen.nextInt(2);
-			series1.add( new SVMDataItem(
+			data.getPositiveSeries().add( new SVMDataItem(
 					x, y, weight, dclass));
 		}
 		
@@ -43,12 +37,10 @@ public class SVMDataGenerator {
 			double y = randGen.nextDouble() * maxVal;
 			double weight = 1;
 			int dclass = randGen.nextInt(2);
-			series2.add( new SVMDataItem(
+			data.getNegativeSeries().add( new SVMDataItem(
 					x, y, weight, dclass));
 		}
 		
-		data.addSeries(series1);
-		data.addSeries(series2);
 	}
 	
 	
