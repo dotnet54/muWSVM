@@ -81,6 +81,15 @@ public class SVMDataItem extends XYDataItem{
 	public double getMagnitude(){
 		return Math.sqrt(Math.pow(getX(), 2) + Math.pow(getY(), 2)) ;
 	}
+	
+	public SVMDataItem getAntiClockWiseNormal(){
+		return new SVMDataItem(-getYValue(), getXValue());
+	}
+	
+	public void scale(double scaleFactor){
+		this.setX(getXValue() * scaleFactor);
+		this.setY(getYValue() * scaleFactor);
+	}
 
 	public double getWeight(){
 		return weight;

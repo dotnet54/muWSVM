@@ -2,12 +2,14 @@ package app.gui;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JDialog;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import javax.swing.ButtonGroup;
+import javax.swing.JFileChooser;
 import javax.swing.JMenuBar;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
@@ -50,6 +52,7 @@ import java.awt.event.InputMethodListener;
 import java.awt.event.InputMethodEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeEvent;
+import java.io.IOException;
 import java.awt.BorderLayout;
 import java.awt.Font;
 import javax.swing.UIManager;
@@ -66,7 +69,7 @@ import java.awt.event.FocusEvent;
  * @author shifaz
  *
  */
-public class SVMMain {
+public class SVMMain implements ActionListener{
 
 	//Model globals
 	private SVMModel model = null;
@@ -75,7 +78,7 @@ public class SVMMain {
 	//GUI globals
 	private JFrame frame;
 	private JFreeChart chart;
-	private SVMPanel chartPanel;
+	public static SVMPanel chartPanel;	//TODO change static public, only for debug
 	
 	//components
 	private JTextField textField_class1;
@@ -97,7 +100,10 @@ public class SVMMain {
 	private JTextField textField_11;
 	private JTextField textField_12;
 	
-	
+	private final SVMAddItemDialog addItemDialog = new SVMAddItemDialog();
+	private final SVMAboutDialog aboutDialog = new SVMAboutDialog();
+	private final SVMHelpDialog helpDialog = new SVMHelpDialog();
+	private final JFileChooser fc = new JFileChooser(".");
 	
 	/**
 	 * Entry point - Launch the application.
@@ -469,14 +475,36 @@ public class SVMMain {
 			JButton btnGenerateData = new JButton("Generate Random Data");
 			btnGenerateData.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					 model.generateRandomData();
-					chart.getXYPlot().setDataset(model.getModelDataSet()); 
+					model.clearDataSet(2);
+					
+					
+					int numPoints = Integer.parseInt(textField_NumDataPoints.getText());
+					int percentPos = Integer.parseInt(textField_PercentPos.getText());
+					int separationDelta = Integer.parseInt(textField_SeparationDelta.getText());
+					
+					model.generateRandomData(numPoints, percentPos, separationDelta);
+					chart.getXYPlot().setDataset(0, model.getRawDataSet()); 
 				}
 			});
 			btnGenerateData.setBounds(10, 294, 145, 23);
 			pContainerTrainingData.add(btnGenerateData);
 			
-			JButton btnLoadData = new JButton("Load Data ");
+			final JButton btnLoadData = new JButton("Load Data ");
+			btnLoadData.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					try {
+				        int returnVal = fc.showOpenDialog(frame);
+
+				        if (returnVal == JFileChooser.APPROVE_OPTION) {
+				        	model.getRawDataSet().loadFromFile(fc.getSelectedFile());
+				        } 
+						
+					} catch (IOException e1) {
+						// TODO
+						e1.printStackTrace();
+					}
+				}
+			});
 			btnLoadData.setBounds(11, 11, 92, 23);
 			pContainerTrainingData.add(btnLoadData);
 			
@@ -505,6 +533,11 @@ public class SVMMain {
 			pContainerTrainingData.add(lblDataDistType);
 			
 			JButton btnClearPlot = new JButton("Clear Plot");
+			btnClearPlot.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					model.clearDataSet(2);
+				}
+			});
 			btnClearPlot.setBounds(113, 11, 79, 23);
 			pContainerTrainingData.add(btnClearPlot);
 			
@@ -619,7 +652,13 @@ public class SVMMain {
 			pContainerDataEditing.add(textField_12);
 			textField_12.setColumns(10);
 			
-			JButton btnAddPoint = new JButton("Add Point");
+			final JButton btnAddPoint = new JButton("Add Point");
+			btnAddPoint.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					addItemDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+					addItemDialog.setVisible(true);
+				}
+			});
 			btnAddPoint.setBounds(152, 294, 89, 23);
 			pContainerDataEditing.add(btnAddPoint);
 			
@@ -749,15 +788,30 @@ public class SVMMain {
 			menuBar.add(mnFile);
 			
 			JMenuItem mntmAddPoint = new JMenuItem("Add Point");
+			mntmAddPoint.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					btnAddPoint.doClick();
+				}
+			});
 			mnFile.add(mntmAddPoint);
 			
 			JMenuItem mntmOpenFile = new JMenuItem("Open File");
+			mntmOpenFile.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					btnLoadData.doClick();
+				}
+			});
 			mnFile.add(mntmOpenFile);
 			
 			JSeparator separator = new JSeparator();
 			mnFile.add(separator);
 			
 			JMenuItem mntmExit = new JMenuItem("Exit");
+			mntmExit.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					System.exit(0);
+				}
+			});
 			mnFile.add(mntmExit);
 			
 			JMenu mnView = new JMenu("View");
@@ -969,9 +1023,21 @@ public class SVMMain {
 			menuBar.add(mnHelp);
 			
 			JMenuItem mntmHelpContent = new JMenuItem("Help Content");
+			mntmHelpContent.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					helpDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+					helpDialog.setVisible(true);
+				}
+			});
 			mnHelp.add(mntmHelpContent);
 			
 			JMenuItem mntmAbout = new JMenuItem("About");
+			mntmAbout.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					aboutDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+					aboutDialog.setVisible(true);
+				}
+			});
 			mnHelp.add(mntmAbout);
 		}
 
@@ -993,8 +1059,23 @@ public class SVMMain {
 	private SVMPanel createChartPanel(){
 
 		chart = ChartFactory.createScatterPlot
-		("Weighted Support Vector Machine", "X", "Y", model.getModelDataSet());
+		("Weighted Support Vector Machine", "X", "Y", model.getRawDataSet());
 
         return new SVMPanel(chart, model);
+	}
+
+
+
+
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		Object source = e.getSource();
+		
+		if (source instanceof JMenuItem){
+			JMenuItem mItem = (JMenuItem) source;
+			//TODO if (mItem.equals(obj)
+		}
+		
 	}
 }

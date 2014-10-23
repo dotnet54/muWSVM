@@ -2,6 +2,7 @@ package app.model.data;
 
 import java.awt.Point;
 import java.awt.geom.Line2D;
+import java.io.ObjectInputStream.GetField;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -15,12 +16,7 @@ public class SVMModel {
 	
 	private ArrayList<SVMDataItem> dataset1 = new ArrayList<SVMDataItem>();
 	private ArrayList<SVMDataItem> dataset2 = new ArrayList<SVMDataItem>();	
-	
-//	XYSeries series1 = new XYSeries("Positive Class");
-//	XYSeries series2 = new XYSeries("Negative Class");
-	
-	private SVMDataItem[] points;
-	private Random randomGenerator = new Random();
+
 	
 	private ArrayList<SVMDataItem> ch1 = new ArrayList<SVMDataItem>();
 	private ArrayList<SVMDataItem> rch1 = new ArrayList<SVMDataItem>();
@@ -34,6 +30,8 @@ public class SVMModel {
 	private double b = 0;
 		
 	private SVMDataItem centroid1;
+	private SVMDataItem centroid2;
+	
 	public SVMDataItem getCentroid1() {
 		return centroid1;
 	}
@@ -42,7 +40,7 @@ public class SVMModel {
 		return centroid2;
 	}
 
-	private SVMDataItem centroid2;
+	
 	
 	public class inParam{
 		private double mu[];	//mu per class
@@ -59,49 +57,80 @@ public class SVMModel {
 		private double alphas[][];	//alphas per class
 	}
 		
-	private SVMDataSet modelDataSet = null;
+	private SVMDataSet rawDataSet = null;
+	private SVMDataSet solutionDataSet = null;
 	
-	public SVMDataSet getModelDataSet() {
-		return modelDataSet;
+	public SVMDataSet getSolutionDataSet() {
+		return solutionDataSet;
 	}
 
-	public void setModelDataSet(SVMDataSet modelDataSet) {
-		this.modelDataSet = modelDataSet;
+	public void setSolutionDataSet(SVMDataSet solutionDataSet) {
+		this.solutionDataSet = solutionDataSet;
 	}
 
+	public SVMDataSet getRawDataSet() {
+		return rawDataSet;
+	}
+
+	public void setRawDataSet(SVMDataSet rawDataSet) {
+		this.rawDataSet = rawDataSet;
+	}
+
+	private SVMDataSeries positiveSeries = null;
+	public SVMDataSeries getPositiveSeries() {
+		return positiveSeries;
+	}
+
+	public void setPositiveSeries(SVMDataSeries positiveSeries) {
+		this.positiveSeries = positiveSeries;
+	}
+	private SVMDataSeries negativeSeries = null;
+	public SVMDataSeries getNegativeSeries() {
+		return negativeSeries;
+	}
+
+	public void setNegativeSeries(SVMDataSeries negativeSeries) {
+		this.negativeSeries = negativeSeries;
+	}
+	
 	//TODO sync problem, run bgtask in debugger, before 1 task finishes 
 	public SVMModel(){
 		
-		modelDataSet = new SVMDataSet();
+		rawDataSet = new SVMDataSet();
+		positiveSeries = new SVMDataSeries("Positive Class");
+		negativeSeries = new SVMDataSeries("Negative Class");
+		rawDataSet.addSeries(positiveSeries);
+		rawDataSet.addSeries(negativeSeries);
+		
+		solutionDataSet = new SVMDataSet();
 		SVMDataSeries series3 = new SVMDataSeries("Positive WRCH");
 		SVMDataSeries series4 = new SVMDataSeries("Negative WRCH");
 		SVMDataSeries series5 = new SVMDataSeries("Centroids");
-		modelDataSet.addSeries(series3);
-		modelDataSet.addSeries(series4);
-		modelDataSet.addSeries(series5);
-		
+		solutionDataSet.addSeries(series3);
+		solutionDataSet.addSeries(series4);
+		solutionDataSet.addSeries(series5);
+
 		initializeData();
 	}
 	
-	public void generateRandomData(){
-		SVMDataGenerator dataGen = new SVMDataGenerator(10, 0, 10);
-		modelDataSet = dataGen.getData();
+	public void generateRandomData(int numPoints, int percentPos, int softnessDelta){
+		SVMDataGenerator dataGen = new SVMDataGenerator(this, 3, 2);
+		dataGen.generateData(rawDataSet, numPoints, percentPos, softnessDelta);
 	}
 	
 	
 	private void initializeData(){
 		
 		
-		SVMDataGenerator dataGen = new SVMDataGenerator(3, 0, 10);
-
-		modelDataSet = dataGen.getData();
+		SVMDataGenerator dataGen = new SVMDataGenerator(this, 3, 2);
+		dataGen.generateData(rawDataSet, 10, 50, 0);
 		
 //		modelDataSet.getSeries(0).clear();
 //		modelDataSet.getSeries(1).clear();
 		
-		modelDataSet.getSeries(0).add(new SVMDataItem(6, 2));
-		modelDataSet.getSeries(0).add(new SVMDataItem(5, 3));
-		modelDataSet.getSeries(0).add(new SVMDataItem(6, 6));
+		rawDataSet.getSeries(0).add(new SVMDataItem(6, 2));
+		rawDataSet.getSeries(0).add(new SVMDataItem(5, 3));
+		rawDataSet.getSeries(0).add(new SVMDataItem(6, 6));
 		//modelDataSet.getSeries(0).add(new SVMDataItem(8, 4, 2));
 		
 //		dataset.getSeries(0).add(new SVMDataItem(4, 4));
@@ -116,10 +145,10 @@ public class SVMModel {
 		
 		
 ////
-		modelDataSet.getSeries(1).add(new SVMDataItem(1.0, 5.0));
-		modelDataSet.getSeries(1).add(new SVMDataItem(3.0, 5.0));
-		modelDataSet.getSeries(1).add(new SVMDataItem(5.0, 5.0));
-		modelDataSet.getSeries(1).add(new SVMDataItem(4.0, 8.0));
+		rawDataSet.getSeries(1).add(new SVMDataItem(1.0, 5.0));
+		rawDataSet.getSeries(1).add(new SVMDataItem(3.0, 5.0));
+		rawDataSet.getSeries(1).add(new SVMDataItem(5.0, 5.0));
+		rawDataSet.getSeries(1).add(new SVMDataItem(4.0, 8.0));
 		
 	}
 	
@@ -149,48 +178,83 @@ public class SVMModel {
 //	}
 	
 	public void compute(){
-		calculateHull(0);
+		dataset1 = rawDataSet.getSeries(0).toArrayList();
+		dataset2 = rawDataSet.getSeries(1).toArrayList();
+
+		findWRCH(2);
 		solveSVM();
-	}
-	
-	public boolean calculateHull(int series){
-		if (series == 1){
-			
-			if (dataset1.size() == 0){
-				return false;
-			}else{
-				ch1 = WRCH.calcWeightedReducedCHull(dataset1, 1.0);
-				rch1 = WRCH.calcWeightedReducedCHull(dataset1, mu1);
-			}
-			
-		}else if (series == 2){
-			if (dataset2.size() == 0){
-				return false;
-			}else{
-				ch2 = WRCH.calcWeightedReducedCHull(dataset2, 1.0);
-				rch2 = WRCH.calcWeightedReducedCHull(dataset2, mu2);
-			}
-			
-		}else{
-			if (dataset1.size() != 0){
-				//ch1 = RCH.calcReducedCHull(dataset1, 1.0);
-				rch1 = WRCH.calcWeightedReducedCHull(dataset1, mu1);
-			}//else return false TODO
-			if (dataset2.size() != 0){
-				//ch2 = RCH.calcReducedCHull(dataset2, 1.0);
-				rch2 = WRCH.calcWeightedReducedCHull(dataset2, mu2);
-			}
-		}
 		
 		centroid1 = WRCH.findCentroid(dataset1);
 		centroid1.setLabel("+");
 		centroid2 = WRCH.findCentroid(dataset2);
 		centroid2.setLabel("-");
-		return true;
+		SVMDataSeries s5= getSolutionDataSet().getSeries(2);
+		s5.clear();
+		s5.add(getCentroid1());
+		s5.add(getCentroid2());
+		
+	}
+	
+	public void findWRCH(int series){
+
+		if (series == 0){
+			rch1 = WRCH.calcWeightedReducedCHull(dataset1, mu1);
+		}else if (series == 1){
+			rch2 = WRCH.calcWeightedReducedCHull(dataset2, mu2);
+		}else{
+			rch1 = WRCH.calcWeightedReducedCHull(dataset1, mu1);
+			rch2 = WRCH.calcWeightedReducedCHull(dataset2, mu2);
+		}
+		
+		SVMDataSeries s3 = getSolutionDataSet().getSeries(0);
+		s3.clear();
+		for (int i = 0; i < rch1.size(); i++){//TODO null exception 23/10
+			s3.add(rch1.get(i));
+		}
+		
+		SVMDataSeries s4= getSolutionDataSet().getSeries(1);
+		s4.clear();
+		for (int i = 0; i < rch2.size(); i++){
+			s4.add(rch2.get(i));
+		}
 	}
 	
 	public boolean solveSVM(){
-		WSK.solve(this);
+		SVMDataItem[] Ppos;
+		SVMDataItem[] Pneg;
+		
+		Ppos = new SVMDataItem[dataset1.size()];
+		Pneg = new SVMDataItem[dataset2.size()];
+		double[] pweights = new double [Ppos.length];
+		double[] nweights = new double [Pneg.length];
+		
+		
+		
+		if (Ppos.length <= 0 || Pneg.length <= 0){
+			return false;
+		}
+		
+		
+		for (int i = 0; i < Ppos.length; i++){
+			Ppos[i] = new SVMDataItem(dataset1.get(i).getXValue(),
+					dataset1.get(i).getYValue(),
+					dataset1.get(i).getWeight());
+			Ppos[i].setDataClass(1);	//TODO
+			pweights[i] = dataset1.get(i).getWeight();
+		}
+		
+		for (int i = 0; i < Pneg.length; i++){
+			Pneg[i] = new SVMDataItem(dataset2.get(i).getXValue(),
+					dataset2.get(i).getYValue(),
+					dataset2.get(i).getWeight());
+			Pneg[i].setDataClass(-1);
+			nweights[i] = dataset2.get(i).getWeight();
+		}
+		
+		WSK.wsk(Ppos, Pneg,pweights,nweights,  getMu1(), getMu2());
+		
+		b = WSK.getFinalB();
+		w = WSK.getFinalW();
 		return true;
 	}
 
@@ -215,14 +279,6 @@ public class SVMModel {
 		return mu2;
 	}
 	
-	public void setW(SVMDataItem w){
-		this.w = w;
-	}
-	
-	public void setB(double b){
-		this.b = b;
-	}
-	
 	public SVMDataItem getW(){
 		return w;	//reference or value TODO
 	}
@@ -232,6 +288,12 @@ public class SVMModel {
 	}
 	
 	public void clearDataSet(int series){
+		rawDataSet.getSeries(0).clear();
+		rawDataSet.getSeries(1).clear();
+		solutionDataSet.getSeries(0).clear();
+		solutionDataSet.getSeries(1).clear();
+		solutionDataSet.getSeries(2).clear();
+		
 		if (series == 1){
 			dataset1.clear();
 			ch1.clear();
@@ -274,8 +336,7 @@ public class SVMModel {
         double f = 5000.0;
         SVMDataItem normal = new SVMDataItem(-w.getYValue(), w.getXValue());
        // SVMDataItem normal = new SVMDataItem(w.getXValue(), w.getYValue());
-        
-        getModelDataSet().getSeries(4).add(mid);
+
         
         
         Point.Double p1= new Point.Double(
@@ -312,44 +373,6 @@ public class SVMModel {
         Point.Double p1= new Point.Double(xMin, yMin);
         Point.Double p2= new Point.Double(xMax, yMax);
         return new Line2D.Double(p1, p2);
-	}
-	
-	
-	public void setSeries1(XYSeries s){
-		dataset1.clear();
-		
-		//SVMDataItem item = null;
-		SVMDataItem item =  null;
-		for (int i = 0; i < s.getItemCount(); i++){
-			item = (SVMDataItem) s.getItems().get(i);
-			
-			//double x =  item.getXValue();	//TODO cast double problem
-			//double y =  item.getYValue();	//TODO cast double problem
-			dataset1.add(item);
-			
-		}
-	}
-	
-	public void setSeries2(XYSeries s){
-		dataset2.clear();
-		
-		SVMDataItem item =  null;
-		for (int i = 0; i < s.getItemCount(); i++){
-			item = (SVMDataItem) s.getItems().get(i);
-			
-			//double x =  item.getXValue();	//TODO cast double problem
-			//double y =  item.getYValue();	//TODO cast double problem
-			dataset2.add(item);
-			
-		}
-	}
-	
-	public ArrayList<SVMDataItem> getSeries1(){
-		return dataset1;
-	}
-	
-	public ArrayList<SVMDataItem> getSeries2(){
-		return dataset2;
 	}
 	
 	public ArrayList<SVMDataItem> getCH1(){

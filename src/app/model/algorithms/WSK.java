@@ -12,66 +12,28 @@ public class WSK {
 	
 	private static SVMDataItem finalW;
 	private static double finalB;
-
-	private static double[] pweights;	//TODO change from static BIG CHANGE
-	private static double[] nweights;
+	
+	public static SVMDataItem getFinalW() {
+		return finalW;
+	}
+	public static double getFinalB() {
+		return finalB;
+	}
 	
 	private static SVMDataItem nearestPositivePoint = null;
+	private static SVMDataItem nearestNegativePoint = null;
 	public static SVMDataItem getNearestPositivePoint() {
 		return nearestPositivePoint;
 	}
 
 
-	private static SVMDataItem nearestNegativePoint = null;
 	public static SVMDataItem getNearestNegativePoint() {
 		return nearestNegativePoint;
 	}
 
 
-	public static void solve(SVMModel model){
-		//TODO solve using different mu? mekae GUI less confusing
-		
-		
-		SVMDataItem[] Ppos;
-		SVMDataItem[] Pneg;
-		
-		Ppos = new SVMDataItem[model.getSeries1().size()];
-		Pneg = new SVMDataItem[model.getSeries2().size()];
-		pweights = new double [Ppos.length];
-		nweights = new double [Pneg.length];
-		
-		
-		
-		if (Ppos.length <= 0 || Pneg.length <= 0){
-			return ;
-		}
-		
-		
-		for (int i = 0; i < Ppos.length; i++){
-			Ppos[i] = new SVMDataItem(model.getSeries1().get(i).getXValue(),
-					model.getSeries1().get(i).getYValue(),
-					model.getSeries1().get(i).getWeight());
-			Ppos[i].setDataClass(1);	//TODO
-			pweights[i] = model.getSeries1().get(i).getWeight();
-		}
-		
-		for (int i = 0; i < Pneg.length; i++){
-			Pneg[i] = new SVMDataItem(model.getSeries2().get(i).getXValue(),
-					model.getSeries2().get(i).getYValue(),
-					model.getSeries2().get(i).getWeight());
-			Pneg[i].setDataClass(-1);
-			nweights[i] = model.getSeries2().get(i).getWeight();
-		}
-		
-		wsk(Ppos, Pneg, model.getMu1(), model.getMu2());
-		
-		model.setW(finalW);
-		model.setB(finalB);
-	}
 	
-
-	
-	public static void wsk(SVMDataItem[] Ppos, SVMDataItem[] Pneg
+	public static void wsk(SVMDataItem[] Ppos, SVMDataItem[] Pneg, double[] pweights, double[] nweights
 			,double mu1,double mu2){
 
 		SVMDataItem p = null;
@@ -214,7 +176,7 @@ public class WSK {
 	}
 	
 	
-	public static double clamp(double c, double cmin, double cmax){
+	private static double clamp(double c, double cmin, double cmax){
 		
 		if (c <= cmin){
 			return cmin;

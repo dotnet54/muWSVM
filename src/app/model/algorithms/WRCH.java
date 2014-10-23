@@ -20,11 +20,10 @@ import app.model.data.SVMDataItem;
 public class WRCH {
 	
 	
-	static SVMDataItem [] Z;
-	static int numSupportPoints;	//varies depending on weight
-	static double weights[];
-	static ArrayList<SVMDataItem> PP;
-
+	private static SVMDataItem [] Z;
+	private static int numSupportPoints;	//varies depending on weight
+	private static double weights[];
+	
 	
 	public static ArrayList<SVMDataItem> calcWeightedReducedCHull(ArrayList<SVMDataItem> dataset, double mu) {
 		
@@ -79,7 +78,7 @@ public class WRCH {
 	}
 	
 	
-	public static SVMDataItem[] rhull(SVMDataItem[] P, double mu) throws StackOverflowError{
+	private static SVMDataItem[] rhull(SVMDataItem[] P, double mu) throws StackOverflowError{
 		
 		int m = (int) Math.ceil(1.0/mu);
 //		if (m > P.length){
@@ -107,7 +106,7 @@ public class WRCH {
 		return Ret;
 	}
 	
-	public static SVMDataItem[] rhull_aux(SVMDataItem[] P, 
+	private static SVMDataItem[] rhull_aux(SVMDataItem[] P, 
 			SVMDataItem l, SVMDataItem r, double mu) throws StackOverflowError{
 		SVMDataItem n = new SVMDataItem(0,0);
 		SVMDataItem h = new SVMDataItem(0,0);
@@ -211,7 +210,7 @@ public class WRCH {
 		return Ret;
 	}
 	
-	public static SVMDataItem normal(SVMDataItem p1, SVMDataItem p2){
+	private static SVMDataItem normal(SVMDataItem p1, SVMDataItem p2){
 		double dx, dy;
 //		dx = p1.getXValue() - p2.getXValue(); //TODO double op
 //		dy = p1.getYValue() - p2.getYValue(); //TODO double op
@@ -254,6 +253,7 @@ public class WRCH {
 
 			@Override
 			public int compare(SVMDataItem o1, SVMDataItem o2) {
+				//TODO BIG BUG FIX comparator diabetes_scale
 				if (SVMDataItem.isLessThan(o1.getScProj(), o2.getScProj())){
 					return -1;
 				}else if (SVMDataItem.isEqual(o1.getScProj(), o2.getScProj())){
@@ -326,7 +326,7 @@ public class WRCH {
 	
 	
 	
-	public static SVMDataItem alg8(SVMDataItem[] Pl, double [] S,
+	private static SVMDataItem alg8(SVMDataItem[] Pl, double [] S,
 			double mu, SVMDataItem n){
 		
 //		int m = (int) Math.ceil(1.0/mu);
@@ -394,7 +394,7 @@ public class WRCH {
 		return v;
 	}
 	
-	public static int[] sorti(double[] s){
+	private static int[] sorti(double[] s){
 		double max;
 		int maxi;
 		double tmp;
@@ -422,7 +422,7 @@ public class WRCH {
 	}
 
 
-	public static SVMDataItem theorem32(SVMDataItem[] P, SVMDataItem n, double mu){
+	private static SVMDataItem theorem32(SVMDataItem[] P, SVMDataItem n, double mu){
 		SVMDataItem v = new SVMDataItem(0,0);
 		Z = new SVMDataItem[P.length];
 		double[] s = new double[P.length];	//scaler projection
@@ -481,7 +481,7 @@ public class WRCH {
 	
 	//TODO FIND GEOMETRIC centroid using weights
 	// use double op functions
-	public static SVMDataItem findCentroid(SVMDataItem P[]){
+	private static SVMDataItem findCentroid(SVMDataItem P[]){
 		SVMDataItem cent = new SVMDataItem(0, 0);
 		
 		for (int i = 0; i < P.length; i++){

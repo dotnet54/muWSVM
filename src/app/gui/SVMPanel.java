@@ -35,6 +35,7 @@ import org.jfree.chart.labels.ItemLabelPosition;
 import org.jfree.chart.labels.StandardXYToolTipGenerator;
 import org.jfree.chart.labels.XYItemLabelGenerator;
 import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYDotRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYDataset;
@@ -69,7 +70,8 @@ public class SVMPanel extends ChartPanel implements ChartMouseListener{
 	
 	
 	private SVMModel model = null;
-	private SVMDataSet chartDataSet = null;
+	private SVMDataSet inputData = null;
+	private SVMDataSet overlayData = null;
 	
 	private  XYShapeAnnotation anoHull1 = null;
 	private  XYShapeAnnotation anoRHull1 = null;
@@ -90,6 +92,43 @@ public class SVMPanel extends ChartPanel implements ChartMouseListener{
 	private XYSeries selectedSeries = null;
 	private SVMDataItem selectedDataItem = null;
 		
+	
+	
+	
+	
+	//Rendering Options
+	
+	private boolean displayPositiveWeights = true;
+	private boolean displayNegativeWeights = true;
+	
+	private boolean displayPositiveAlpha = false;
+	private boolean displayNegativeAlpha = false;
+	
+	private boolean displayPositiveClass = true;
+	private boolean displayNegativeClass = true;
+	
+	private boolean displayPositiveCH = false;
+	private boolean displayNegativeCH = false;
+	
+	private boolean displayPositiveWRCH = true;
+	private boolean displayNegativeWRCH = true;
+	
+	private boolean displayPositiveSupportVectors = false;
+	private boolean displayNegativeSupportVectors = false;
+	
+	private boolean displayPositiveCentroid = true;
+	private boolean displayNegativeCentroid = true;
+	
+	private boolean displayHyperplane = true;
+	private boolean displayNearestPointLine = true;
+	private boolean displayCentroidConnectingLine = true;
+	private boolean displayMargins = true;
+	
+	
+	private boolean enableZoom = true;
+	private int pointSize = 2;
+	
+	
 	/**
 	 * Label generator for point labels of JFreeChart
 	 * @author shifaz
@@ -117,7 +156,7 @@ public class SVMPanel extends ChartPanel implements ChartMouseListener{
 		this.model = model;
 		thisChart = chart;
 		thisPlot = chart.getXYPlot();
-
+		
 		
 		//Panel settings
 		setMouseWheelEnabled(true);
@@ -145,29 +184,36 @@ public class SVMPanel extends ChartPanel implements ChartMouseListener{
 		
 
 		//Dataset settings
-		chartDataSet = model.getModelDataSet();
-		
-		
+		inputData = model.getRawDataSet();
+		thisPlot.setDataset(1, model.getSolutionDataSet());
+		thisPlot.setRenderer(1, new XYLineAndShapeRenderer(false, true));
 		
         //Renderer settings
-        XYLineAndShapeRenderer renderer = (XYLineAndShapeRenderer) thisPlot.getRenderer();
-        renderer.setBaseItemLabelGenerator(new LabelGenerator());
-        renderer.setBaseItemLabelPaint(Color.black);
-        renderer.setBasePositiveItemLabelPosition(
+		XYDotRenderer rawDataRenderer = new XYDotRenderer();
+		rawDataRenderer.setDotWidth(4);
+		rawDataRenderer.setDotHeight(4);
+		thisPlot.setRenderer(rawDataRenderer);
+		
+        //XYLineAndShapeRenderer rawDataRenderer = (XYLineAndShapeRenderer) thisPlot.getRenderer();
+        XYLineAndShapeRenderer solutionRenderer = (XYLineAndShapeRenderer) thisPlot.getRenderer(1);
+
+        rawDataRenderer.setBaseItemLabelGenerator(new LabelGenerator());
+        rawDataRenderer.setBaseItemLabelPaint(Color.black);
+        rawDataRenderer.setBaseItemLabelsVisible(true);
+        rawDataRenderer.setBaseToolTipGenerator(new StandardXYToolTipGenerator());        
+        rawDataRenderer.setBasePositiveItemLabelPosition(
             new ItemLabelPosition(ItemLabelAnchor.OUTSIDE1, TextAnchor.BOTTOM_LEFT));
-        renderer.setBaseItemLabelFont(
-            renderer.getBaseItemLabelFont().deriveFont(8f));
-        renderer.setBaseItemLabelsVisible(true);
-        renderer.setBaseToolTipGenerator(new StandardXYToolTipGenerator());
+        rawDataRenderer.setBaseItemLabelFont(
+        		rawDataRenderer.getBaseItemLabelFont().deriveFont(8f));
         
-        renderer.setSeriesShape(2, ShapeUtilities.createDiagonalCross(1, 1));
-        renderer.setSeriesPaint(2, Color.RED.brighter());
+        solutionRenderer.setSeriesShape(0, ShapeUtilities.createDiagonalCross(1, 1));
+        solutionRenderer.setSeriesPaint(0, Color.RED.brighter());
         
-        renderer.setSeriesShape(3, ShapeUtilities.createDiagonalCross(1, 1));
-        renderer.setSeriesPaint(3, Color.BLUE.brighter());
+        solutionRenderer.setSeriesShape(1, ShapeUtilities.createDiagonalCross(1, 1));
+        solutionRenderer.setSeriesPaint(1, Color.BLUE.brighter());
         
-        renderer.setSeriesShape(4, ShapeUtilities.createDiagonalCross(2, 2));
-        renderer.setSeriesPaint(4, Color.GREEN.brighter());
+        solutionRenderer.setSeriesShape(2, ShapeUtilities.createDiagonalCross(2, 2));
+        solutionRenderer.setSeriesPaint(2, Color.GREEN.brighter());
 	}
 
 	
@@ -292,38 +338,114 @@ public class SVMPanel extends ChartPanel implements ChartMouseListener{
 
 	public void solveSVM(){
 		System.out.println("solving SVM...");
-		
-		XYSeriesCollection sc = (XYSeriesCollection) getChart().getXYPlot().getDataset();
-		XYSeries s1 = sc.getSeries(0);
-		XYSeries s2 = sc.getSeries(1);
-		model.setSeries1(s1);
-		model.setSeries2(s2);
-		
+ 
 		model.compute();
-		
-		XYPlot p = getChart().getXYPlot();
 			    
 	    if (hyperPlane != null){
-	    	p.removeAnnotation(hyperPlane);
+	    	thisPlot.removeAnnotation(hyperPlane);
 	    }
 	    Line2D line = model.getLine(model.getW(), model.getB());
 	   // Line2D line = SVMModel.getPerpendicularBisector();
 	    hyperPlane = new XYLineAnnotation(line.getX1(), line.getY1(),
 	    		line.getX2(), line.getY2());
-		p.addAnnotation(hyperPlane);
+	    thisPlot.addAnnotation(hyperPlane);
 		
 		
 	    if (nearestPointLine != null){
-	    	p.removeAnnotation(nearestPointLine);
+	    	thisPlot.removeAnnotation(nearestPointLine);
 	    }
 	    nearestPointLine = new XYLineAnnotation(
 	    		WSK.getNearestPositivePoint().getXValue(), 
 	    		WSK.getNearestPositivePoint().getYValue(),
 	    		WSK.getNearestNegativePoint().getXValue(),
 	    		WSK.getNearestNegativePoint().getYValue());
-		p.addAnnotation(nearestPointLine);
+	    thisPlot.addAnnotation(nearestPointLine);
 		
 		System.out.format("SVM found w:%s b:%s ", model.getW(), model.getB() );
+	}
+
+
+
+	public void findRCH(){
+		System.out.println("finding RCH...");
+	
+		model.compute();
+		
+		
+		final float dash1[] = { 2.0f, 2.0f };
+		final BasicStroke dashed = new BasicStroke(1.0f, BasicStroke.CAP_BUTT,
+				BasicStroke.JOIN_MITER, 10.0f, dash1, 0.0f);
+	
+		Path2D path;
+		
+	
+		final Shape[] shapes = new Shape[3];
+		thisPlot.clearAnnotations();
+	
+		ArrayList<SVMDataItem> rch1 = model.getRCH1();
+	
+		if (!rch1.isEmpty()) {
+	
+			double[] xPoints = new double[rch1.size()];
+			double[] yPoints = new double[rch1.size()];
+	
+			for (int i = 0; i < rch1.size(); i++) {
+				xPoints[i] = rch1.get(i).getXValue();
+				yPoints[i] = rch1.get(i).getYValue();
+			}
+			path = new Path2D.Double();
+	
+			path.moveTo(xPoints[0], yPoints[0]);
+			for (int i = 1; i < xPoints.length; ++i) {
+				path.lineTo(xPoints[i], yPoints[i]);
+			}
+			path.closePath();
+			shapes[0] = path;
+	
+			
+			if (anoRHull1 != null) {
+				thisPlot.removeAnnotation(anoRHull1);
+			}
+	
+			anoRHull1 = new XYShapeAnnotation(shapes[0], dashed, Color.blue);
+			thisPlot.addAnnotation(anoRHull1);
+	
+	
+			
+			
+		}
+	
+		ArrayList<SVMDataItem> rch2 = model.getRCH2();
+	
+		if (!rch2.isEmpty()) {
+			double[] xPoints3 = new double[rch2.size()];
+			double[] yPoints3 = new double[rch2.size()];
+	
+			for (int i = 0; i < rch2.size(); i++) {
+				xPoints3[i] = rch2.get(i).getXValue();
+				yPoints3[i] = rch2.get(i).getYValue();
+			}
+			path = new Path2D.Double();
+	
+			path.moveTo(xPoints3[0], yPoints3[0]);
+			for (int i = 1; i < xPoints3.length; ++i) {
+				path.lineTo(xPoints3[i], yPoints3[i]);
+			}
+			path.closePath();
+			shapes[1] = path;
+	
+			if (anoRHull2 != null) {
+				thisPlot.removeAnnotation(anoRHull2);
+			}
+	
+			anoRHull2 = new XYShapeAnnotation(shapes[1], dashed, Color.blue);
+			thisPlot.addAnnotation(anoRHull2);
+			
+	
+		}
+	
+	
+		System.out.println("RCH found");
 	}
 
 
@@ -332,19 +454,11 @@ public class SVMPanel extends ChartPanel implements ChartMouseListener{
 		System.out.println("finding CH...");
 	
 		Path2D path;
-	
-		XYPlot p = getChart().getXYPlot();
-		XYSeriesCollection sc = (XYSeriesCollection) getChart().getXYPlot()
-				.getDataset();
-		XYSeries s1 = sc.getSeries(0);
-		XYSeries s2 = sc.getSeries(1);
-		model.setSeries1(s1);
-		model.setSeries2(s2);
 		model.compute();
 	
 		final Shape[] shapes = new Shape[4];
 		
-		p.clearAnnotations();
+		thisPlot.clearAnnotations();
 	
 		ArrayList<SVMDataItem> ch1 = model.getCH1();
 	
@@ -379,11 +493,11 @@ public class SVMPanel extends ChartPanel implements ChartMouseListener{
 			shapes[2] = path;
 	
 			if (anoHull1 != null) {
-				p.removeAnnotation(anoHull1);
+				thisPlot.removeAnnotation(anoHull1);
 			}
 	
 			anoHull1 = new XYShapeAnnotation(shapes[2]);
-			p.addAnnotation(anoHull1);
+			thisPlot.addAnnotation(anoHull1);
 		}
 	
 		ArrayList<SVMDataItem> ch2 = model.getCH2();
@@ -405,11 +519,11 @@ public class SVMPanel extends ChartPanel implements ChartMouseListener{
 			shapes[3] = path;
 	
 			if (anoHull2 != null) {
-				p.removeAnnotation(anoHull2);
+				thisPlot.removeAnnotation(anoHull2);
 			}
 	
 			anoHull2 = new XYShapeAnnotation(shapes[3]);
-			p.addAnnotation(anoHull2);
+			thisPlot.addAnnotation(anoHull2);
 	
 		}
 	        
@@ -417,106 +531,26 @@ public class SVMPanel extends ChartPanel implements ChartMouseListener{
 	}
 
 
-
-	public void findRCH(){
-		System.out.println("finding RCH...");
-	
+	public void drawLine(SVMDataItem vector){
+		thisPlot.clearAnnotations();
+		
+		double length = 500;
+		
+		
+		XYLineAnnotation line = new XYLineAnnotation(
+				vector.getXValue() * length, vector.getYValue() * length,
+				vector.getXValue() * -length, vector.getYValue() * -length);
+	    //thisPlot.addAnnotation(line);
+	    
+	    vector = vector.getAntiClockWiseNormal();
 		final float dash1[] = { 2.0f, 2.0f };
 		final BasicStroke dashed = new BasicStroke(1.0f, BasicStroke.CAP_BUTT,
 				BasicStroke.JOIN_MITER, 10.0f, dash1, 0.0f);
-	
-		Path2D path;
-		
-		XYPlot p = getChart().getXYPlot();
-		XYSeriesCollection sc = (XYSeriesCollection) getChart().getXYPlot().getDataset();
-		XYSeries s1 = sc.getSeries(0);
-		XYSeries s2 = sc.getSeries(1);
-		model.setSeries1(s1);
-		model.setSeries2(s2);
-		double m1 = model.getMu1();
-		double m2 = model.getMu2();
-		model.setMu(m1, m2);
-		model.compute();
-	
-		final Shape[] shapes = new Shape[3];
-		p.clearAnnotations();
-	
-		ArrayList<SVMDataItem> rch1 = model.getRCH1();
-	
-		if (!rch1.isEmpty()) {
-	
-			double[] xPoints = new double[rch1.size()];
-			double[] yPoints = new double[rch1.size()];
-	
-			for (int i = 0; i < rch1.size(); i++) {
-				xPoints[i] = rch1.get(i).getXValue();
-				yPoints[i] = rch1.get(i).getYValue();
-			}
-			path = new Path2D.Double();
-	
-			path.moveTo(xPoints[0], yPoints[0]);
-			for (int i = 1; i < xPoints.length; ++i) {
-				path.lineTo(xPoints[i], yPoints[i]);
-			}
-			path.closePath();
-			shapes[0] = path;
-	
-			
-			if (anoRHull1 != null) {
-				p.removeAnnotation(anoRHull1);
-			}
-	
-			anoRHull1 = new XYShapeAnnotation(shapes[0], dashed, Color.blue);
-			p.addAnnotation(anoRHull1);
-	
-			XYSeries s3 = sc.getSeries(2);
-			s3.clear();
-			for (int i = 0; i < rch1.size(); i++){
-				s3.add(rch1.get(i));
-			}
-			
-			
-		}
-	
-		ArrayList<SVMDataItem> rch2 = model.getRCH2();
-	
-		if (!rch2.isEmpty()) {
-			double[] xPoints3 = new double[rch2.size()];
-			double[] yPoints3 = new double[rch2.size()];
-	
-			for (int i = 0; i < rch2.size(); i++) {
-				xPoints3[i] = rch2.get(i).getXValue();
-				yPoints3[i] = rch2.get(i).getYValue();
-			}
-			path = new Path2D.Double();
-	
-			path.moveTo(xPoints3[0], yPoints3[0]);
-			for (int i = 1; i < xPoints3.length; ++i) {
-				path.lineTo(xPoints3[i], yPoints3[i]);
-			}
-			path.closePath();
-			shapes[1] = path;
-	
-			if (anoRHull2 != null) {
-				p.removeAnnotation(anoRHull2);
-			}
-	
-			anoRHull2 = new XYShapeAnnotation(shapes[1], dashed, Color.blue);
-			p.addAnnotation(anoRHull2);
-			
-			XYSeries s4= sc.getSeries(3);
-			s4.clear();
-			for (int i = 0; i < rch2.size(); i++){
-				s4.add(rch2.get(i));
-			}
-		}
-		
-		XYSeries s5= sc.getSeries(4);
-		s5.clear();
-		s5.add(model.getCentroid1());
-		s5.add(model.getCentroid2());
-	
-		System.out.println("RCH found");
+		XYLineAnnotation line2 = new XYLineAnnotation(
+				vector.getXValue() * length, vector.getYValue() * length,
+				vector.getXValue() * -length, vector.getYValue() * -length,
+				dashed, Color.blue);
+	    thisPlot.addAnnotation(line2);
 	}
 
 	private void initPopUpMenu(){
@@ -623,34 +657,36 @@ public class SVMPanel extends ChartPanel implements ChartMouseListener{
 		
 		if (list == null){
 			selectedEntity = null;
+		}else{
+			for (int j = 0; j < list.size(); j++){
+				ce = (ChartEntity) list.get(j);
+				if (ce instanceof XYItemEntity) {
+		            XYItemEntity e = (XYItemEntity) ce;
+		            Insets insets = getInsets();
+		            x = (int) ((event.getX() - insets.left) / this.getScaleX());
+		            y = (int) ((event.getY() - insets.top) / this.getScaleY());
+		            
+		            if (e.getArea().contains(x, y)){
+		           	    XYDataset d = e.getDataset();
+			            int s = e.getSeriesIndex();
+			            int i = e.getItem();
+			            //System.out.println("X:" + d.getX(s, i) + ", Y:" + d.getY(s, i));
+			            
+			            XYSeriesCollection dd = (XYSeriesCollection) e.getDataset();
+			            XYSeries ss =  dd.getSeries(s);
+			            
+			            
+			            //ss.remove(i);
+			            selectedSeries = ss;
+			            selectedEntity = e;
+			            System.out.format("Selected Item:%s:%s\n",i, ss.getItems().get(i));
+			            break;
+		            }
+				}
+			}			
 		}
-		selectedEntity = null;
-		for (int j = 0; j < list.size(); j++){
-			ce = (ChartEntity) list.get(j);
-			if (ce instanceof XYItemEntity) {
-	            XYItemEntity e = (XYItemEntity) ce;
-	            Insets insets = getInsets();
-	            x = (int) ((event.getX() - insets.left) / this.getScaleX());
-	            y = (int) ((event.getY() - insets.top) / this.getScaleY());
-	            
-	            if (e.getArea().contains(x, y)){
-	           	    XYDataset d = e.getDataset();
-		            int s = e.getSeriesIndex();
-		            int i = e.getItem();
-		            //System.out.println("X:" + d.getX(s, i) + ", Y:" + d.getY(s, i));
-		            
-		            XYSeriesCollection dd = (XYSeriesCollection) e.getDataset();
-		            XYSeries ss =  dd.getSeries(s);
-		            
-		            
-		            //ss.remove(i);
-		            selectedSeries = ss;
-		            selectedEntity = e;
-		            System.out.format("Selected Item:%s:%s\n",i, ss.getItems().get(i));
-		            break;
-	            }
-			}
-		}
+		
+
         
 		return selectedEntity;
 		
