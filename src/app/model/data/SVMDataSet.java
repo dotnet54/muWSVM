@@ -1,10 +1,15 @@
 package app.model.data;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
@@ -35,6 +40,11 @@ public class SVMDataSet extends XYSeriesCollection{
 	public void removeItem(int seriesIndex, int itemIndex){
 		getSeries(seriesIndex).remove(itemIndex);
 	}
+	
+	public void clear(){
+		getSeries(0).clear();	//TODO 0 and 1 must exist
+		getSeries(1).clear();
+	}
 
 	public void loadFromFile(File fin) throws IOException{
 		
@@ -45,6 +55,9 @@ public class SVMDataSet extends XYSeriesCollection{
 	 
 		String line = null;
 		SVMDataItem item = null;
+		
+		clear();
+		
 		while ((line = br.readLine()) != null) {
 			
 			StringTokenizer st = new StringTokenizer(line," \t\n\r\f:");
@@ -67,4 +80,32 @@ public class SVMDataSet extends XYSeriesCollection{
 	 
 		br.close();
 	}
+	
+	public void saveToFile(File fout){
+	       String text = "";
+	        try {
+	          File file = new File("example.txt");
+	          BufferedWriter output = new BufferedWriter(new FileWriter(fout));
+	          
+	          SVMDataItem item = null;
+	          //TODO hard coded dataclass, series index
+	          for (int i = 0; i < getItemCount(0); i++){
+	        	  item = getSeries(0).getRawDataItem(i);
+	        	  text = "+1  1:" 
+	        	  		+ item.getXValue() + " 2:" + item.getYValue();
+	        	  output.write(text + "\n");
+	          }
+	          for (int i = 0; i < getItemCount(1); i++){
+	        	  item = getSeries(1).getRawDataItem(i);
+	        	  text =  "-1  1:" 
+	        	  		+ item.getXValue() + " 2:" + item.getYValue();
+	        	  output.write(text + "\n");
+	          }
+	          
+	          output.close();
+	        } catch ( IOException e ) {
+	           e.printStackTrace();
+	        }
+	}
+	
 }

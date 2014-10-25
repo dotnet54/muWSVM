@@ -122,6 +122,7 @@ public class SVMDataItem extends XYDataItem{
 		return new SVMDataItem(p.getX(), p.getY());
 	}
 	
+	//TODO check weight, classs
 	public boolean equals(Object obj){
 		SVMDataItem d= (SVMDataItem) obj;
 //		if (this.getXValue() == d.getXValue()  //TODO double op
@@ -131,6 +132,23 @@ public class SVMDataItem extends XYDataItem{
 			return true;
 		}else{
 			return false;
+		}
+	}
+	
+	public int custCompareTo(SVMDataItem o2){
+		if ((scProjection < o2.getScProj())){
+			return -1;
+		}else if ((scProjection > o2.getScProj())){
+			return +1;
+		}else{
+			if (getWeight() < o2.getWeight()){
+				return -1;
+			}else if(getWeight() > o2.getWeight()){
+				return +1;
+			}else{
+				return 0;
+			}
+			
 		}
 	}
 	
@@ -157,7 +175,7 @@ public class SVMDataItem extends XYDataItem{
 		return scProjection;
 	}
 	
-	
+	//TODO bad idea but used for sorting
 	public double getScProj(){
 		return scProjection;
 	}

@@ -119,11 +119,14 @@ public class SVMPanel extends ChartPanel implements ChartMouseListener{
 	private boolean displayPositiveCentroid = true;
 	private boolean displayNegativeCentroid = true;
 	
-	private boolean displayHyperplane = true;
+	private boolean displayGeometricBoundary = true;
+	private boolean displayKKTBoundary = false;
 	private boolean displayNearestPointLine = true;
 	private boolean displayCentroidConnectingLine = true;
 	private boolean displayMargins = true;
 	
+	private boolean displaySlackVariables = false;
+	private boolean displayslackAmount = false;
 	
 	private boolean enableZoom = true;
 	private int pointSize = 2;
@@ -162,13 +165,10 @@ public class SVMPanel extends ChartPanel implements ChartMouseListener{
 		setMouseWheelEnabled(true);
 		setZoomTriggerDistance(20);
 		addChartMouseListener(this);
-		
-//		popup.add(it);
-//		popup.add(itr);
-//		popup.add(itw);		
-		setPopupMenu(popup);
+			
+		//popup menu
 		initPopUpMenu();
-		
+		setPopupMenu(popup);
 		
 		
 		//Plot settings
@@ -189,12 +189,12 @@ public class SVMPanel extends ChartPanel implements ChartMouseListener{
 		thisPlot.setRenderer(1, new XYLineAndShapeRenderer(false, true));
 		
         //Renderer settings
-		XYDotRenderer rawDataRenderer = new XYDotRenderer();
-		rawDataRenderer.setDotWidth(4);
-		rawDataRenderer.setDotHeight(4);
-		thisPlot.setRenderer(rawDataRenderer);
+//		XYDotRenderer rawDataRenderer = new XYDotRenderer();
+//		rawDataRenderer.setDotWidth(4);
+//		rawDataRenderer.setDotHeight(4);
+//		thisPlot.setRenderer(rawDataRenderer);
 		
-        //XYLineAndShapeRenderer rawDataRenderer = (XYLineAndShapeRenderer) thisPlot.getRenderer();
+        XYLineAndShapeRenderer rawDataRenderer = (XYLineAndShapeRenderer) thisPlot.getRenderer();
         XYLineAndShapeRenderer solutionRenderer = (XYLineAndShapeRenderer) thisPlot.getRenderer(1);
 
         rawDataRenderer.setBaseItemLabelGenerator(new LabelGenerator());
@@ -223,11 +223,10 @@ public class SVMPanel extends ChartPanel implements ChartMouseListener{
 		super.mouseReleased(event);
 
 		Rectangle2D plotArea = this.getScreenDataArea();
-		XYPlot plot = (XYPlot) getChart().getPlot(); // your plot
-		double chartX = plot.getDomainAxis().java2DToValue(event.getX(),
-				plotArea, plot.getDomainAxisEdge());
-		double chartY = plot.getRangeAxis().java2DToValue(event.getY(),
-				plotArea, plot.getRangeAxisEdge());
+		double chartX = thisPlot.getDomainAxis().java2DToValue(event.getX(),
+				plotArea, thisPlot.getDomainAxisEdge());
+		double chartY = thisPlot.getRangeAxis().java2DToValue(event.getY(),
+				plotArea, thisPlot.getRangeAxisEdge());
 
 		ChartEntity entity = null;
 		List list = null;
@@ -243,67 +242,45 @@ public class SVMPanel extends ChartPanel implements ChartMouseListener{
 				list = sec.getEntities(event.getX(), event.getY());
 			}
 		}
-		ChartMouseEvent chartEvent = new ChartMouseEvent(getChart(), event,
-				list, event.getX(), event.getY());
-		report(chartEvent);
-		// addPoint((double)chartX, (double)chartY);
+		ChartMouseEvent chartEvent = new ChartMouseEvent(getChart(), event, list, event.getX(), event.getY());
 		xChart = chartX;
 		yChart = chartY;
 
-		// System.out.println("Mouse Released [Panel]: "
-		// + event.getX() + "," + event.getY());
-		// System.out.println("Mouse Released [Chart]: "
-		// + xChart + "," + yChart);
 		Point2D p = chartToPanel(new Point2D.Double(chartX, chartY));
-		//System.out.println("Point: " + p);
-
 		Point2D p2 = panelToChart(new Point(event.getX(), event.getY()));
-		//System.out.println("Point2: " + p2);
 
 		selectedEntity = getSelectedEntity(chartEvent, chartX, chartY);
 		// System.out.println("releasedb on:" + selection.toString());
-		if (selectedEntity == null) {
-
-			if (event.isPopupTrigger()) {
-				popup.removeAll();
-				popup.add(itp);
-				popup.add(itn);
-				popup.pack();
-				popup.show(this, event.getX(), event.getY());
+		
+		if (event.isPopupTrigger()){
+			if (plotArea.contains(event.getX(), event.getY())){
+				if (selectedEntity == null) {
+					popup.removeAll();
+					popup.add(itp);
+					popup.add(itn);
+					popup.pack();
+					popup.show(this, event.getX(), event.getY());
+				} else {
+					popup.removeAll();
+					popup.add(itd);// TODO duplicate point
+					popup.add(itr);
+					popup.add(itw);
+					popup.pack();
+					popup.show(this, event.getX(), event.getY());
+				}					
+			}else{
+				popup.setVisible(false);
 			}
-
-		} else {
-			popup.removeAll();
-			popup.add(itd);// TODO duplicate point
-			popup.add(itr);
-			popup.add(itw);
-			popup.pack();
-			XYItemEntity e = selectedEntity;
-			XYDataset d = e.getDataset();
-			int s = e.getSeriesIndex();
-			int i = e.getItem();
-			// System.out.println("Mouse Released : " + i +" : "+ d.getX(s, i) +
-			// "," + d.getY(s, i));
-			// d.g
-
-			if (event.isPopupTrigger()) {
-				popup.show(this, event.getX(), event.getY());
-			}
-
 		}
 		//TODO 
-        plot.getRangeAxis().setAutoRange(false);
-        plot.getDomainAxis().setAutoRange(false);
+		thisPlot.getRangeAxis().setAutoRange(false);
+		thisPlot.getDomainAxis().setAutoRange(false);
        // plot.getRangeAxis().setRange(0, 10);
         //plot.getDomainAxis().setRange(0, 20);
 	}
 	
 	@Override
 	public void chartMouseClicked(ChartMouseEvent event) {
-		//clicks
-
-		 
-		 
 	}
 
 	@Override
@@ -344,13 +321,35 @@ public class SVMPanel extends ChartPanel implements ChartMouseListener{
 	    if (hyperPlane != null){
 	    	thisPlot.removeAnnotation(hyperPlane);
 	    }
-	    Line2D line = model.getLine(model.getW(), model.getB());
+	    Line2D line = model.getLine(model.getW(), model.getB()+10);
 	   // Line2D line = SVMModel.getPerpendicularBisector();
 	    hyperPlane = new XYLineAnnotation(line.getX1(), line.getY1(),
 	    		line.getX2(), line.getY2());
 	    thisPlot.addAnnotation(hyperPlane);
 		
+//	    SVMDataItem vector = model.getHyperplane();
+//	    SVMDataItem midPoint = null;
+//	    double scaleFactor = 500.0;
+//	    
+//	    if (marginPos != null){
+//	    	thisPlot.removeAnnotation(marginPos);
+//	    }
+//	    midPoint = model.getPositiveMargin();
+//	    line = toLine(vector, midPoint, scaleFactor);
+//	    marginPos = new XYLineAnnotation(line.getX1(), line.getY1(), line.getX2(), line.getY2());
+//	    thisPlot.addAnnotation(marginPos);
+//	    
+//	    
+//	    if (marginNeg != null){
+//	    	thisPlot.removeAnnotation(marginNeg);
+//	    }
+//	    midPoint = model.getNegativeMargin();
+//	    line = toLine(vector, midPoint, scaleFactor);
+//	    marginNeg = new XYLineAnnotation(line.getX1(), line.getY1(),line.getX2(), line.getY2());
+//	    thisPlot.addAnnotation(marginNeg);
 		
+	    
+	    
 	    if (nearestPointLine != null){
 	    	thisPlot.removeAnnotation(nearestPointLine);
 	    }
@@ -652,12 +651,11 @@ public class SVMPanel extends ChartPanel implements ChartMouseListener{
 	private XYItemEntity getSelectedEntity(ChartMouseEvent event, double x, double y){
 		ChartEntity ce = event.getEntity();
 		List list = event.getEntities();
+		selectedEntity = null;
 		
 		//TODO selectable layer?? cant select and delete centroid
 		
-		if (list == null){
-			selectedEntity = null;
-		}else{
+		if (list != null){
 			for (int j = 0; j < list.size(); j++){
 				ce = (ChartEntity) list.get(j);
 				if (ce instanceof XYItemEntity) {
@@ -746,6 +744,11 @@ public class SVMPanel extends ChartPanel implements ChartMouseListener{
 				plotArea, plot.getRangeAxisEdge());
 		Point2D p2 =new Point2D.Double(panelX, panelY);
 		return this.translateJava2DToScreen(p2);
+	}
+	
+	private Line2D toLine(SVMDataItem vector, SVMDataItem midPoint, double scaleFactor){
+		
+		return null;
 	}
 	
 	private SVMDataItem getDataItem(XYItemEntity entity){

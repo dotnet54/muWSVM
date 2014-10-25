@@ -160,8 +160,7 @@ public class WSK {
 		}
 		
 
-		double b = 0.5 * ((w.getDotProduct(p)) + 
-						(w.getDotProduct(n)));
+		double b = 0.5 * ((w.getDotProduct(p)) + (w.getDotProduct(n)));
 		
 		finalW = w;
 		finalB = b;

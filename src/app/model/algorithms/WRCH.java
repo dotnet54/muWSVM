@@ -250,23 +250,9 @@ public class WRCH {
 		}
 		
 		Collections.sort(X,Collections.reverseOrder( new Comparator<SVMDataItem>() {
-
 			@Override
 			public int compare(SVMDataItem o1, SVMDataItem o2) {
-				//TODO BIG BUG FIX comparator diabetes_scale
-				if (SVMDataItem.isLessThan(o1.getScProj(), o2.getScProj())){
-					return -1;
-				}else if (SVMDataItem.isEqual(o1.getScProj(), o2.getScProj())){
-					if (SVMDataItem.isLessThan(o1.getWeight(), o2.getWeight())){
-						return -1;
-					}else if(SVMDataItem.isEqual(o1.getWeight(), o2.getWeight())){
-						return 0;
-					}else{
-						return +1;
-					}
-				}else{
-					return +1;
-				}
+				return (o1.custCompareTo(o2));
 			}
 		}));
 		

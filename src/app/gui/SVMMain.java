@@ -62,6 +62,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.ListSelectionModel;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.io.File;
 
 /**
  * Main GUI window for the application
@@ -99,6 +100,11 @@ public class SVMMain implements ActionListener{
 	private JTextField textField_SeparationDelta;
 	private JTextField textField_11;
 	private JTextField textField_12;
+	
+	private JCheckBox chckbxUsemuScale;
+	private JCheckBox chckbxUsemuScale_1;
+	private JCheckBox chckbxAutoUpdate;
+	private JCheckBox chckbxUseSameParameters;
 	
 	private final SVMAddItemDialog addItemDialog = new SVMAddItemDialog();
 	private final SVMAboutDialog aboutDialog = new SVMAboutDialog();
@@ -157,19 +163,10 @@ public class SVMMain implements ActionListener{
 			frame.setResizable(false);
 			frame.setBounds(100, 100, 845, 518);
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			
-			
-		    java.util.Hashtable<Integer,JLabel> labelTable = new java.util.Hashtable<Integer,JLabel>();  
-		    labelTable.put(new Integer(100), new JLabel("1.0"));  
-		    labelTable.put(new Integer(75), new JLabel("0.75"));  
-		    labelTable.put(new Integer(50), new JLabel("0.50"));  
-		    labelTable.put(new Integer(25), new JLabel("0.25"));  
-		    labelTable.put(new Integer(0), new JLabel("0.0"));
-			
+
 			JPanel pChartContainer = new JPanel();
 			pChartContainer.setBounds(10, 11, 450, 454);
 	        
-	
 	        pChartContainer.setLayout(new BorderLayout(0, 0));
 	        
 	        chartPanel = createChartPanel();
@@ -186,16 +183,33 @@ public class SVMMain implements ActionListener{
 			JButton btnFindWeightedReduced = new JButton("Find Weighted RCH");
 			btnFindWeightedReduced.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					model.setMu1(Double.parseDouble(textField_class1.getText()));
-					model.setMu2(Double.parseDouble(textField_class_2.getText()));
+					//TODO try catch parse integer
+					if (chckbxUseSameParameters.isSelected()){
+						model.setMu(Double.parseDouble(textField_class1.getText()),
+							 	Double.parseDouble(textField_class1.getText()));
+					}else{
+						model.setMu(Double.parseDouble(textField_class1.getText()),
+							 	Double.parseDouble(textField_class_2.getText()));
+					}
+					
 					chartPanel.findRCH();
-					chartPanel.solveSVM();
 				}
 			});
 			btnFindWeightedReduced.setBounds(0, 0, 125, 23);
 			pSolveButtonsContainer.add(btnFindWeightedReduced);
 			
 			JButton btnTrainWSVM = new JButton("Train Weighted SVM");
+			btnTrainWSVM.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					if (chckbxUseSameParameters.isSelected()){
+						solveSVM(Double.parseDouble(textField_class1.getText()),
+							 	Double.parseDouble(textField_class1.getText()));
+					}else{
+						solveSVM(Double.parseDouble(textField_class1.getText()),
+							 	Double.parseDouble(textField_class_2.getText()));
+					}
+				}
+			});
 			btnTrainWSVM.setBounds(0, 29, 129, 23);
 			pSolveButtonsContainer.add(btnTrainWSVM);
 			
@@ -208,31 +222,44 @@ public class SVMMain implements ActionListener{
 			pContainerParameters.add(pClass1);
 			
 			slider_class1 = new JSlider();
-			slider_class1.setBounds(0, 26, 200, 40);
-			slider_class1.setFont(new Font("Tahoma", Font.PLAIN, 8));
-			slider_class1.setMajorTickSpacing(25);
-			slider_class1.setPaintTicks(true);
-			slider_class1.setLabelTable( labelTable );  
-			slider_class1.setPaintLabels(true);
+			setupSlider(slider_class1, true, 100);
+			
 			slider_class1.addChangeListener(new ChangeListener() {
 				public void stateChanged(ChangeEvent arg0) {
 					JSlider j = (JSlider) arg0.getSource();
-					textField_class1.setText(String.valueOf((double) j.getValue() / 100));
-					lblmuInvVal_class1.setText((1 / Double.parseDouble(textField_class1.getText()))  + "");
-					//TODO
-					model.setMu1(Double.parseDouble(textField_class1.getText()));
-					model.setMu2(Double.parseDouble(textField_class_2.getText()));
-					chartPanel.findRCH();
-					chartPanel.solveSVM();
+					double m1 = (double) j.getValue();
+					double m2 = Double.parseDouble(textField_class_2.getText());
+					//TODO try catch parse double, format label string
 					
-	
+					if (chckbxUsemuScale.isSelected()){
+						textField_class1.setText(1 / m1  + "");
+						lblmuInvVal_class1.setText(m1  + "");
+						if (chckbxAutoUpdate.isSelected()){
+							if (chckbxUseSameParameters.isSelected()){
+								solveSVM(1 / m1, 1 / m1);
+							}else{
+								solveSVM(1 / m1, m2);
+							}
+						}
+					}else{
+						m1 = m1 / 100.0;
+						textField_class1.setText(m1 + "");
+						lblmuInvVal_class1.setText(1 / m1  + "");
+						if (chckbxAutoUpdate.isSelected()){
+							if (chckbxUseSameParameters.isSelected()){
+								solveSVM(m1, m1);
+							}else{
+								solveSVM(m1, m2);
+							}
+						}
+					}
+
 					for (ActionListener a : textField_class1.getActionListeners()) {
 						a.actionPerformed(new ActionEvent(j,
 								ActionEvent.ACTION_PERFORMED, " slider 1 changed") {
 									private static final long serialVersionUID = 1L;
 							// Nothing need go here, the actionPerformed method
-							// (with the
-							// above arguments) will trigger the respective listener
+							// (with the  above arguments) will trigger the respective listener
 						});
 					}
 	
@@ -350,29 +377,47 @@ public class SVMMain implements ActionListener{
 			pClass1.add(lblmuInvVal_class1);
 			pClass1.add(slider_class1);
 			
+			
+			chckbxUsemuScale = new JCheckBox("Use 1/mu scale");
+			chckbxUsemuScale.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					if (chckbxUsemuScale.isSelected()){
+						setupSlider(slider_class1, false, model.getRawDataSet().getSeries(0).getItemCount());
+					}else{
+						setupSlider(slider_class1, true, 100);
+					}
+				}
+			});
+			chckbxUsemuScale.setBounds(117, 91, 97, 23);
+			pClass1.add(chckbxUsemuScale);
+			
 			JPanel pClass2 = new JPanel();
 			pClass2.setBounds(10, 189, 259, 120);
 			pContainerParameters.add(pClass2);
 			
 			slider_class2 = new JSlider();
-			slider_class2.setBounds(0, 19, 200, 40);
-			slider_class2.setMajorTickSpacing(25);
-			slider_class2.setFont(new Font("Tahoma", Font.PLAIN, 8));
-			slider_class2.setLabelTable( labelTable );  
-			slider_class2.setPaintLabels(true);
+			setupSlider(slider_class2, true, 100);
 			slider_class2.addChangeListener(new ChangeListener() {
 				public void stateChanged(ChangeEvent arg0) {
 					JSlider j = (JSlider) arg0.getSource();
-					textField_class_2.setText(String.valueOf((double) j.getValue() / 100));
-					lblmuInvVal_class2.setText((1 / Double.parseDouble(textField_class_2.getText()))  + "");
+					double m1 = Double.parseDouble(textField_class1.getText());
+					double m2 =  (double) j.getValue();
+					//TODO try catch parse double, format label string
 					
-					//TODO temp do same for other slider
-					model.setMu1(Double.parseDouble(textField_class1.getText()));
-					model.setMu2(Double.parseDouble(textField_class_2.getText()));
-					chartPanel.findRCH();
-					chartPanel.solveSVM();
-					
-					
+					if (chckbxUsemuScale_1.isSelected()){
+						textField_class_2.setText(1 / m2  + "");
+						lblmuInvVal_class2.setText(m2  + "");
+						if (chckbxAutoUpdate.isSelected()){
+							solveSVM(m1, 1 / m2);
+						}
+					}else{
+						m2 = m2 / 100.0;
+						textField_class_2.setText(m2 + "");
+						lblmuInvVal_class1.setText(1 / m2  + "");
+						if (chckbxAutoUpdate.isSelected()){
+							solveSVM(m1, m2);
+						}
+					}
 					
 					for (ActionListener a : textField_class_2.getActionListeners()) {
 						a.actionPerformed(new ActionEvent(j,
@@ -387,8 +432,7 @@ public class SVMMain implements ActionListener{
 	
 				}
 			});
-			slider_class2.setPaintLabels(true);
-			slider_class2.setPaintTicks(true);
+
 			
 			JLabel lblmu_class2 = new JLabel("mu");
 			lblmu_class2.setBounds(10, 70, 14, 14);
@@ -453,15 +497,34 @@ public class SVMMain implements ActionListener{
 			pClass2.add(lblNewLabel_5);
 			pClass2.add(slider_class2);
 			
-			JCheckBox chckbxUseSameParameters = new JCheckBox("Use same parameters for two classes");
+			chckbxUsemuScale_1 = new JCheckBox("Use 1/mu scale");
+			chckbxUsemuScale_1.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					if (chckbxUsemuScale_1.isSelected()){
+						setupSlider(slider_class2, false, model.getRawDataSet().getSeries(1).getItemCount());
+					}else{
+						setupSlider(slider_class2, true, 100);
+					}
+				}
+			});
+			chckbxUsemuScale_1.setBounds(116, 91, 97, 23);
+			pClass2.add(chckbxUsemuScale_1);
+			
+			chckbxUseSameParameters = new JCheckBox("Use same parameters for two classes");
 			chckbxUseSameParameters.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					slider_class2.setEnabled(!slider_class2.isEnabled());
 					textField_class_2.setEnabled(!textField_class_2.isEnabled());
+					chckbxUsemuScale_1.setEnabled(!chckbxUsemuScale_1.isEnabled());
 				}
 			});
-			chckbxUseSameParameters.setBounds(6, 7, 231, 23);
+			chckbxUseSameParameters.setBounds(10, 28, 231, 23);
 			pContainerParameters.add(chckbxUseSameParameters);
+			
+			chckbxAutoUpdate = new JCheckBox("Auto update the solutions");
+			chckbxAutoUpdate.setSelected(true);
+			chckbxAutoUpdate.setBounds(10, 2, 259, 23);
+			pContainerParameters.add(chckbxAutoUpdate);
 			
 			JPanel pContainerTrainingData = new JPanel();
 			tabbedPane.addTab("Training Data", null, pContainerTrainingData, null);
@@ -559,6 +622,16 @@ public class SVMMain implements ActionListener{
 			textField_SeparationDelta.setBounds(113, 255, 55, 20);
 			pContainerTrainingData.add(textField_SeparationDelta);
 			textField_SeparationDelta.setColumns(10);
+			
+			JButton btnSaveData = new JButton("Save Data");
+			btnSaveData.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					File file = new File("wsvm_out.txt");
+					model.getRawDataSet().saveToFile(file);
+				}
+			});
+			btnSaveData.setBounds(209, 294, 89, 23);
+			pContainerTrainingData.add(btnSaveData);
 			
 			JPanel pContainerDataEditing = new JPanel();
 			tabbedPane.addTab("Data Editing", null, pContainerDataEditing, null);
@@ -722,12 +795,8 @@ public class SVMMain implements ActionListener{
 			frame.getContentPane().add(pSolveButtonsContainer);
 			
 			JButton btnClassify = new JButton("Classify");
-			btnClassify.setBounds(188, 29, 89, 23);
+			btnClassify.setBounds(214, 29, 89, 23);
 			pSolveButtonsContainer.add(btnClassify);
-			
-			JButton btnPlotTestData = new JButton("Plot Test Data");
-			btnPlotTestData.setBounds(188, 0, 125, 23);
-			pSolveButtonsContainer.add(btnPlotTestData);
 			frame.getContentPane().add(tabbedPane);
 			
 			JPanel pContainerOptions = new JPanel();
@@ -891,10 +960,7 @@ public class SVMMain implements ActionListener{
 			JMenuItem mntmTwoPoints = new JMenuItem("Two points 1");
 			mntmTwoPoints.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					chartPanel.clearPlot();
-	//				series1.add(new SVMDataItem(1, 1));
-	//				series1.add(new SVMDataItem(4, 1));
-	//				model.setSeries1(series1);
+					model.setDataset("Two points 1");
 				}
 			});
 			mnData.add(mntmTwoPoints);
@@ -902,13 +968,7 @@ public class SVMMain implements ActionListener{
 			JMenuItem mntmCollinearPoints = new JMenuItem("Collinear Points 1");
 			mntmCollinearPoints.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					chartPanel.clearPlot();
-	//				series1.add(new SVMDataItem(1, 1));
-	//				series1.add(new SVMDataItem(4, 1));
-	//				series1.add(new SVMDataItem(7, 1));
-	//				series1.add(new SVMDataItem(11, 1));
-	//				
-	//				model.setSeries1(series1);
+					model.setDataset("Collinear Points 1");
 				}
 			});
 			mnData.add(mntmCollinearPoints);
@@ -916,34 +976,14 @@ public class SVMMain implements ActionListener{
 			JMenuItem mntmTriangle = new JMenuItem("Triangle 1");
 			mntmTriangle.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-	//				chartPanel.clearPlot();
-	//				series1.add(new SVMDataItem(1, 1));
-	//				//series1.add(new SVMDataItem(1, 1));
-	//				
-	//				series1.add(new SVMDataItem(8, 1,2));
-	//				
-	//				//series1.add(new SVMDataItem(8, 1));
-	//				//series1.add(new SVMDataItem(8, 1));
-	//				
-	//				series1.add(new SVMDataItem(1, 8));
-	//				//series1.add(new SVMDataItem(1, 8));
-	//				
-	//				//series1.add(new SVMDataItem(4.5, 1));
-	//				//series1.add(new SVMDataItem(1, 1));
-	//				model.setSeries1(series1);
+					model.setDataset("Triangle 1");
 				}
 			});
 			
 			JMenuItem mntmCollinearPoints_1 = new JMenuItem("Collinear Points 2");
 			mntmCollinearPoints_1.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					chartPanel.clearPlot();
-	//				series1.add(new SVMDataItem(1, 1));
-	//				series1.add(new SVMDataItem(4, 1));
-	//				series1.add(new SVMDataItem(7, 1.01));
-	//				series1.add(new SVMDataItem(11, 1));
-	//				
-	//				model.setSeries1(series1);
+					model.setDataset("Collinear Points 2");
 					
 				}
 			});
@@ -953,12 +993,7 @@ public class SVMMain implements ActionListener{
 			JMenuItem mntmRombus = new JMenuItem("Parallelogram");
 			mntmRombus.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					chartPanel.clearPlot();
-	//				series1.add(new SVMDataItem(1, 1));
-	//				series1.add(new SVMDataItem(4, 4));
-	//				series1.add(new SVMDataItem(4, 1));
-	//				series1.add(new SVMDataItem(7, 4));
-	//				model.setSeries1(series1);
+					model.setDataset("Parallelogram");
 				}
 			});
 			mnData.add(mntmRombus);
@@ -966,12 +1001,7 @@ public class SVMMain implements ActionListener{
 			JMenuItem mntmTrapezium = new JMenuItem("Trapezium");
 			mntmTrapezium.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					chartPanel.clearPlot();
-	//				series1.add(new SVMDataItem(1, 1));
-	//				series1.add(new SVMDataItem(4, 4));
-	//				series1.add(new SVMDataItem(8, 4));
-	//				series1.add(new SVMDataItem(11, 1));
-	//				model.setSeries1(series1);
+					model.setDataset("Trapezium");
 				}
 			});
 			mnData.add(mntmTrapezium);
@@ -979,24 +1009,18 @@ public class SVMMain implements ActionListener{
 			JMenuItem mntmRandom = new JMenuItem("Random");
 			mntmRandom.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-	//				addRandomData();
+					model.getRawDataSet().clear();
+					model.generateRandomData(//TODO make this completely random
+							10,
+							50, 
+							0);
 				}
 			});
 			
 			JMenuItem mntmTPoints = new JMenuItem("T points");
 			mntmTPoints.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					chartPanel.clearPlot();
-					//TODO answer the question is point adding order is dependent or independent of RCH produced
-	//				series1.add(new SVMDataItem(1, 1));
-	//				series1.add(new SVMDataItem(1, 3));
-	//				series1.add(new SVMDataItem(1, 5));
-	//				series1.add(new SVMDataItem(1, 7));
-	//				series1.add(new SVMDataItem(1, 9));
-	////				series1.add(new SVMDataItem(2, 5));
-	////				series1.add(new SVMDataItem(4, 5));
-	//				series1.add(new SVMDataItem(6, 5));
-	//				model.setSeries1(series1);
+					model.setDataset("T points");
 				}
 			});
 			mnData.add(mntmTPoints);
@@ -1005,16 +1029,7 @@ public class SVMMain implements ActionListener{
 			JMenuItem mntmNewMenuItem = new JMenuItem("Triangle 2");
 			mntmNewMenuItem.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					chartPanel.clearPlot();
-					//TODO answer the question is point adding order is dependent or independent of RCH produced
-	//				series1.add(new SVMDataItem(1, 1));
-	//				series1.add(new SVMDataItem(6, 1));
-	//				series1.add(new SVMDataItem(1, 6));
-	//				series2.add(new SVMDataItem(8, 1));
-	//				series2.add(new SVMDataItem(13, 1));
-	//				series2.add(new SVMDataItem(13, 6));
-	//				model.setSeries1(series1);
-	//				model.setSeries2(series2);
+					model.setDataset("Triangle 2");
 				}
 			});
 			mnData.add(mntmNewMenuItem);
@@ -1064,8 +1079,41 @@ public class SVMMain implements ActionListener{
         return new SVMPanel(chart, model);
 	}
 
+	private void solveSVM(double mu1, double mu2){
+		model.setMu(mu1, mu2);
+		chartPanel.findRCH();
+		chartPanel.solveSVM();
+	}
 
-
+	private JSlider setupSlider(JSlider slider, boolean useMuScale, int maxValue){
+	    java.util.Hashtable<Integer,JLabel> labelTable = new java.util.Hashtable<Integer,JLabel>();  
+	    labelTable.put(new Integer(100), new JLabel("1.0"));  
+	    labelTable.put(new Integer(75), new JLabel("0.75"));  
+	    labelTable.put(new Integer(50), new JLabel("0.50"));  
+	    labelTable.put(new Integer(25), new JLabel("0.25"));  
+	    labelTable.put(new Integer(0), new JLabel("0.0"));
+	    
+	    slider.setBounds(0, 26, 200, 40);
+	    slider.setFont(new Font("Tahoma", Font.PLAIN, 8));	    
+	    
+	    slider.setLabelTable(null);
+	    
+	    if (useMuScale){
+	    	slider.setMajorTickSpacing(25);
+	    	slider.setLabelTable(labelTable);
+	    	slider.setMinimum(0);
+	    	slider.setMaximum(100);
+	    }else{
+	    	slider.setMajorTickSpacing(maxValue/2);
+	    	//slider.setLabelTable(slider.createStandardLabels(10));
+	    	slider.setMinimum(0);
+	    	slider.setMaximum(maxValue);
+	    }
+	    
+		slider.setPaintLabels(true);
+		slider.setPaintTicks(true);
+		return slider;
+	}
 
 
 	@Override

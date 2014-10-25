@@ -4,6 +4,7 @@ import java.awt.Point;
 import java.awt.geom.Line2D;
 import java.io.ObjectInputStream.GetField;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import org.jfree.data.xy.XYSeries;
@@ -118,6 +119,10 @@ public class SVMModel {
 		dataGen.generateData(rawDataSet, numPoints, percentPos, softnessDelta);
 	}
 	
+	public void setDataset(String name){
+		SVMDataGenerator dataGen = new SVMDataGenerator(this, 3, 2);
+		dataGen.setPredefinedDataset(rawDataSet, name);
+	}
 	
 	private void initializeData(){
 		
@@ -312,41 +317,80 @@ public class SVMModel {
 		}
 	}
 	public Line2D getLine(SVMDataItem w, double b){
-        double yMin = -500;
-        double yMax = 500;
-        double xMin = ((b-(w.getYValue()*yMin))/w.getXValue());
-        double xMax = ((b-(w.getYValue()*yMax))/w.getXValue());
-        
-//        double mx = w.getXValue();
-//        double my = w.getYValue();
-//        double m = w.getMagnitude();
-//        
-//        double xMin = yMin / m;
-//        double xMax = yMax / m;
 		SVMDataItem p =  WSK.getNearestPositivePoint();
 		SVMDataItem n = WSK.getNearestNegativePoint();
+		
 		SVMDataItem mid = new SVMDataItem(
 				(p.getXValue() + n.getXValue()) / 2,
 				(p.getYValue() + n.getYValue()) / 2);
-		
-        xMin = -500;
-        xMax = 500;
-        //yMix = w.getXValue() *  
-        
-        double f = 5000.0;
-        SVMDataItem normal = new SVMDataItem(-w.getYValue(), w.getXValue());
-       // SVMDataItem normal = new SVMDataItem(w.getXValue(), w.getYValue());
 
         
+        double f = 5000.0;
+        double delta = b / w.getMagnitude();
+      
+        SVMDataItem normal = new SVMDataItem(-w.getYValue(), w.getXValue());
+        //normal.setX(normal.getXValue() + delta);
+        //normal.setY(normal.getYValue() + delta);
         
-        Point.Double p1= new Point.Double(
-        		(normal.getXValue() * f) + mid.getXValue(),
-        		(normal.getYValue() * f) + mid.getYValue());
-        Point.Double p2= new Point.Double(
-        		(normal.getXValue() * -f) + mid.getXValue(),
-        		(normal.getYValue() * -f) + mid.getYValue());
-        System.out.format("Line points:\np1:%s\np2:%s\n", p1, p2 );
+//        Point.Double p1= new Point.Double(
+//        		(normal.getXValue() * f) + mid.getXValue(),
+//        		(normal.getYValue() * f) + mid.getYValue());
+//        Point.Double p2= new Point.Double(
+//        		(normal.getXValue() * -f) + mid.getXValue(),
+//        		(normal.getYValue() * -f) + mid.getYValue());
+        
+        
+        
+        
+      Point.Double p1= new Point.Double(
+		(normal.getXValue() * f + delta) ,
+		(normal.getYValue() * f + delta) );
+Point.Double p2= new Point.Double(
+		(normal.getXValue() * -f + delta) ,
+		(normal.getYValue() * -f + delta) );
+        System.out.format("Line points:\np1:%s\np2:%s -- %f\n", p1, p2, delta );
         return new Line2D.Double(p1, p2);
+        
+//        double yMin = -500;
+//        double yMax = 500;
+//        double xMin = ((b-(w.getYValue()*yMin))/w.getXValue());
+//        double xMax =   ((b-(w.getYValue()*yMax))/w.getXValue());
+//        
+//        Point.Double p1= new Point.Double(xMin, yMin);
+//        Point.Double p2= new Point.Double(xMax, yMax);
+//        return new Line2D.Double(p1, p2);
+	}
+	
+	public SVMDataItem getPositiveMargin(){
+		SVMDataSeries positives = getPositiveSeries();
+		SVMDataItem item = null;
+		SVMDataItem max = null;
+		double prod = 0.0;
+		double maxProd = 0.0;
+	
+		for (int i = 0; i < positives.getItemCount(); i++){
+			item = positives.getRawDataItem(i);
+			prod = item.getDotProduct(getW());
+			
+			if (max == null){
+				max = item;
+				maxProd = prod;
+			}
+			
+			if (prod < maxProd){
+				
+			}
+		}
+		
+		return null;
+	}
+	
+	public SVMDataItem getNegativeMargin(){
+		return null;
+	}
+	
+	public SVMDataItem getHyperplane(){
+		return getW().getAntiClockWiseNormal(); //TODO sure?
 	}
 	
 	public static Line2D getPerpendicularBisector(){

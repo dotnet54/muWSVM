@@ -2,6 +2,7 @@ package app.model.data;
 
 import java.util.ArrayList;
 
+import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYSeries;
 
 public class SVMDataSeries extends XYSeries {
@@ -26,5 +27,8 @@ public class SVMDataSeries extends XYSeries {
 		}
 		return list;
 	}
-
+	
+    public SVMDataItem getRawDataItem(int index) {
+        return (SVMDataItem) this.data.get(index);
+    }
 }
