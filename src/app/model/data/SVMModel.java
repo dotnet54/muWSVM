@@ -348,7 +348,7 @@ public class SVMModel {
 Point.Double p2= new Point.Double(
 		(normal.getXValue() * -f + delta) ,
 		(normal.getYValue() * -f + delta) );
-        System.out.format("Line points:\np1:%s\np2:%s -- %f\n", p1, p2, delta );
+        //System.out.format("Line points:\np1:%s\np2:%s -- %f\n", p1, p2, delta );
         return new Line2D.Double(p1, p2);
         
 //        double yMin = -500;

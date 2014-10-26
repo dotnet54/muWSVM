@@ -41,7 +41,7 @@ public class WSK {
 		SVMDataItem w = null;
 		
 		double eps = 0.005;
-		int MAXIT = 50;
+		int MAXIT = 500;
 		int it = 0;
 		
 		
@@ -167,10 +167,10 @@ public class WSK {
 		nearestPositivePoint = p;
 		nearestNegativePoint = n;
 		
-		System.out.println("w = " + finalW.getXValue() + ", "+finalW.getYValue());
-		System.out.println("b = " + finalB);
+		//System.out.println("w = " + finalW.getXValue() + ", "+finalW.getYValue());
+		//System.out.println("b = " + finalB);
 		System.out.println("it = " + it);
-		System.out.println("p = " + p + ", n = " + n);
+		//System.out.println("p = " + p + ", n = " + n);
 		
 	}
 	

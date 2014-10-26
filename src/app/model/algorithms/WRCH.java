@@ -243,7 +243,7 @@ public class WRCH {
 		//TODO if weight = 0 ??
 		ArrayList<SVMDataItem> X = new ArrayList<SVMDataItem>(Arrays.asList(P));
 		
-		//TODO debug code
+		//TODO debug code ->connect n with comparator in a dirty way
 		double [] dots = new double[X.size()];
 		for (int i = 0; i < X.size(); i++){
 			dots[i] = X.get(i).project(n);
@@ -252,6 +252,7 @@ public class WRCH {
 		Collections.sort(X,Collections.reverseOrder( new Comparator<SVMDataItem>() {
 			@Override
 			public int compare(SVMDataItem o1, SVMDataItem o2) {
+				//USE normal to compare between two objects
 				return (o1.custCompareTo(o2));
 			}
 		}));

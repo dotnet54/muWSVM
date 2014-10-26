@@ -46,6 +46,7 @@ import org.jfree.ui.TextAnchor;
 import org.jfree.util.ShapeUtilities;
 
 import app.model.algorithms.WSK;
+import app.model.data.DVector;
 import app.model.data.SVMDataItem;
 import app.model.data.SVMDataSet;
 import app.model.data.SVMModel;
@@ -216,7 +217,9 @@ public class SVMPanel extends ChartPanel implements ChartMouseListener{
         solutionRenderer.setSeriesPaint(2, Color.GREEN.brighter());
 	}
 
-	
+	public void mousePressed(MouseEvent event) {
+		super.mousePressed(event);
+	}
 	
 	@Override
 	public void mouseReleased(MouseEvent event) {
@@ -314,18 +317,58 @@ public class SVMPanel extends ChartPanel implements ChartMouseListener{
 
 
 	public void solveSVM(){
-		System.out.println("solving SVM...");
+		//System.out.println("solving SVM...");
  
 		model.compute();
 			    
-	    if (hyperPlane != null){
+		
+		
+		SVMDataItem w = model.getW();
+		double b = model.getB();
+		SVMDataItem p =  WSK.getNearestPositivePoint();
+		SVMDataItem n = WSK.getNearestNegativePoint();			
+		
+		double y1 = -500;
+		double y2 = 500;
+		double x1 = (b - (w.getY() * y1))/ w.getX();
+		double x2 = (b - (w.getY() * y2))/ w.getX();
+		
+		if (hyperPlane != null){
 	    	thisPlot.removeAnnotation(hyperPlane);
 	    }
-	    Line2D line = model.getLine(model.getW(), model.getB()+10);
-	   // Line2D line = SVMModel.getPerpendicularBisector();
-	    hyperPlane = new XYLineAnnotation(line.getX1(), line.getY1(),
-	    		line.getX2(), line.getY2());
-	    thisPlot.addAnnotation(hyperPlane);
+		if (marginPos != null){
+	    	thisPlot.removeAnnotation(marginPos);
+	    }
+		if (marginNeg != null){
+	    	thisPlot.removeAnnotation(marginNeg);
+	    }
+		
+		hyperPlane = new XYLineAnnotation(x1, y1, x2, y2);
+		b = p.getDotProduct(w);
+		x1 = (b - (w.getY() * y1))/ w.getX();
+		x2 = (b - (w.getY() * y2))/ w.getX();
+		marginPos = new XYLineAnnotation(x1, y1, x2, y2);
+		b = n.getDotProduct(w);
+		x1 = (b - (w.getY() * y1))/ w.getX();
+		x2 = (b - (w.getY() * y2))/ w.getX();
+		marginNeg = new XYLineAnnotation(x1, y1, x2, y2);
+		
+		thisPlot.addAnnotation(hyperPlane);
+		thisPlot.addAnnotation(marginPos);
+		thisPlot.addAnnotation(marginNeg);
+
+		
+		
+		
+		
+//	    if (hyperPlane != null){
+//	    	thisPlot.removeAnnotation(hyperPlane);
+//	    }
+//	    Line2D line = model.getLine(model.getW(), model.getB()+10);
+//	   // Line2D line = SVMModel.getPerpendicularBisector();
+//	    hyperPlane = new XYLineAnnotation(line.getX1(), line.getY1(),
+//	    		line.getX2(), line.getY2());
+//	    thisPlot.addAnnotation(hyperPlane);
 		
 //	    SVMDataItem vector = model.getHyperplane();
 //	    SVMDataItem midPoint = null;
@@ -366,7 +409,7 @@ public class SVMPanel extends ChartPanel implements ChartMouseListener{
 
 
 	public void findRCH(){
-		System.out.println("finding RCH...");
+		//System.out.println("finding RCH...");
 	
 		model.compute();
 		
@@ -444,7 +487,7 @@ public class SVMPanel extends ChartPanel implements ChartMouseListener{
 		}
 	
 	
-		System.out.println("RCH found");
+		//System.out.println("RCH found");
 	}
 
 

@@ -63,6 +63,7 @@ import javax.swing.ListSelectionModel;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.io.File;
+import java.awt.Panel;
 
 /**
  * Main GUI window for the application
@@ -110,6 +111,7 @@ public class SVMMain implements ActionListener{
 	private final SVMAboutDialog aboutDialog = new SVMAboutDialog();
 	private final SVMHelpDialog helpDialog = new SVMHelpDialog();
 	private final JFileChooser fc = new JFileChooser(".");
+	private JTextField numDimensions;
 	
 	/**
 	 * Entry point - Launch the application.
@@ -381,6 +383,7 @@ public class SVMMain implements ActionListener{
 			chckbxUsemuScale = new JCheckBox("Use 1/mu scale");
 			chckbxUsemuScale.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
+					//TODO bug fix, when #points change, scale is not updated, implement observer
 					if (chckbxUsemuScale.isSelected()){
 						setupSlider(slider_class1, false, model.getRawDataSet().getSeries(0).getItemCount());
 					}else{
@@ -521,10 +524,14 @@ public class SVMMain implements ActionListener{
 			chckbxUseSameParameters.setBounds(10, 28, 231, 23);
 			pContainerParameters.add(chckbxUseSameParameters);
 			
-			chckbxAutoUpdate = new JCheckBox("Auto update the solutions");
+			chckbxAutoUpdate = new JCheckBox("Auto update WRCH");
 			chckbxAutoUpdate.setSelected(true);
-			chckbxAutoUpdate.setBounds(10, 2, 259, 23);
+			chckbxAutoUpdate.setBounds(10, 2, 119, 23);
 			pContainerParameters.add(chckbxAutoUpdate);
+			
+			JCheckBox chckbxAutoUpdateWsvm = new JCheckBox("Auto update hyperplane");
+			chckbxAutoUpdateWsvm.setBounds(144, 2, 158, 23);
+			pContainerParameters.add(chckbxAutoUpdateWsvm);
 			
 			JPanel pContainerTrainingData = new JPanel();
 			tabbedPane.addTab("Training Data", null, pContainerTrainingData, null);
@@ -582,7 +589,7 @@ public class SVMMain implements ActionListener{
 			textField_NumDataPoints.setColumns(10);
 			
 			JLabel lblPercentPos = new JLabel("Percentage of Positive Data:");
-			lblPercentPos.setBounds(10, 140, 175, 14);
+			lblPercentPos.setBounds(10, 140, 157, 14);
 			pContainerTrainingData.add(lblPercentPos);
 			
 			textField_PercentPos = new JTextField();
@@ -632,6 +639,15 @@ public class SVMMain implements ActionListener{
 			});
 			btnSaveData.setBounds(209, 294, 89, 23);
 			pContainerTrainingData.add(btnSaveData);
+			
+			numDimensions = new JTextField();
+			numDimensions.setBounds(165, 109, 104, 20);
+			pContainerTrainingData.add(numDimensions);
+			numDimensions.setColumns(10);
+			
+			JLabel lblNumberOfDimensions = new JLabel("Number of dimensions");
+			lblNumberOfDimensions.setBounds(164, 92, 105, 14);
+			pContainerTrainingData.add(lblNumberOfDimensions);
 			
 			JPanel pContainerDataEditing = new JPanel();
 			tabbedPane.addTab("Data Editing", null, pContainerDataEditing, null);
@@ -849,6 +865,36 @@ public class SVMMain implements ActionListener{
 			
 			JPanel pContainerTestingData = new JPanel();
 			tabbedPane.addTab("Testing Data", null, pContainerTestingData, null);
+			pContainerTestingData.setLayout(null);
+			
+			JButton btnLoadTestingData = new JButton("Load Testing Data");
+			btnLoadTestingData.setBounds(10, 11, 119, 23);
+			pContainerTestingData.add(btnLoadTestingData);
+			
+			JButton btnPerformCrossValidation = new JButton("Perform Cross Validation");
+			btnPerformCrossValidation.setBounds(10, 55, 159, 23);
+			pContainerTestingData.add(btnPerformCrossValidation);
+			
+			Panel pContainerWeighting = new Panel();
+			tabbedPane.addTab("Weighting", null, pContainerWeighting, null);
+			pContainerWeighting.setLayout(null);
+			
+			JButton btnApplyAutoWeighting = new JButton("Apply Auto Weighting");
+			btnApplyAutoWeighting.setBounds(10, 80, 145, 23);
+			pContainerWeighting.add(btnApplyAutoWeighting);
+			
+			JComboBox cmbWeightingSchemes = new JComboBox();
+			cmbWeightingSchemes.setModel(new DefaultComboBoxModel(new String[] {"Reduce weight of old data", "Reduce weight of uncertain data"}));
+			cmbWeightingSchemes.setBounds(10, 37, 186, 20);
+			pContainerWeighting.add(cmbWeightingSchemes);
+			
+			JButton btnNewButton = new JButton("Weight based on clusters");
+			btnNewButton.setBounds(10, 128, 168, 23);
+			pContainerWeighting.add(btnNewButton);
+			
+			JCheckBox chckbxEnableAutoWeighting = new JCheckBox("Enable Auto weighting");
+			chckbxEnableAutoWeighting.setBounds(10, 7, 168, 23);
+			pContainerWeighting.add(chckbxEnableAutoWeighting);
 			
 			JMenuBar menuBar = new JMenuBar();
 			frame.setJMenuBar(menuBar);
