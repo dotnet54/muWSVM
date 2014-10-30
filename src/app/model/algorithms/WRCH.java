@@ -80,10 +80,12 @@ public class WRCH {
 	
 	private static SVMDataItem[] rhull(SVMDataItem[] P, double mu) throws StackOverflowError{
 		
-		int m = (int) Math.ceil(1.0/mu);
+//		int m = (int) Math.ceil(1.0/mu);
 //		if (m > P.length){
-//			System.out.println("rhull_aux: m (or ceil(1/mu)) must be greater than number of points");
-//			return null;//TODO return centroid??
+//			SVMDataItem c = findCentroid(P);
+//			SVMDataItem res[] = new SVMDataItem[1];
+//			res[0] = c;
+//			return res;
 //		}
 		
 		SVMDataItem n = new SVMDataItem(-1,0);
@@ -210,28 +212,6 @@ public class WRCH {
 		return Ret;
 	}
 	
-	private static SVMDataItem normal(SVMDataItem p1, SVMDataItem p2){
-		double dx, dy;
-//		dx = p1.getXValue() - p2.getXValue(); //TODO double op
-//		dy = p1.getYValue() - p2.getYValue(); //TODO double op
-		dx = SVMDataItem.dMinus(p1.getXValue(), p2.getXValue());
-		dy = SVMDataItem.dMinus(p1.getYValue(), p2.getYValue());
-		
-		SVMDataItem n = new SVMDataItem(0,0);
-		n.setX(-dy);
-		n.setY(dx);
-
-		return n;
-	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	public static SVMDataItem alg9(SVMDataItem[] P, double[] S, double mu, SVMDataItem n){
 		//TODO S not used
 		
@@ -313,74 +293,177 @@ public class WRCH {
 	
 	
 	
-	private static SVMDataItem alg8(SVMDataItem[] Pl, double [] S,
-			double mu, SVMDataItem n){
+	public static SVMDataItem findCentroid(ArrayList<SVMDataItem> P){
+		SVMDataItem cent = new SVMDataItem(0, 0);
 		
-//		int m = (int) Math.ceil(1.0/mu);
-//		if (m > Pl.length){
-//			System.out.println("alg8: m (or ceil(1/mu)) must be greater than number of points");
-//			return null;
-//		}
-		
-		
-		ArrayList<SVMDataItem> P = new ArrayList<SVMDataItem>(Arrays.asList(Pl));
-		//TODO NULL
-		SVMDataItem v = new SVMDataItem(0,0);
-		double [] A = new double[P.size()];
-		double [] dots = new double[P.size()];
-		int [] sortedInd = new int[P.size()];
-		Z = new SVMDataItem[P.size()];
-		double s = 0.0;
-		int i = 0;
-		
-		for (i = 0; i < P.size(); i++){
-			dots[i] = n.getDotProduct(P.get(i));
+		for (int i = 0; i < P.size(); i++){
+			cent.setX(cent.getX() + P.get(i).getXValue() * P.get(i).getWeight());
+			cent.setY(cent.getY() + P.get(i).getYValue() * P.get(i).getWeight());
 		}
 		
-
-		sortedInd = sorti(dots);	
-		for (i = 0; i < P.size(); i++){
-			Z[i] = P.get(sortedInd[i]);
+		double totalWeight = 0;
+		for (int i = 0; i < P.size(); i++){
+			totalWeight += P.get(i).getWeight();
 		}
+		//ASSERT totalWeight != 0;
 		
-		i = 0;
-		//int k = 0;//kth maximum
-		int count = 0;
-		while ((1 - s) >0.000001 ){//TODO double op
-			for (int k = 0; k < sortedInd.length; k++){
-				if (A[sortedInd[k]] == 0){
-					i = sortedInd[k];
-					count++;
-					break;
-				}
-			}
-			A[i] = Math.min(S[i] * mu, 1 - s); //if s[i] = 0?? TEST
-			s = s + A[i];
-		}
-		int gg = 4;
+		cent.setX(cent.getXValue() / totalWeight);
+		cent.setY(cent.getYValue() / totalWeight);
 		
-		for (i = 0; i < count; i++){
-			
-			if (i >= P.size()){
-				System.out.println("index out of bounds");
-			}
-			//TODO double op
-//			v.setX(v.getXValue() + (A[sortedInd[i]] * P.get(sortedInd[i]).getXValue()));
-//			v.setY(v.getYValue() + (A[sortedInd[i]] * P.get(sortedInd[i]).getYValue()));
-			v.setX(SVMDataItem.dAdd(v.getXValue(),
-					SVMDataItem.dMult(A[sortedInd[i]], 
-							P.get(sortedInd[i]).getXValue())));
-			
-			v.setY(SVMDataItem.dAdd(v.getYValue(),
-					SVMDataItem.dMult(A[sortedInd[i]], 
-							P.get(sortedInd[i]).getYValue())));
-	
-		}
-		
-		numSupportPoints = count;
-		return v;
+		return cent;
 	}
 	
+	private static SVMDataItem normal(SVMDataItem p1, SVMDataItem p2){
+			double dx, dy;
+	//		dx = p1.getXValue() - p2.getXValue(); //TODO double op
+	//		dy = p1.getYValue() - p2.getYValue(); //TODO double op
+			dx = SVMDataItem.dMinus(p1.getXValue(), p2.getXValue());
+			dy = SVMDataItem.dMinus(p1.getYValue(), p2.getYValue());
+			
+			SVMDataItem n = new SVMDataItem(0,0);
+			n.setX(-dy);
+			n.setY(dx);
+	
+			return n;
+		}
+
+
+	//TODO FIND GEOMETRIC centroid using weights
+	// use double op functions
+	private static SVMDataItem findCentroid(SVMDataItem P[]){
+		SVMDataItem cent = new SVMDataItem(0, 0);
+		
+		for (int i = 0; i < P.length; i++){
+			cent.setX(cent.getX() + P[i].getXValue() * P[i].getWeight());
+			cent.setY(cent.getY() + P[i].getYValue() * P[i].getWeight());
+		}
+		
+		double totalWeight = 0;
+		for (int i = 0; i < P.length; i++){
+			totalWeight += P[i].getWeight();
+		}
+		//ASSERT totalWeight != 0;
+		
+		cent.setX(cent.getXValue() / totalWeight);
+		cent.setY(cent.getYValue() / totalWeight);
+		
+		return cent;
+	}
+	
+	
+	
+	
+	
+	
+	/*
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 */
+
+
+	private static SVMDataItem alg8(SVMDataItem[] Pl, double [] S,
+				double mu, SVMDataItem n){
+			
+	//		int m = (int) Math.ceil(1.0/mu);
+	//		if (m > Pl.length){
+	//			System.out.println("alg8: m (or ceil(1/mu)) must be greater than number of points");
+	//			return null;
+	//		}
+			
+			
+			ArrayList<SVMDataItem> P = new ArrayList<SVMDataItem>(Arrays.asList(Pl));
+			//TODO NULL
+			SVMDataItem v = new SVMDataItem(0,0);
+			double [] A = new double[P.size()];
+			double [] dots = new double[P.size()];
+			int [] sortedInd = new int[P.size()];
+			Z = new SVMDataItem[P.size()];
+			double s = 0.0;
+			int i = 0;
+			
+			for (i = 0; i < P.size(); i++){
+				dots[i] = n.getDotProduct(P.get(i));
+			}
+			
+	
+			sortedInd = sorti(dots);	
+			for (i = 0; i < P.size(); i++){
+				Z[i] = P.get(sortedInd[i]);
+			}
+			
+			i = 0;
+			//int k = 0;//kth maximum
+			int count = 0;
+			while ((1 - s) >0.000001 ){//TODO double op
+				for (int k = 0; k < sortedInd.length; k++){
+					if (A[sortedInd[k]] == 0){
+						i = sortedInd[k];
+						count++;
+						break;
+					}
+				}
+				A[i] = Math.min(S[i] * mu, 1 - s); //if s[i] = 0?? TEST
+				s = s + A[i];
+			}
+			int gg = 4;
+			
+			for (i = 0; i < count; i++){
+				
+				if (i >= P.size()){
+					System.out.println("index out of bounds");
+				}
+				//TODO double op
+	//			v.setX(v.getXValue() + (A[sortedInd[i]] * P.get(sortedInd[i]).getXValue()));
+	//			v.setY(v.getYValue() + (A[sortedInd[i]] * P.get(sortedInd[i]).getYValue()));
+				v.setX(SVMDataItem.dAdd(v.getXValue(),
+						SVMDataItem.dMult(A[sortedInd[i]], 
+								P.get(sortedInd[i]).getXValue())));
+				
+				v.setY(SVMDataItem.dAdd(v.getYValue(),
+						SVMDataItem.dMult(A[sortedInd[i]], 
+								P.get(sortedInd[i]).getYValue())));
+		
+			}
+			
+			numSupportPoints = count;
+			return v;
+		}
+
+
 	private static int[] sorti(double[] s){
 		double max;
 		int maxi;
@@ -443,49 +526,6 @@ public class WRCH {
 		
 		//S = 
 		return v;
-	}
-
-
-	public static SVMDataItem findCentroid(ArrayList<SVMDataItem> P){
-		SVMDataItem cent = new SVMDataItem(0, 0);
-		
-		for (int i = 0; i < P.size(); i++){
-			cent.setX(cent.getX() + P.get(i).getXValue() * P.get(i).getWeight());
-			cent.setY(cent.getY() + P.get(i).getYValue() * P.get(i).getWeight());
-		}
-		
-		double totalWeight = 0;
-		for (int i = 0; i < P.size(); i++){
-			totalWeight += P.get(i).getWeight();
-		}
-		//ASSERT totalWeight != 0;
-		
-		cent.setX(cent.getXValue() / totalWeight);
-		cent.setY(cent.getYValue() / totalWeight);
-		
-		return cent;
-	}
-	
-	//TODO FIND GEOMETRIC centroid using weights
-	// use double op functions
-	private static SVMDataItem findCentroid(SVMDataItem P[]){
-		SVMDataItem cent = new SVMDataItem(0, 0);
-		
-		for (int i = 0; i < P.length; i++){
-			cent.setX(cent.getX() + P[i].getXValue() * P[i].getWeight());
-			cent.setY(cent.getY() + P[i].getYValue() * P[i].getWeight());
-		}
-		
-		double totalWeight = 0;
-		for (int i = 0; i < P.length; i++){
-			totalWeight += P[i].getWeight();
-		}
-		//ASSERT totalWeight != 0;
-		
-		cent.setX(cent.getXValue() / totalWeight);
-		cent.setY(cent.getYValue() / totalWeight);
-		
-		return cent;
 	}
 
 

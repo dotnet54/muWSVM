@@ -3,6 +3,7 @@ package app.gui;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Insets;
+import java.awt.MenuItem;
 import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.Shape;
@@ -47,11 +48,14 @@ import org.jfree.util.ShapeUtilities;
 
 import app.model.algorithms.WSK;
 import app.model.data.DVector;
+import app.model.data.IObserver;
+import app.model.data.ISubject;
 import app.model.data.SVMDataItem;
 import app.model.data.SVMDataSet;
 import app.model.data.SVMModel;
 
-public class SVMPanel extends ChartPanel implements ChartMouseListener{
+public class SVMPanel extends ChartPanel 
+						implements ChartMouseListener, ISubject{
 //TODO BUG point is not added to click location but upper corner of popup menu
 	
 	
@@ -133,6 +137,11 @@ public class SVMPanel extends ChartPanel implements ChartMouseListener{
 	private int pointSize = 2;
 	
 	
+	//observer pattern 
+    private List<IObserver> observers;
+    private boolean changed;
+    private final Object MUTEX= new Object();
+	
 	/**
 	 * Label generator for point labels of JFreeChart
 	 * @author shifaz
@@ -156,6 +165,7 @@ public class SVMPanel extends ChartPanel implements ChartMouseListener{
 	public SVMPanel(JFreeChart chart,SVMModel model ) {
 		super(chart);
 		
+		this.observers = new ArrayList<IObserver>();
 		
 		this.model = model;
 		thisChart = chart;
@@ -166,6 +176,9 @@ public class SVMPanel extends ChartPanel implements ChartMouseListener{
 		setMouseWheelEnabled(true);
 		setZoomTriggerDistance(20);
 		addChartMouseListener(this);
+		//setMouseZoomable(false);
+		//setDomainZoomable(false);
+		//setRangeZoomable(false);
 			
 		//popup menu
 		initPopUpMenu();
@@ -219,6 +232,8 @@ public class SVMPanel extends ChartPanel implements ChartMouseListener{
 
 	public void mousePressed(MouseEvent event) {
 		super.mousePressed(event);
+		
+		System.out.format("mPressed: %s\n", event.getSource());
 	}
 	
 	@Override
@@ -265,6 +280,9 @@ public class SVMPanel extends ChartPanel implements ChartMouseListener{
 					popup.show(this, event.getX(), event.getY());
 				} else {
 					popup.removeAll();
+					popup.add(itp);
+					popup.add(itn);
+					popup.addSeparator();
 					popup.add(itd);// TODO duplicate point
 					popup.add(itr);
 					popup.add(itw);
@@ -297,32 +315,82 @@ public class SVMPanel extends ChartPanel implements ChartMouseListener{
 	public void clearPlot(){
 			XYPlot p = getChart().getXYPlot();
 			p.clearAnnotations();
-			//TODO
-	//		series1.clear();
-	//		series2.clear();
-	//		series3.clear();
-	//		series4.clear();
-	//		series5.clear();
-			
 			model.clearDataSet(0);
-	    }
-
-
-
-	public void drawBisector(){
-		
-		
+	}
+	
+	public void updateChart(){
+		updateWRCHSolutions();
+		updateWSVMSolutions();
 	}
 
+	public void updateWRCHSolutions(){
+		final float dash1[] = { 2.0f, 2.0f };
+		final BasicStroke dashed = new BasicStroke(1.0f, BasicStroke.CAP_BUTT,
+				BasicStroke.JOIN_MITER, 10.0f, dash1, 0.0f);
+		Path2D path;
+		final Shape[] shapes = new Shape[3];
+		thisPlot.clearAnnotations();
+	
+		ArrayList<SVMDataItem> rch1 = model.getRCH1();
+	
+		if (!rch1.isEmpty()) {
+	
+			double[] xPoints = new double[rch1.size()];
+			double[] yPoints = new double[rch1.size()];
+	
+			for (int i = 0; i < rch1.size(); i++) {
+				xPoints[i] = rch1.get(i).getXValue();
+				yPoints[i] = rch1.get(i).getYValue();
+			}
+			path = new Path2D.Double();
+	
+			path.moveTo(xPoints[0], yPoints[0]);
+			for (int i = 1; i < xPoints.length; ++i) {
+				path.lineTo(xPoints[i], yPoints[i]);
+			}
+			path.closePath();
+			shapes[0] = path;
+	
+			
+			if (anoRHull1 != null) {
+				thisPlot.removeAnnotation(anoRHull1);
+			}
+	
+			anoRHull1 = new XYShapeAnnotation(shapes[0], dashed, Color.blue);
+			thisPlot.addAnnotation(anoRHull1);
+		}
+	
+		ArrayList<SVMDataItem> rch2 = model.getRCH2();
+	
+		if (!rch2.isEmpty()) {
+			double[] xPoints3 = new double[rch2.size()];
+			double[] yPoints3 = new double[rch2.size()];
+	
+			for (int i = 0; i < rch2.size(); i++) {
+				xPoints3[i] = rch2.get(i).getXValue();
+				yPoints3[i] = rch2.get(i).getYValue();
+			}
+			path = new Path2D.Double();
+	
+			path.moveTo(xPoints3[0], yPoints3[0]);
+			for (int i = 1; i < xPoints3.length; ++i) {
+				path.lineTo(xPoints3[i], yPoints3[i]);
+			}
+			path.closePath();
+			shapes[1] = path;
+	
+			if (anoRHull2 != null) {
+				thisPlot.removeAnnotation(anoRHull2);
+			}
+	
+			anoRHull2 = new XYShapeAnnotation(shapes[1], dashed, Color.blue);
+			thisPlot.addAnnotation(anoRHull2);
+	
+		}
+	
+	}
 
-
-	public void solveSVM(){
-		//System.out.println("solving SVM...");
- 
-		model.compute();
-			    
-		
-		
+	public void updateWSVMSolutions(){
 		SVMDataItem w = model.getW();
 		double b = model.getB();
 		SVMDataItem p =  WSK.getNearestPositivePoint();
@@ -408,171 +476,6 @@ public class SVMPanel extends ChartPanel implements ChartMouseListener{
 
 
 
-	public void findRCH(){
-		//System.out.println("finding RCH...");
-	
-		model.compute();
-		
-		
-		final float dash1[] = { 2.0f, 2.0f };
-		final BasicStroke dashed = new BasicStroke(1.0f, BasicStroke.CAP_BUTT,
-				BasicStroke.JOIN_MITER, 10.0f, dash1, 0.0f);
-	
-		Path2D path;
-		
-	
-		final Shape[] shapes = new Shape[3];
-		thisPlot.clearAnnotations();
-	
-		ArrayList<SVMDataItem> rch1 = model.getRCH1();
-	
-		if (!rch1.isEmpty()) {
-	
-			double[] xPoints = new double[rch1.size()];
-			double[] yPoints = new double[rch1.size()];
-	
-			for (int i = 0; i < rch1.size(); i++) {
-				xPoints[i] = rch1.get(i).getXValue();
-				yPoints[i] = rch1.get(i).getYValue();
-			}
-			path = new Path2D.Double();
-	
-			path.moveTo(xPoints[0], yPoints[0]);
-			for (int i = 1; i < xPoints.length; ++i) {
-				path.lineTo(xPoints[i], yPoints[i]);
-			}
-			path.closePath();
-			shapes[0] = path;
-	
-			
-			if (anoRHull1 != null) {
-				thisPlot.removeAnnotation(anoRHull1);
-			}
-	
-			anoRHull1 = new XYShapeAnnotation(shapes[0], dashed, Color.blue);
-			thisPlot.addAnnotation(anoRHull1);
-	
-	
-			
-			
-		}
-	
-		ArrayList<SVMDataItem> rch2 = model.getRCH2();
-	
-		if (!rch2.isEmpty()) {
-			double[] xPoints3 = new double[rch2.size()];
-			double[] yPoints3 = new double[rch2.size()];
-	
-			for (int i = 0; i < rch2.size(); i++) {
-				xPoints3[i] = rch2.get(i).getXValue();
-				yPoints3[i] = rch2.get(i).getYValue();
-			}
-			path = new Path2D.Double();
-	
-			path.moveTo(xPoints3[0], yPoints3[0]);
-			for (int i = 1; i < xPoints3.length; ++i) {
-				path.lineTo(xPoints3[i], yPoints3[i]);
-			}
-			path.closePath();
-			shapes[1] = path;
-	
-			if (anoRHull2 != null) {
-				thisPlot.removeAnnotation(anoRHull2);
-			}
-	
-			anoRHull2 = new XYShapeAnnotation(shapes[1], dashed, Color.blue);
-			thisPlot.addAnnotation(anoRHull2);
-			
-	
-		}
-	
-	
-		//System.out.println("RCH found");
-	}
-
-
-
-	public void findCH(){
-		System.out.println("finding CH...");
-	
-		Path2D path;
-		model.compute();
-	
-		final Shape[] shapes = new Shape[4];
-		
-		thisPlot.clearAnnotations();
-	
-		ArrayList<SVMDataItem> ch1 = model.getCH1();
-	
-		if (!ch1.isEmpty()) {
-			int[] xPoints = new int[ch1.size()];
-			int[] yPoints = new int[ch1.size()];
-	
-			int[] xPoints2 = new int[ch1.size()];
-			int[] yPoints2 = new int[ch1.size()];
-	
-			double[] xPoints3 = new double[ch1.size()];
-			double[] yPoints3 = new double[ch1.size()];
-	
-			for (int i = 0; i < ch1.size(); i++) {
-				xPoints[i] = (int) ch1.get(i).getXValue();
-				yPoints[i] = (int) ch1.get(i).getYValue();
-				xPoints2[i] = toPanelX(ch1.get(i).getXValue());
-				yPoints2[i] = toPanelY(ch1.get(i).getYValue());
-				xPoints3[i] = ch1.get(i).getXValue();
-				yPoints3[i] = ch1.get(i).getYValue();
-			}
-			shapes[0] = new Polygon(xPoints, yPoints, ch1.size());
-			shapes[1] = new Polygon(xPoints2, yPoints2, ch1.size());
-	
-			path = new Path2D.Double();
-	
-			path.moveTo(xPoints3[0], yPoints3[0]);
-			for (int i = 1; i < xPoints3.length; ++i) {
-				path.lineTo(xPoints3[i], yPoints3[i]);
-			}
-			path.closePath();
-			shapes[2] = path;
-	
-			if (anoHull1 != null) {
-				thisPlot.removeAnnotation(anoHull1);
-			}
-	
-			anoHull1 = new XYShapeAnnotation(shapes[2]);
-			thisPlot.addAnnotation(anoHull1);
-		}
-	
-		ArrayList<SVMDataItem> ch2 = model.getCH2();
-		if (!ch2.isEmpty()) {
-			double[] xPoints3 = new double[ch1.size()];
-			double[] yPoints3 = new double[ch1.size()];
-	
-			for (int i = 0; i < ch2.size(); i++) {
-				xPoints3[i] = ch2.get(i).getXValue();
-				yPoints3[i] = ch2.get(i).getYValue();
-			}
-			path = new Path2D.Double();
-	
-			path.moveTo(xPoints3[0], yPoints3[0]);
-			for (int i = 1; i < xPoints3.length; ++i) {
-				path.lineTo(xPoints3[i], yPoints3[i]);
-			}
-			path.closePath();
-			shapes[3] = path;
-	
-			if (anoHull2 != null) {
-				thisPlot.removeAnnotation(anoHull2);
-			}
-	
-			anoHull2 = new XYShapeAnnotation(shapes[3]);
-			thisPlot.addAnnotation(anoHull2);
-	
-		}
-	        
-		System.out.println("CH found");
-	}
-
-
 	public void drawLine(SVMDataItem vector){
 		thisPlot.clearAnnotations();
 		
@@ -600,14 +503,14 @@ public class SVMPanel extends ChartPanel implements ChartMouseListener{
 		itp.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				addPoint(0,xChart, yChart);
+				addPoint(0);
 			}
 		});
 		
 		itn.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				addPoint(1,xChart, yChart);
+				addPoint(1);
 			}
 		});
 		
@@ -615,39 +518,14 @@ public class SVMPanel extends ChartPanel implements ChartMouseListener{
 			
 			@Override
 			public void actionPerformed(ActionEvent ev) {
-				if (selectedEntity != null){
-					XYItemEntity e = (XYItemEntity) selectedEntity;
-		            XYDataset d = e.getDataset(); //TODO check selection for null
-		            int s = e.getSeriesIndex();
-		            int i = e.getItem();
-		            //System.out.println("X:" + d.getX(s, i) + ", Y:" + d.getY(s, i));
-		            
-		            XYSeriesCollection dd = (XYSeriesCollection) e.getDataset();
-		            XYSeries ss =  dd.getSeries(s);
-		            
-		            System.out.println("duplicated:" + ss.getItems().get(i));
-		            ss.add((XYDataItem) ss.getItems().get(i));
-				}
+				duplicateSelection(1);
 			}
 		});
 		
 		itr.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent ev) {
-				if (selectedEntity != null){
-					XYItemEntity e = (XYItemEntity) selectedEntity;
-		            XYDataset d = e.getDataset(); //TODO check selection for null
-		            int s = e.getSeriesIndex();
-		            int i = e.getItem();
-		            //System.out.println("X:" + d.getX(s, i) + ", Y:" + d.getY(s, i));
-		            
-		            XYSeriesCollection dd = (XYSeriesCollection) e.getDataset();
-		            XYSeries ss =  dd.getSeries(s);
-		            
-		            System.out.println("rem:" + ss.getItems().get(i));
-		            ss.remove(i);
-				}
-	            
+				removeSelection();
 			}
 		});
 		
@@ -686,15 +564,15 @@ public class SVMPanel extends ChartPanel implements ChartMouseListener{
 		
 	}
 
-	private SVMDataItem getSelectedDataItem(ChartMouseEvent event, double x, double y){
-		XYItemEntity ent = getSelectedEntity(event, x, y);
-		return getDataItem(ent);
+	public SVMDataItem getSelectedDataItem(){
+		return selectedDataItem;
 	}
 	
 	private XYItemEntity getSelectedEntity(ChartMouseEvent event, double x, double y){
 		ChartEntity ce = event.getEntity();
 		List list = event.getEntities();
 		selectedEntity = null;
+		selectedDataItem = null;
 		
 		//TODO selectable layer?? cant select and delete centroid
 		
@@ -716,19 +594,26 @@ public class SVMPanel extends ChartPanel implements ChartMouseListener{
 			            XYSeriesCollection dd = (XYSeriesCollection) e.getDataset();
 			            XYSeries ss =  dd.getSeries(s);
 			            
+			            SVMDataItem item  = (SVMDataItem) ss.getItems().get(i);
 			            
-			            //ss.remove(i);
-			            selectedSeries = ss;
-			            selectedEntity = e;
-			            System.out.format("Selected Item:%s:%s\n",i, ss.getItems().get(i));
-			            break;
+			            if (d.equals(model.getRawDataSet())
+			            	&&	s == 0 
+			            	|| s == 1){ //assume index 0 and 1 = pos/neg 
+				            //ss.remove(i);
+				            selectedSeries = ss;
+				            selectedEntity = e;
+				            selectedDataItem = item;
+				            System.out.format("Selected Item:%s:%s\n",i, item);
+				            break;			            	
+			            }
 		            }
 				}
 			}			
 		}
 		
 
-        
+        this.changed = true;
+        notifyObservers();
 		return selectedEntity;
 		
 	}
@@ -789,36 +674,54 @@ public class SVMPanel extends ChartPanel implements ChartMouseListener{
 		return this.translateJava2DToScreen(p2);
 	}
 	
-	private Line2D toLine(SVMDataItem vector, SVMDataItem midPoint, double scaleFactor){
-		
-		return null;
-	}
-	
-	private SVMDataItem getDataItem(XYItemEntity entity){
-	
-	    if (entity != null){
-	        XYSeriesCollection sc = (XYSeriesCollection) entity.getDataset();
-	        XYSeries s =  sc.getSeries(entity.getSeriesIndex());
-	        int i = entity.getItem();
-	        
-	    	XYDataItem item =  (XYDataItem) s.getItems().get(i);
-	    	if (item instanceof SVMDataItem){
-	    		SVMDataItem svmItem = (SVMDataItem) item;
-	    		return svmItem;
-	    	}
-	    }
-	    
-		return null;
-	}
-
-
-	private void addPoint(int series, double x, double y){
+	public void addPoint(int series){
 		
 		XYSeriesCollection d = (XYSeriesCollection) getChart().getXYPlot().getDataset();
 		XYSeries s =  d.getSeries(series);
 		
-		SVMDataItem i = new SVMDataItem(x, y);
+		SVMDataItem i = new SVMDataItem(xChart, yChart);
 		s.add(i);
+	}
+	
+	public void duplicateSelection(int numDuplicates){
+		if (hasSelectedItem()){
+			XYItemEntity e = (XYItemEntity) selectedEntity;
+            XYDataset d = e.getDataset(); //TODO check selection for null
+            int s = e.getSeriesIndex();
+            int i = e.getItem();
+            //System.out.println("X:" + d.getX(s, i) + ", Y:" + d.getY(s, i));
+            
+            XYSeriesCollection dd = (XYSeriesCollection) e.getDataset();
+            XYSeries ss =  dd.getSeries(s);
+            
+            System.out.println("duplicated:" + ss.getItems().get(i));
+            for (int k = 0; k < numDuplicates; k++){
+            	ss.add((XYDataItem) ss.getItems().get(i));
+            }
+            
+		}
+	}
+	
+	public void removeSelection(){
+		if (hasSelectedItem()){
+			XYItemEntity e = (XYItemEntity) selectedEntity;
+            XYDataset d = e.getDataset(); //TODO check selection for null
+            int s = e.getSeriesIndex();
+            int i = e.getItem();
+            //System.out.println("X:" + d.getX(s, i) + ", Y:" + d.getY(s, i));
+            
+            XYSeriesCollection dd = (XYSeriesCollection) e.getDataset();
+            XYSeries ss =  dd.getSeries(s);
+            
+            System.out.println("rem:" + ss.getItems().get(i));
+            ss.remove(i);
+            
+            clearSelection();
+		}
+	}
+	
+	public void changeSelectionWeight(){
+		
 	}
 	
     private void report(ChartMouseEvent cme) {
@@ -831,5 +734,65 @@ public class SVMPanel extends ChartPanel implements ChartMouseListener{
             int i = e.getItem();
             //System.out.println("X:" + d.getX(s, i) + ", Y:" + d.getY(s, i));
         }
+    }
+    
+    public boolean hasSelectedItem(){
+    	if (selectedEntity != null && selectedDataItem != null){
+    		return true;
+    	}else{
+    		return false;
+    	}
+    }
+    
+    private void clearSelection(){
+    	selectedDataItem = null;
+    	selectedEntity = null;
+    	selectedSeries = null;
+    	
+    	this.changed = true;
+    	notifyObservers();
+    }
+    
+    /**
+     * based on 
+     * http://www.journaldev.com/1739/observer-design-pattern-in-java-example-tutorial
+     * @param obj
+     */
+    @Override
+    public void register(IObserver obj) {
+        if(obj == null) throw new NullPointerException("Null Observer");
+        synchronized (MUTEX) {
+        if(!observers.contains(obj)) observers.add(obj);
+        }
+    }
+ 
+    /**
+     * http://www.journaldev.com/1739/observer-design-pattern-in-java-example-tutorial
+     * @param obj
+     */
+    @Override
+    public void unregister(IObserver obj) {
+        synchronized (MUTEX) {
+        observers.remove(obj);
+        }
+    }
+ 
+    /**
+     * http://www.journaldev.com/1739/observer-design-pattern-in-java-example-tutorial
+     */
+    @Override
+    public void notifyObservers() {
+        List<IObserver> observersLocal = null;
+        //synchronization is used to make sure any observer registered after message is received is not notified
+        synchronized (MUTEX) {
+            if (!changed)
+                return;
+            observersLocal = new ArrayList<IObserver>(this.observers);
+            this.changed=false;
+        }
+        for (IObserver obj : observersLocal) {
+            obj.update();
+        }
+ 
     }
 }

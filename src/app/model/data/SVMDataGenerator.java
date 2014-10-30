@@ -47,7 +47,7 @@ public class SVMDataGenerator {
 			data.addItem(1, new SVMDataItem(3, 4, 1, -1));
 		}else if (name == "Triangle 1"){
 			data.addItem(0, new SVMDataItem(1, 1, 1, 1));
-			data.addItem(0, new SVMDataItem(2, 2, 1, 1));
+			data.addItem(0, new SVMDataItem(1, 3, 1, 1));
 			data.addItem(0, new SVMDataItem(3, 1, 1, 1));
 			
 			data.addItem(1, new SVMDataItem(4, 1, 1, -1));
@@ -104,7 +104,7 @@ public class SVMDataGenerator {
 				(randGen.nextDouble() * 2.0) - 1);
 		normal.scale(maxVal);
 		if (SVMMain.chartPanel != null){
-			SVMMain.chartPanel.drawLine(normal);
+			SVMMain.chartPanel.drawLine(normal); //TODO temporary
 		}
 		
 		System.out.println(normal);

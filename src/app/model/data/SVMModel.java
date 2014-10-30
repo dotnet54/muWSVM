@@ -18,11 +18,7 @@ public class SVMModel {
 	private ArrayList<SVMDataItem> dataset1 = new ArrayList<SVMDataItem>();
 	private ArrayList<SVMDataItem> dataset2 = new ArrayList<SVMDataItem>();	
 
-	
-	private ArrayList<SVMDataItem> ch1 = new ArrayList<SVMDataItem>();
 	private ArrayList<SVMDataItem> rch1 = new ArrayList<SVMDataItem>();
-	
-	private ArrayList<SVMDataItem> ch2 = new ArrayList<SVMDataItem>();
 	private ArrayList<SVMDataItem> rch2 = new ArrayList<SVMDataItem>();
 	
 	private double mu1 = 1;
@@ -41,7 +37,53 @@ public class SVMModel {
 		return centroid2;
 	}
 
-	
+	int numActualPositives;
+	public int getNumActualPositives() {
+		numActualPositives = rawDataSet.getItemCount(0);
+		return numActualPositives;
+	}
+
+	public int getNumActualNegatives() {
+		numActualNegatives = rawDataSet.getItemCount(1);
+		return numActualNegatives;
+	}
+
+	public int getNumPredictedPositives() {
+		
+		int count = 0;
+		double proj = 0.0;
+		SVMDataItem item = null;
+		
+		for (int i = 0; i < rawDataSet.getItemCount(0); i++){
+			item = rawDataSet.getSeries(0).getRawDataItem(i);
+			proj = getW().getDotProduct(item);
+			if (proj > 0){ //TODO fp comparison
+				count++;
+			}
+		}
+		numPredictedPositives = count;
+		return numPredictedPositives;
+	}
+
+	public int getNumPredictedNegatives() {
+		int count = 0;
+		double proj = 0.0;
+		SVMDataItem item = null;
+		
+		for (int i = 0; i < rawDataSet.getItemCount(0); i++){
+			item = rawDataSet.getSeries(0).getRawDataItem(i);
+			proj = getW().getDotProduct(item);
+			if (proj > 0){ //TODO fp comparison
+				count++;
+			}
+		}
+		numPredictedNegatives = count;
+		return numPredictedNegatives;
+	}
+
+	int numActualNegatives;
+	int numPredictedPositives;
+	int numPredictedNegatives;
 	
 	public class inParam{
 		private double mu[];	//mu per class
@@ -94,6 +136,58 @@ public class SVMModel {
 		this.negativeSeries = negativeSeries;
 	}
 	
+	public void setMu(double m1, double m2){
+		setMu1(m1);
+		setMu2(m2);
+	}
+
+	public void setMu1(double m1){
+		mu1=m1;
+		//compute();	//FIRE model change event TODO
+	}
+
+	public void setMu2(double m2){
+		mu2=m2;
+		//compute();
+	}
+
+	public double getMu1(){
+		return mu1;
+	}
+
+	public double getMu2(){
+		return mu2;
+	}
+
+	public SVMDataItem getW(){
+		return w;	//reference or value TODO
+	}
+
+	public double getB(){
+		return b;
+	}
+
+	public void clearDataSet(int series){
+		rawDataSet.getSeries(0).clear();
+		rawDataSet.getSeries(1).clear();
+		solutionDataSet.getSeries(0).clear();
+		solutionDataSet.getSeries(1).clear();
+		solutionDataSet.getSeries(2).clear();
+		
+		if (series == 1){
+			dataset1.clear();
+			rch1.clear();
+		}else if (series == 2){
+			dataset2.clear();
+			rch2.clear();
+		}else{
+			dataset1.clear();
+			rch1.clear();
+			dataset2.clear();
+			rch2.clear();
+		}
+	}
+
 	//TODO sync problem, run bgtask in debugger, before 1 task finishes 
 	public SVMModel(){
 		
@@ -128,14 +222,15 @@ public class SVMModel {
 		
 		
 		SVMDataGenerator dataGen = new SVMDataGenerator(this, 3, 2);
-		dataGen.generateData(rawDataSet, 10, 50, 0);
+		//dataGen.generateData(rawDataSet, 10, 50, 0);
+		dataGen.setPredefinedDataset(rawDataSet, "Triangle 1");
 		
 //		modelDataSet.getSeries(0).clear();
 //		modelDataSet.getSeries(1).clear();
 		
-		rawDataSet.getSeries(0).add(new SVMDataItem(6, 2));
-		rawDataSet.getSeries(0).add(new SVMDataItem(5, 3));
-		rawDataSet.getSeries(0).add(new SVMDataItem(6, 6));
+//		rawDataSet.getSeries(0).add(new SVMDataItem(6, 2));
+//		rawDataSet.getSeries(0).add(new SVMDataItem(5, 3));
+//		rawDataSet.getSeries(0).add(new SVMDataItem(6, 6));
 		//modelDataSet.getSeries(0).add(new SVMDataItem(8, 4, 2));
 		
 //		dataset.getSeries(0).add(new SVMDataItem(4, 4));
@@ -150,45 +245,14 @@ public class SVMModel {
 		
 		
 ////
-		rawDataSet.getSeries(1).add(new SVMDataItem(1.0, 5.0));
-		rawDataSet.getSeries(1).add(new SVMDataItem(3.0, 5.0));
-		rawDataSet.getSeries(1).add(new SVMDataItem(5.0, 5.0));
-		rawDataSet.getSeries(1).add(new SVMDataItem(4.0, 8.0));
+//		rawDataSet.getSeries(1).add(new SVMDataItem(1.0, 5.0));
+//		rawDataSet.getSeries(1).add(new SVMDataItem(3.0, 5.0));
+//		rawDataSet.getSeries(1).add(new SVMDataItem(5.0, 5.0));
+//		rawDataSet.getSeries(1).add(new SVMDataItem(4.0, 8.0));
 		
 	}
 	
-//	public void addRandomData(){
-//		clearPlot();
-//		
-//		//TODO use generator and set seed
-//		Random r = new Random(System.currentTimeMillis());
-//		
-//		int max  = (int) (r.nextDouble() * 50) + 0;
-//		
-//		for (int i = 0; i < max; i++ ){
-//			double randX  =  (r.nextDouble() * 20);
-//			double randY  =  (r.nextDouble() * 20);
-//			series1.add(new SVMDataItem(randX, randY));
-//		}
-//		for (int i = 0; i < max/8; i++ ){
-//			double randX  =  (r.nextDouble() * 20);
-//			double randY  =  (r.nextDouble() * 20);
-//			series2.add(new SVMDataItem(randX, randY));
-//		}
-//		
-//		model.setSeries1(series1);
-//		model.setSeries2(series2);
-//        chartPanel.thisPlot.getRangeAxis().setRange(0, 20);
-//        chartPanel.thisPlot.getDomainAxis().setRange(0, 20);
-//	}
-	
 	public void compute(){
-		dataset1 = rawDataSet.getSeries(0).toArrayList();
-		dataset2 = rawDataSet.getSeries(1).toArrayList();
-
-		findWRCH(2);
-		solveSVM();
-		
 		centroid1 = WRCH.findCentroid(dataset1);
 		centroid1.setLabel("+");
 		centroid2 = WRCH.findCentroid(dataset2);
@@ -201,7 +265,9 @@ public class SVMModel {
 	}
 	
 	public void findWRCH(int series){
-
+		dataset1 = rawDataSet.getSeries(0).toArrayList();
+		dataset2 = rawDataSet.getSeries(1).toArrayList();
+		
 		if (series == 0){
 			rch1 = WRCH.calcWeightedReducedCHull(dataset1, mu1);
 		}else if (series == 1){
@@ -227,6 +293,9 @@ public class SVMModel {
 	public boolean solveSVM(){
 		SVMDataItem[] Ppos;
 		SVMDataItem[] Pneg;
+		
+		dataset1 = rawDataSet.getSeries(0).toArrayList();
+		dataset2 = rawDataSet.getSeries(1).toArrayList();
 		
 		Ppos = new SVMDataItem[dataset1.size()];
 		Pneg = new SVMDataItem[dataset2.size()];
@@ -264,58 +333,6 @@ public class SVMModel {
 	}
 
 	
-	public void setMu(double m1, double m2){
-		setMu1(m1);
-		setMu2(m2);
-	}
-	public void setMu1(double m1){
-		mu1=m1;
-		//compute();	//FIRE model change event TODO
-	}
-	public void setMu2(double m2){
-		mu2=m2;
-		//compute();
-	}
-	public double getMu1(){
-		return mu1;
-	}
-	
-	public double getMu2(){
-		return mu2;
-	}
-	
-	public SVMDataItem getW(){
-		return w;	//reference or value TODO
-	}
-	
-	public double getB(){
-		return b;
-	}
-	
-	public void clearDataSet(int series){
-		rawDataSet.getSeries(0).clear();
-		rawDataSet.getSeries(1).clear();
-		solutionDataSet.getSeries(0).clear();
-		solutionDataSet.getSeries(1).clear();
-		solutionDataSet.getSeries(2).clear();
-		
-		if (series == 1){
-			dataset1.clear();
-			ch1.clear();
-			rch1.clear();
-		}else if (series == 2){
-			dataset2.clear();
-			ch2.clear();
-			rch2.clear();
-		}else{
-			dataset1.clear();
-			ch1.clear();
-			rch1.clear();
-			dataset2.clear();
-			ch2.clear();
-			rch2.clear();
-		}
-	}
 	public Line2D getLine(SVMDataItem w, double b){
 		SVMDataItem p =  WSK.getNearestPositivePoint();
 		SVMDataItem n = WSK.getNearestNegativePoint();
@@ -419,16 +436,8 @@ Point.Double p2= new Point.Double(
         return new Line2D.Double(p1, p2);
 	}
 	
-	public ArrayList<SVMDataItem> getCH1(){
-		return ch1;
-	}
-	
 	public ArrayList<SVMDataItem> getRCH1(){
 		return rch1;
-	}
-	
-	public ArrayList<SVMDataItem> getCH2(){
-		return ch2;
 	}
 	
 	public ArrayList<SVMDataItem> getRCH2(){

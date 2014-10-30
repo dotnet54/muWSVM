@@ -45,8 +45,11 @@ import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.TextAnchor;
 import org.jfree.util.ShapeUtilities;
 
+import app.model.data.IObserver;
+import app.model.data.ISubject;
 import app.model.data.SVMDataItem;
 import app.model.data.SVMModel;
+import app.test.PerformanceMatrix;
 
 import java.awt.event.InputMethodListener;
 import java.awt.event.InputMethodEvent;
@@ -71,16 +74,16 @@ import java.awt.Panel;
  * @author shifaz
  *
  */
-public class SVMMain implements ActionListener{
+public class SVMMain implements ActionListener, IObserver{
 
 	//Model globals
 	private SVMModel model = null;
-	//TODO we can remove centroid by right click, disable those
 	
 	//GUI globals
 	private JFrame frame;
 	private JFreeChart chart;
 	public static SVMPanel chartPanel;	//TODO change static public, only for debug
+	private String tool;
 	
 	//components
 	private JTextField textField_class1;
@@ -102,9 +105,12 @@ public class SVMMain implements ActionListener{
 	private JTextField textField_11;
 	private JTextField textField_12;
 	
+	private JLabel lblSelectedPoint;
+	
 	private JCheckBox chckbxUsemuScale;
 	private JCheckBox chckbxUsemuScale_1;
 	private JCheckBox chckbxAutoUpdate;
+	private JCheckBox chckbxAutoUpdateWsvm;
 	private JCheckBox chckbxUseSameParameters;
 	
 	private final SVMAddItemDialog addItemDialog = new SVMAddItemDialog();
@@ -112,6 +118,20 @@ public class SVMMain implements ActionListener{
 	private final SVMHelpDialog helpDialog = new SVMHelpDialog();
 	private final JFileChooser fc = new JFileChooser(".");
 	private JTextField numDimensions;
+
+	private JRadioButton rdbtnAddTool;
+
+	private JRadioButton rdbtnSelectTool;
+
+	private JRadioButton rdbtnRemoveTool;
+
+	private JRadioButton rdbtnDuplicateTool;
+
+	private JRadioButton rdbtnWeightingTool;
+
+	private JComboBox<String> cmbNewClass;
+
+	private JPanel panelPerformance;
 	
 	/**
 	 * Entry point - Launch the application.
@@ -172,6 +192,7 @@ public class SVMMain implements ActionListener{
 	        pChartContainer.setLayout(new BorderLayout(0, 0));
 	        
 	        chartPanel = createChartPanel();
+	        chartPanel.register(this);
 	        pChartContainer.add(chartPanel, BorderLayout.NORTH);
 	        chartPanel.setBackground(Color.WHITE);
 			
@@ -194,7 +215,8 @@ public class SVMMain implements ActionListener{
 							 	Double.parseDouble(textField_class_2.getText()));
 					}
 					
-					chartPanel.findRCH();
+					model.compute();
+					chartPanel.updateWRCHSolutions();
 				}
 			});
 			btnFindWeightedReduced.setBounds(0, 0, 125, 23);
@@ -234,9 +256,16 @@ public class SVMMain implements ActionListener{
 					//TODO try catch parse double, format label string
 					
 					if (chckbxUsemuScale.isSelected()){
-						textField_class1.setText(1 / m1  + "");
-						lblmuInvVal_class1.setText(m1  + "");
+						textField_class1.setText(format(1 / m1));
+						lblmuInvVal_class1.setText(format(m1));
 						if (chckbxAutoUpdate.isSelected()){
+							if (chckbxUseSameParameters.isSelected()){
+								findWRCH(1 / m1, 1 / m1);
+							}else{
+								findWRCH(1 / m1, m2);
+							}
+						}
+						if(chckbxAutoUpdateWsvm.isSelected()){
 							if (chckbxUseSameParameters.isSelected()){
 								solveSVM(1 / m1, 1 / m1);
 							}else{
@@ -245,9 +274,16 @@ public class SVMMain implements ActionListener{
 						}
 					}else{
 						m1 = m1 / 100.0;
-						textField_class1.setText(m1 + "");
-						lblmuInvVal_class1.setText(1 / m1  + "");
+						textField_class1.setText(format(m1));
+						lblmuInvVal_class1.setText(format(1 / m1));
 						if (chckbxAutoUpdate.isSelected()){
+							if (chckbxUseSameParameters.isSelected()){
+								findWRCH(m1, m1);
+							}else{
+								findWRCH(m1, m2);
+							}
+						}
+						if(chckbxAutoUpdateWsvm.isSelected()){
 							if (chckbxUseSameParameters.isSelected()){
 								solveSVM(m1, m1);
 							}else{
@@ -303,7 +339,7 @@ public class SVMMain implements ActionListener{
 					System.out.println("textField Gained Focus: " + textField_class1.getText());
 				}
 			});
-			textField_class1.setBounds(58, 72, 49, 16);
+			textField_class1.setBounds(58, 72, 82, 16);
 			textField_class1.addPropertyChangeListener(new PropertyChangeListener() {
 				public void propertyChange(PropertyChangeEvent arg0) {
 					System.out.println("propertyChange");
@@ -375,7 +411,7 @@ public class SVMMain implements ActionListener{
 			pClass1.add(lblmu_class1);
 			pClass1.add(textField_class1);
 			pClass1.add(lblmuInv_class1);
-			lblmuInvVal_class1.setBounds(58, 95, 69, 14);
+			lblmuInvVal_class1.setBounds(58, 95, 82, 14);
 			pClass1.add(lblmuInvVal_class1);
 			pClass1.add(slider_class1);
 			
@@ -391,7 +427,7 @@ public class SVMMain implements ActionListener{
 					}
 				}
 			});
-			chckbxUsemuScale.setBounds(117, 91, 97, 23);
+			chckbxUsemuScale.setBounds(156, 91, 97, 23);
 			pClass1.add(chckbxUsemuScale);
 			
 			JPanel pClass2 = new JPanel();
@@ -408,16 +444,22 @@ public class SVMMain implements ActionListener{
 					//TODO try catch parse double, format label string
 					
 					if (chckbxUsemuScale_1.isSelected()){
-						textField_class_2.setText(1 / m2  + "");
-						lblmuInvVal_class2.setText(m2  + "");
+						textField_class_2.setText(format(1 / m2));
+						lblmuInvVal_class2.setText(format(m2));
 						if (chckbxAutoUpdate.isSelected()){
-							solveSVM(m1, 1 / m2);
+							findWRCH(m1, 1/m2);
+						}
+						if(chckbxAutoUpdateWsvm.isSelected()){
+							solveSVM(m1, 1/m2);
 						}
 					}else{
 						m2 = m2 / 100.0;
-						textField_class_2.setText(m2 + "");
-						lblmuInvVal_class1.setText(1 / m2  + "");
+						textField_class_2.setText(format(m2));
+						lblmuInvVal_class2.setText(format(1 / m2));
 						if (chckbxAutoUpdate.isSelected()){
+							findWRCH(m1, m2);
+						}
+						if(chckbxAutoUpdateWsvm.isSelected()){
 							solveSVM(m1, m2);
 						}
 					}
@@ -441,7 +483,7 @@ public class SVMMain implements ActionListener{
 			lblmu_class2.setBounds(10, 70, 14, 14);
 			
 			textField_class_2 = new JTextField();
-			textField_class_2.setBounds(55, 70, 54, 14);
+			textField_class_2.setBounds(55, 70, 86, 14);
 			textField_class_2.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent arg0) {
 					Object src = arg0.getSource();
@@ -495,7 +537,7 @@ public class SVMMain implements ActionListener{
 			pClass2.add(lblmu_class2);
 			pClass2.add(textField_class_2);
 			pClass2.add(lblmuInv_class2);
-			lblmuInvVal_class2.setBounds(55, 95, 66, 14);
+			lblmuInvVal_class2.setBounds(55, 95, 86, 14);
 			pClass2.add(lblmuInvVal_class2);
 			pClass2.add(lblNewLabel_5);
 			pClass2.add(slider_class2);
@@ -510,7 +552,7 @@ public class SVMMain implements ActionListener{
 					}
 				}
 			});
-			chckbxUsemuScale_1.setBounds(116, 91, 97, 23);
+			chckbxUsemuScale_1.setBounds(156, 91, 97, 23);
 			pClass2.add(chckbxUsemuScale_1);
 			
 			chckbxUseSameParameters = new JCheckBox("Use same parameters for two classes");
@@ -529,7 +571,7 @@ public class SVMMain implements ActionListener{
 			chckbxAutoUpdate.setBounds(10, 2, 119, 23);
 			pContainerParameters.add(chckbxAutoUpdate);
 			
-			JCheckBox chckbxAutoUpdateWsvm = new JCheckBox("Auto update hyperplane");
+			chckbxAutoUpdateWsvm = new JCheckBox("Auto update hyperplane");
 			chckbxAutoUpdateWsvm.setBounds(144, 2, 158, 23);
 			pContainerParameters.add(chckbxAutoUpdateWsvm);
 			
@@ -667,9 +709,9 @@ public class SVMMain implements ActionListener{
 			lblCurrentSelection.setBounds(10, 11, 94, 14);
 			pContainerDataEditing.add(lblCurrentSelection);
 			
-			JLabel lblNone = new JLabel("None");
-			lblNone.setBounds(114, 11, 46, 14);
-			pContainerDataEditing.add(lblNone);
+			lblSelectedPoint = new JLabel("None");
+			lblSelectedPoint.setBounds(10, 36, 259, 40);
+			pContainerDataEditing.add(lblSelectedPoint);
 			
 			JLabel lblNewLabel_10 = new JLabel("Select tool and click points to edit");
 			lblNewLabel_10.setBounds(10, 87, 259, 14);
@@ -685,7 +727,7 @@ public class SVMMain implements ActionListener{
 			lblNumDuplications.setBounds(10, 201, 122, 14);
 			pContainerDataEditing.add(lblNumDuplications);
 			
-			JComboBox<String> cmbNewClass = new JComboBox<String>();
+			cmbNewClass = new JComboBox<String>();
 			cmbNewClass.setModel(new DefaultComboBoxModel<String>(new String[] {"Positive Class", "Negative Class"}));
 			cmbNewClass.setBounds(142, 229, 90, 20);
 			pContainerDataEditing.add(cmbNewClass);
@@ -694,24 +736,24 @@ public class SVMMain implements ActionListener{
 			lblNewClass.setBounds(10, 226, 77, 14);
 			pContainerDataEditing.add(lblNewClass);
 			
-			JRadioButton rdbtnSelectTool = new JRadioButton("Select Tool");
+			rdbtnSelectTool = new JRadioButton("Select Tool");
 			rdbtnSelectTool.setSelected(true);
 			rdbtnSelectTool.setBounds(10, 119, 109, 23);
 			pContainerDataEditing.add(rdbtnSelectTool);
 			
-			JRadioButton rdbtnAddTool = new JRadioButton("Add Tool");
+			rdbtnAddTool = new JRadioButton("Add Tool");
 			rdbtnAddTool.setBounds(123, 145, 109, 23);
 			pContainerDataEditing.add(rdbtnAddTool);
 			
-			JRadioButton rdbtnRemoveTool = new JRadioButton("Remove Tool");
+			rdbtnRemoveTool = new JRadioButton("Remove Tool");
 			rdbtnRemoveTool.setBounds(123, 119, 109, 23);
 			pContainerDataEditing.add(rdbtnRemoveTool);
 			
-			JRadioButton rdbtnDuplicateTool = new JRadioButton("Duplicate Tool");
+			rdbtnDuplicateTool = new JRadioButton("Duplicate Tool");
 			rdbtnDuplicateTool.setBounds(10, 145, 109, 23);
 			pContainerDataEditing.add(rdbtnDuplicateTool);
 			
-			JRadioButton rdbtnWeightingTool = new JRadioButton("Weight Tool");
+			rdbtnWeightingTool = new JRadioButton("Weight Tool");
 			rdbtnWeightingTool.setBounds(10, 171, 109, 23);
 			pContainerDataEditing.add(rdbtnWeightingTool);
 			
@@ -806,6 +848,11 @@ public class SVMMain implements ActionListener{
 			JLabel lblNumberOfSupport = new JLabel("<html>Number of\r\n<br> Support Vectors");
 			lblNumberOfSupport.setBounds(47, 210, 77, 28);
 			pContainerPerformance.add(lblNumberOfSupport);
+			
+			panelPerformance = new JPanel();
+			createPerformancePanel();
+			panelPerformance.setBounds(47, 249, 215, 68);
+			pContainerPerformance.add(panelPerformance);
 			frame.getContentPane().setLayout(null);
 			frame.getContentPane().add(pChartContainer);
 			frame.getContentPane().add(pSolveButtonsContainer);
@@ -1127,8 +1174,15 @@ public class SVMMain implements ActionListener{
 
 	private void solveSVM(double mu1, double mu2){
 		model.setMu(mu1, mu2);
-		chartPanel.findRCH();
-		chartPanel.solveSVM();
+		model.solveSVM();
+		chartPanel.updateWSVMSolutions();
+	}
+	
+	private void findWRCH(double mu1, double mu2){
+		model.setMu(mu1, mu2);
+		model.findWRCH(0);
+		model.findWRCH(1);
+		chartPanel.updateWRCHSolutions();
 	}
 
 	private JSlider setupSlider(JSlider slider, boolean useMuScale, int maxValue){
@@ -1160,8 +1214,19 @@ public class SVMMain implements ActionListener{
 		slider.setPaintTicks(true);
 		return slider;
 	}
+	
+	
+	
+	public void createPerformancePanel(){
+		PerformanceMatrix perf = new PerformanceMatrix();
+		
+		panelPerformance.add(perf);
+	}
 
-
+	public String format(double d){
+		return String.format("%.2f", d);
+	}
+	
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		Object source = e.getSource();
@@ -1171,5 +1236,34 @@ public class SVMMain implements ActionListener{
 			//TODO if (mItem.equals(obj)
 		}
 		
+	}
+
+
+
+
+
+	@Override
+	public void update() {
+		if (chartPanel.getSelectedDataItem() != null){
+			lblSelectedPoint.setText(chartPanel.getSelectedDataItem().toFormatedString(2));
+		}else{
+			lblSelectedPoint.setText("None");
+		}
+		
+		if (rdbtnRemoveTool.isSelected()){
+			chartPanel.removeSelection();
+		}else if (rdbtnDuplicateTool.isSelected()){
+			
+			int duplications = Integer.parseInt(textField_NumDuplications.getText());
+			chartPanel.duplicateSelection(duplications);
+		}else if (rdbtnAddTool.isSelected()){
+			if (cmbNewClass.getSelectedIndex() == 0){ //asumption 0 is positive class
+				chartPanel.addPoint(0);
+			}else if (cmbNewClass.getSelectedIndex() == 1){
+				chartPanel.addPoint(1);
+			}
+		}else if (rdbtnWeightingTool.isSelected()){
+			
+		}
 	}
 }
