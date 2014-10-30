@@ -85,6 +85,55 @@ public class SVMModel {
 	int numPredictedPositives;
 	int numPredictedNegatives;
 	
+	
+	public int getNumTruePositives(){
+		return 0;
+	}
+	
+	public int getNumTrueNegatives(){
+		return 0;
+	}
+	
+	public int getNumFalsePositives(){
+		return 0;
+	}
+	
+	public int getNumFalseNegatives(){
+		return 0;
+	}
+	
+	public int getAccuracy(){
+		return 0;
+	}
+	
+	public int getPrecision(){
+		return 0;
+	}
+	
+	public int getSensitivity(){
+		return 0;
+	}
+	
+	public int getSpecificity(){
+		return 0;
+	}
+	
+	public int getNumPositiveSupportVectors(){
+		return 0;
+	}
+	
+	public int getNumNegativeSupportVectors(){
+		return 0;
+	}
+	
+	public long getTimeElapsedForWSK(){
+		return 0;
+	}
+	
+	public long getTimeElapsedForWRCH(){
+		return 0;
+	}
+	
 	public class inParam{
 		private double mu[];	//mu per class
 		private boolean useSameMu = false;

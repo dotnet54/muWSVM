@@ -67,6 +67,8 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.io.File;
 import java.awt.Panel;
+import java.awt.FlowLayout;
+import java.awt.Dimension;
 
 /**
  * Main GUI window for the application
@@ -92,7 +94,6 @@ public class SVMMain implements ActionListener, IObserver{
 	private JSlider slider_class2;
 	private JLabel lblmuInvVal_class1 = new JLabel("1");
 	private JLabel lblmuInvVal_class2 = new JLabel("1");
-	private JTable tableConfusion;
 	private JTextField textField_NewWeight;
 	private JTextField textField_NumDataPoints;
 	private JTextField textField_PercentPos;
@@ -132,6 +133,8 @@ public class SVMMain implements ActionListener, IObserver{
 	private JComboBox<String> cmbNewClass;
 
 	private JPanel panelPerformance;
+
+	private PerformanceMatrix perfMatrix;
 	
 	/**
 	 * Entry point - Launch the application.
@@ -189,11 +192,10 @@ public class SVMMain implements ActionListener, IObserver{
 			JPanel pChartContainer = new JPanel();
 			pChartContainer.setBounds(10, 11, 450, 454);
 	        
-	        pChartContainer.setLayout(new BorderLayout(0, 0));
-	        
 	        chartPanel = createChartPanel();
 	        chartPanel.register(this);
-	        pChartContainer.add(chartPanel, BorderLayout.NORTH);
+	        pChartContainer.setLayout(new BorderLayout(0, 0));
+	        pChartContainer.add(chartPanel, BorderLayout.CENTER);
 	        chartPanel.setBackground(Color.WHITE);
 			
 			JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
@@ -795,71 +797,65 @@ public class SVMMain implements ActionListener, IObserver{
 			
 			JPanel pContainerPerformance = new JPanel();
 			tabbedPane.addTab("Performance", null, pContainerPerformance, null);
-			
-			tableConfusion = new JTable();
-			tableConfusion.setBounds(47, 57, 227, 142);
-			tableConfusion.setEnabled(false);
-			tableConfusion.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-			tableConfusion.setRowSelectionAllowed(false);
-			tableConfusion.setModel(new DefaultTableModel(
-				new Object[][] {
-					{"Total:", "Positive", "Negative"},
-					{"Positive", null, null},
-					{"Negative", null, null},
-					{null, null, ""},
-					{"Sensitivity", null, null},
-					{"Specificity", null, null},
-					{"Accuracy", null, null},
-					{"Precision", null, null},
-				},
-				new String[] {
-					"New column", "New column", "New column"
-				}
-			) {
-				/**
-				 * 
-				 */
-				private static final long serialVersionUID = 3148195956415476019L;
-				Class[] columnTypes = new Class[] {
-					String.class, String.class, String.class
-				};
-				public Class getColumnClass(int columnIndex) {
-					return columnTypes[columnIndex];
-				}
-			});
-			tableConfusion.getColumnModel().getColumn(0).setResizable(false);
-			tableConfusion.getColumnModel().getColumn(1).setResizable(false);
-			tableConfusion.getColumnModel().getColumn(2).setResizable(false);
 			pContainerPerformance.setLayout(null);
-			pContainerPerformance.add(tableConfusion);
 			
 			JLabel lblConfusionMatrix = new JLabel("Confusion Matrix");
 			lblConfusionMatrix.setBounds(10, 11, 102, 14);
 			pContainerPerformance.add(lblConfusionMatrix);
 			
-			JLabel lblPredictedClass = new JLabel("<html>Predicted Class");
-			lblPredictedClass.setBounds(122, 29, 89, 22);
-			pContainerPerformance.add(lblPredictedClass);
-			
-			JLabel lblActualClass = new JLabel("<html>Actual<br> Class");
-			lblActualClass.setBounds(10, 82, 30, 22);
-			pContainerPerformance.add(lblActualClass);
-			
-			JLabel lblNumberOfSupport = new JLabel("<html>Number of\r\n<br> Support Vectors");
-			lblNumberOfSupport.setBounds(47, 210, 77, 28);
+			JLabel lblNumberOfSupport = new JLabel("<html>Num. Pos.\r\n<br> Support Vectors");
+			lblNumberOfSupport.setBounds(20, 273, 77, 28);
 			pContainerPerformance.add(lblNumberOfSupport);
 			
 			panelPerformance = new JPanel();
-			createPerformancePanel();
-			panelPerformance.setBounds(47, 249, 215, 68);
+			panelPerformance.setBounds(10, 36, 288, 225);
 			pContainerPerformance.add(panelPerformance);
+			perfMatrix = new PerformanceMatrix();
+			panelPerformance.add(perfMatrix);
+			
+			JLabel lblTimemsForWsk = new JLabel("Time(ms) for WSK");
+			lblTimemsForWsk.setBounds(113, 273, 109, 14);
+			pContainerPerformance.add(lblTimemsForWsk);
+			
+			JLabel lblTimemsForWrch = new JLabel("Time(ms) for WRCH");
+			lblTimemsForWrch.setBounds(107, 298, 99, 14);
+			pContainerPerformance.add(lblTimemsForWrch);
+			
+			JLabel lblNewLabel = new JLabel("numIterations");
+			lblNewLabel.setBounds(220, 273, 78, 14);
+			pContainerPerformance.add(lblNewLabel);
 			frame.getContentPane().setLayout(null);
 			frame.getContentPane().add(pChartContainer);
+			
+			Panel panel = new Panel();
+			FlowLayout flowLayout = (FlowLayout) panel.getLayout();
+			flowLayout.setAlignment(FlowLayout.LEFT);
+			pChartContainer.add(panel, BorderLayout.NORTH);
+			
+			JLabel lblXaxisAttribute = new JLabel("X-axis Attribute");
+			panel.add(lblXaxisAttribute);
+			
+			JComboBox comboBox = new JComboBox();
+			comboBox.setModel(new DefaultComboBoxModel(new String[] {"0"}));
+			comboBox.setMinimumSize(new Dimension(40, 20));
+			panel.add(comboBox);
+			
+			JLabel lblYaxisAttribute = new JLabel("Y-axis Attribute");
+			panel.add(lblYaxisAttribute);
+			
+			JComboBox comboBox_1 = new JComboBox();
+			comboBox_1.setModel(new DefaultComboBoxModel(new String[] {"1"}));
+			comboBox_1.setMinimumSize(new Dimension(40, 20));
+			panel.add(comboBox_1);
 			frame.getContentPane().add(pSolveButtonsContainer);
 			
 			JButton btnClassify = new JButton("Classify");
 			btnClassify.setBounds(214, 29, 89, 23);
 			pSolveButtonsContainer.add(btnClassify);
+			
+			JButton btndScatterMatrix = new JButton("2D Scatter Matrix");
+			btndScatterMatrix.setBounds(196, 0, 117, 23);
+			pSolveButtonsContainer.add(btndScatterMatrix);
 			frame.getContentPane().add(tabbedPane);
 			
 			JPanel pContainerOptions = new JPanel();
@@ -1153,9 +1149,6 @@ public class SVMMain implements ActionListener, IObserver{
 
 
 
-	private void updateMatrix(){
-		tableConfusion.getCellEditor(0, 0);
-	}
 
 
 	
@@ -1176,6 +1169,11 @@ public class SVMMain implements ActionListener, IObserver{
 		model.setMu(mu1, mu2);
 		model.solveSVM();
 		chartPanel.updateWSVMSolutions();
+		
+		perfMatrix.setValue(0, 0, model.getNumActualPositives());
+		perfMatrix.setValue(0, 1, model.getNumPredictedPositives());
+		perfMatrix.setValue(1, 0, model.getNumActualNegatives());
+		perfMatrix.setValue(1, 1, model.getNumPredictedNegatives());
 	}
 	
 	private void findWRCH(double mu1, double mu2){
@@ -1215,16 +1213,9 @@ public class SVMMain implements ActionListener, IObserver{
 		return slider;
 	}
 	
-	
-	
-	public void createPerformancePanel(){
-		PerformanceMatrix perf = new PerformanceMatrix();
-		
-		panelPerformance.add(perf);
-	}
 
 	public String format(double d){
-		return String.format("%.2f", d);
+		return String.format("%.4f", d);
 	}
 	
 	@Override

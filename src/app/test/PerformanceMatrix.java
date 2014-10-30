@@ -22,8 +22,8 @@ public class PerformanceMatrix extends JPanel {
 	 */
 	public PerformanceMatrix() {
 		GridBagLayout gridBagLayout = new GridBagLayout();
-		gridBagLayout.columnWidths = new int[]{0, 97, 83, 69, 0};
-		gridBagLayout.rowHeights = new int[] {0, 35, 30, 36, 0, 0, 0, 0, 0, 0};
+		gridBagLayout.columnWidths = new int[]{0, 48, 63, 69, 0};
+		gridBagLayout.rowHeights = new int[] {0, 23, 22, 23, 21, 0, 0, 0, 0, 0};
 		gridBagLayout.columnWeights = new double[]{0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		gridBagLayout.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		setLayout(gridBagLayout);
@@ -112,12 +112,26 @@ public class PerformanceMatrix extends JPanel {
 		gbc_lblSensitivity.gridy = 5;
 		add(lblSensitivity, gbc_lblSensitivity);
 		
+		JLabel label = new JLabel("0");
+		GridBagConstraints gbc_label = new GridBagConstraints();
+		gbc_label.insets = new Insets(0, 0, 5, 5);
+		gbc_label.gridx = 1;
+		gbc_label.gridy = 5;
+		add(label, gbc_label);
+		
 		JLabel lblSpecificity = new JLabel("Specificity");
 		GridBagConstraints gbc_lblSpecificity = new GridBagConstraints();
 		gbc_lblSpecificity.insets = new Insets(0, 0, 5, 5);
 		gbc_lblSpecificity.gridx = 0;
 		gbc_lblSpecificity.gridy = 6;
 		add(lblSpecificity, gbc_lblSpecificity);
+		
+		JLabel label_1 = new JLabel("0");
+		GridBagConstraints gbc_label_1 = new GridBagConstraints();
+		gbc_label_1.insets = new Insets(0, 0, 5, 5);
+		gbc_label_1.gridx = 1;
+		gbc_label_1.gridy = 6;
+		add(label_1, gbc_label_1);
 		
 		JLabel lblRecall = new JLabel("Accuracy");
 		GridBagConstraints gbc_lblRecall = new GridBagConstraints();
@@ -126,12 +140,26 @@ public class PerformanceMatrix extends JPanel {
 		gbc_lblRecall.gridy = 7;
 		add(lblRecall, gbc_lblRecall);
 		
+		JLabel label_2 = new JLabel("0");
+		GridBagConstraints gbc_label_2 = new GridBagConstraints();
+		gbc_label_2.insets = new Insets(0, 0, 5, 5);
+		gbc_label_2.gridx = 1;
+		gbc_label_2.gridy = 7;
+		add(label_2, gbc_label_2);
+		
 		JLabel lblPrecision = new JLabel("Precision");
 		GridBagConstraints gbc_lblPrecision = new GridBagConstraints();
 		gbc_lblPrecision.insets = new Insets(0, 0, 0, 5);
 		gbc_lblPrecision.gridx = 0;
 		gbc_lblPrecision.gridy = 8;
 		add(lblPrecision, gbc_lblPrecision);
+		
+		JLabel label_3 = new JLabel("0");
+		GridBagConstraints gbc_label_3 = new GridBagConstraints();
+		gbc_label_3.insets = new Insets(0, 0, 0, 5);
+		gbc_label_3.gridx = 1;
+		gbc_label_3.gridy = 8;
+		add(label_3, gbc_label_3);
 
 	}
 	
