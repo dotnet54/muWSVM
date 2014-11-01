@@ -16,13 +16,17 @@ import java.util.StringTokenizer;
 import org.jfree.data.general.Dataset;
 import org.jfree.data.xy.XYSeriesCollection;
 
-public class SVMDataSet extends XYSeriesCollection{
+import app.model.data.DData.DataChangeEvent;
+import app.model.data.DData.DataChangeType;
+
+public class SVMDataSet extends XYSeriesCollection implements IObserver{
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -5941570772540357547L;
 
+	DData datasource = null;
 
 	public SVMDataSet(){	
 		super();
@@ -106,6 +110,42 @@ public class SVMDataSet extends XYSeriesCollection{
 	        } catch ( IOException e ) {
 	           e.printStackTrace();
 	        }
+	}
+	
+	public void attach(DData datasource){
+		this.datasource = datasource;
+		datasource.register(this);
+	}
+
+	@Override
+	public void update() {
+		// TODO 
+		try {
+			DataChangeEvent event = datasource.getLastChange();
+			DVector item = event.item;
+			if (event.type == DataChangeType.DataAdded){
+				SVMDataItem newItem = new SVMDataItem(item.getX(), item.getY(), 
+						item.getWeight(), item.getClassID());
+				
+				if (item.getClassID() == +1){ //TODO if positive class changed??
+					addItem(0,  newItem);
+				}else if(item.getClassID() == -1){
+					addItem(1,  newItem);
+				}
+			}else if (event.type == DataChangeType.DataRemoved){
+				if (item.getClassID() == +1){ //TODO if positive class changed??
+					removeItem(0,  event.index); //TODO index missmatch
+				}else if(item.getClassID() == -1){
+					removeItem(1,  event.index);
+				}
+			}else if (event.type == DataChangeType.DatasetCleared){
+				clear();
+			}
+			
+		} catch (Exception e) {
+			// TODO
+			e.printStackTrace();
+		}
 	}
 	
 }

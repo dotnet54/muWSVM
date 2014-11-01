@@ -220,7 +220,7 @@ public class SVMMain implements ActionListener, IObserver{
 							 	Double.parseDouble(textField_class_2.getText()));
 					}
 					
-					model.compute();
+					model.solveWRCH(2);
 					chartPanel.updateWRCHSolutions();
 				}
 			});
@@ -426,7 +426,7 @@ public class SVMMain implements ActionListener, IObserver{
 				public void actionPerformed(ActionEvent e) {
 					//TODO bug fix, when #points change, scale is not updated, implement observer
 					if (chckbxUsemuScale.isSelected()){
-						setupSlider(slider_class1, false, model.getRawDataSet().getSeries(0).getItemCount());
+						setupSlider(slider_class1, false, model.getChartDataset().getSeries(0).getItemCount());
 					}else{
 						setupSlider(slider_class1, true, 100);
 					}
@@ -551,7 +551,7 @@ public class SVMMain implements ActionListener, IObserver{
 			chckbxUsemuScale_1.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					if (chckbxUsemuScale_1.isSelected()){
-						setupSlider(slider_class2, false, model.getRawDataSet().getSeries(1).getItemCount());
+						setupSlider(slider_class2, false, model.getChartDataset().getSeries(1).getItemCount());
 					}else{
 						setupSlider(slider_class2, true, 100);
 					}
@@ -600,7 +600,7 @@ public class SVMMain implements ActionListener, IObserver{
 					int separationDelta = Integer.parseInt(textField_SeparationDelta.getText());
 					
 					model.generateRandomData(numPoints, percentPos, separationDelta);
-					chart.getXYPlot().setDataset(0, model.getRawDataSet()); 
+					chart.getXYPlot().setDataset(0, model.getChartDataset()); 
 				}
 			});
 			btnGenerateData.setBounds(10, 294, 145, 23);
@@ -613,7 +613,7 @@ public class SVMMain implements ActionListener, IObserver{
 				        int returnVal = fc.showOpenDialog(frame);
 
 				        if (returnVal == JFileChooser.APPROVE_OPTION) {
-				        	model.getRawDataSet().loadFromFile(fc.getSelectedFile());
+				        	model.getChartDataset().loadFromFile(fc.getSelectedFile());
 				        } 
 						
 					} catch (IOException e1) {
@@ -681,7 +681,7 @@ public class SVMMain implements ActionListener, IObserver{
 			btnSaveData.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					File file = new File("wsvm_out.txt");
-					model.getRawDataSet().saveToFile(file);
+					model.getChartDataset().saveToFile(file);
 				}
 			});
 			btnSaveData.setBounds(209, 294, 89, 23);
@@ -701,13 +701,13 @@ public class SVMMain implements ActionListener, IObserver{
 			pContainerDataEditing.setLayout(null);
 			
 			textField_NewWeight = new JTextField();
-			textField_NewWeight.setBounds(142, 263, 46, 20);
+			textField_NewWeight.setBounds(242, 210, 46, 20);
 			pContainerDataEditing.add(textField_NewWeight);
 			textField_NewWeight.setText("1");
 			textField_NewWeight.setColumns(10);
 			
 			JLabel lblNewWeight = new JLabel("New Weight:");
-			lblNewWeight.setBounds(10, 263, 77, 14);
+			lblNewWeight.setBounds(155, 213, 77, 14);
 			pContainerDataEditing.add(lblNewWeight);
 			
 			JLabel lblCurrentSelection = new JLabel("Current Selection:");
@@ -718,48 +718,48 @@ public class SVMMain implements ActionListener, IObserver{
 			lblSelectedPoint.setBounds(10, 36, 259, 40);
 			pContainerDataEditing.add(lblSelectedPoint);
 			
-			JLabel lblNewLabel_10 = new JLabel("Select tool and click points to edit");
+			JLabel lblNewLabel_10 = new JLabel("Select option and click chart/points to edit");
 			lblNewLabel_10.setBounds(10, 87, 259, 14);
 			pContainerDataEditing.add(lblNewLabel_10);
 			
 			textField_NumDuplications = new JTextField();
 			textField_NumDuplications.setText("1");
-			textField_NumDuplications.setBounds(142, 198, 46, 20);
+			textField_NumDuplications.setBounds(242, 179, 46, 20);
 			pContainerDataEditing.add(textField_NumDuplications);
 			textField_NumDuplications.setColumns(10);
 			
-			JLabel lblNumDuplications = new JLabel("Number of Duplications");
-			lblNumDuplications.setBounds(10, 201, 122, 14);
+			JLabel lblNumDuplications = new JLabel("Number of Duplications:");
+			lblNumDuplications.setBounds(125, 182, 122, 14);
 			pContainerDataEditing.add(lblNumDuplications);
 			
 			cmbNewClass = new JComboBox<String>();
 			cmbNewClass.setModel(new DefaultComboBoxModel<String>(new String[] {"Positive Class", "Negative Class"}));
-			cmbNewClass.setBounds(142, 229, 90, 20);
+			cmbNewClass.setBounds(198, 241, 90, 20);
 			pContainerDataEditing.add(cmbNewClass);
 			
 			JLabel lblNewClass = new JLabel("New Class:");
-			lblNewClass.setBounds(10, 226, 77, 14);
+			lblNewClass.setBounds(128, 244, 60, 14);
 			pContainerDataEditing.add(lblNewClass);
 			
-			rdbtnSelectTool = new JRadioButton("Select Tool");
+			rdbtnSelectTool = new JRadioButton("Select Point");
 			rdbtnSelectTool.setSelected(true);
 			rdbtnSelectTool.setBounds(10, 119, 109, 23);
 			pContainerDataEditing.add(rdbtnSelectTool);
 			
-			rdbtnAddTool = new JRadioButton("Add Tool");
-			rdbtnAddTool.setBounds(123, 145, 109, 23);
+			rdbtnAddTool = new JRadioButton("Add Point");
+			rdbtnAddTool.setBounds(10, 233, 77, 23);
 			pContainerDataEditing.add(rdbtnAddTool);
 			
-			rdbtnRemoveTool = new JRadioButton("Remove Tool");
-			rdbtnRemoveTool.setBounds(123, 119, 109, 23);
+			rdbtnRemoveTool = new JRadioButton("Remove Point");
+			rdbtnRemoveTool.setBounds(10, 145, 109, 23);
 			pContainerDataEditing.add(rdbtnRemoveTool);
 			
-			rdbtnDuplicateTool = new JRadioButton("Duplicate Tool");
-			rdbtnDuplicateTool.setBounds(10, 145, 109, 23);
+			rdbtnDuplicateTool = new JRadioButton("Duplicate Point");
+			rdbtnDuplicateTool.setBounds(10, 178, 109, 23);
 			pContainerDataEditing.add(rdbtnDuplicateTool);
 			
-			rdbtnWeightingTool = new JRadioButton("Weight Tool");
-			rdbtnWeightingTool.setBounds(10, 171, 109, 23);
+			rdbtnWeightingTool = new JRadioButton("Change Weight");
+			rdbtnWeightingTool.setBounds(10, 204, 109, 23);
 			pContainerDataEditing.add(rdbtnWeightingTool);
 			
 			
@@ -795,8 +795,12 @@ public class SVMMain implements ActionListener, IObserver{
 					addItemDialog.setVisible(true);
 				}
 			});
-			btnAddPoint.setBounds(152, 294, 89, 23);
+			btnAddPoint.setBounds(199, 299, 89, 23);
 			pContainerDataEditing.add(btnAddPoint);
+			
+			JLabel lblDefineExactPoint = new JLabel("Add to an exact location:");
+			lblDefineExactPoint.setBounds(20, 278, 129, 14);
+			pContainerDataEditing.add(lblDefineExactPoint);
 			
 			JPanel pContainerPerformance = new JPanel();
 			tabbedPane.addTab("Performance", null, pContainerPerformance, null);
@@ -940,12 +944,28 @@ public class SVMMain implements ActionListener, IObserver{
 			pContainerWeighting.add(cmbWeightingSchemes);
 			
 			JButton btnNewButton = new JButton("Weight based on clusters");
-			btnNewButton.setBounds(10, 128, 168, 23);
+			btnNewButton.setBounds(10, 114, 168, 23);
 			pContainerWeighting.add(btnNewButton);
 			
 			JCheckBox chckbxEnableAutoWeighting = new JCheckBox("Enable Auto weighting");
 			chckbxEnableAutoWeighting.setBounds(10, 7, 168, 23);
 			pContainerWeighting.add(chckbxEnableAutoWeighting);
+			
+			JButton btnRandomUndersample = new JButton("Random Undersample");
+			btnRandomUndersample.setBounds(10, 260, 145, 23);
+			pContainerWeighting.add(btnRandomUndersample);
+			
+			JButton btnRandomOversample = new JButton("Random Oversample");
+			btnRandomOversample.setBounds(10, 294, 145, 23);
+			pContainerWeighting.add(btnRandomOversample);
+			
+			JButton btnSystematicUndersample = new JButton("Systematic Undersample");
+			btnSystematicUndersample.setBounds(10, 194, 168, 23);
+			pContainerWeighting.add(btnSystematicUndersample);
+			
+			JButton btnSystematicOversample = new JButton("Systematic Oversample");
+			btnSystematicOversample.setBounds(10, 228, 168, 23);
+			pContainerWeighting.add(btnSystematicOversample);
 			
 			JMenuBar menuBar = new JMenuBar();
 			frame.setJMenuBar(menuBar);
@@ -1057,7 +1077,7 @@ public class SVMMain implements ActionListener, IObserver{
 			JMenuItem mntmTwoPoints = new JMenuItem("Two points 1");
 			mntmTwoPoints.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					model.setDataset("Two points 1");
+					model.loadPredefinedDataset("Two points 1");
 				}
 			});
 			mnData.add(mntmTwoPoints);
@@ -1065,7 +1085,7 @@ public class SVMMain implements ActionListener, IObserver{
 			JMenuItem mntmCollinearPoints = new JMenuItem("Collinear Points 1");
 			mntmCollinearPoints.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					model.setDataset("Collinear Points 1");
+					model.loadPredefinedDataset("Collinear Points 1");
 				}
 			});
 			mnData.add(mntmCollinearPoints);
@@ -1073,14 +1093,14 @@ public class SVMMain implements ActionListener, IObserver{
 			JMenuItem mntmTriangle = new JMenuItem("Triangle 1");
 			mntmTriangle.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					model.setDataset("Triangle 1");
+					model.loadPredefinedDataset("Triangle 1");
 				}
 			});
 			
 			JMenuItem mntmCollinearPoints_1 = new JMenuItem("Collinear Points 2");
 			mntmCollinearPoints_1.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					model.setDataset("Collinear Points 2");
+					model.loadPredefinedDataset("Collinear Points 2");
 					
 				}
 			});
@@ -1090,7 +1110,7 @@ public class SVMMain implements ActionListener, IObserver{
 			JMenuItem mntmRombus = new JMenuItem("Parallelogram");
 			mntmRombus.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					model.setDataset("Parallelogram");
+					model.loadPredefinedDataset("Parallelogram");
 				}
 			});
 			mnData.add(mntmRombus);
@@ -1098,7 +1118,7 @@ public class SVMMain implements ActionListener, IObserver{
 			JMenuItem mntmTrapezium = new JMenuItem("Trapezium");
 			mntmTrapezium.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					model.setDataset("Trapezium");
+					model.loadPredefinedDataset("Trapezium");
 				}
 			});
 			mnData.add(mntmTrapezium);
@@ -1106,7 +1126,7 @@ public class SVMMain implements ActionListener, IObserver{
 			JMenuItem mntmRandom = new JMenuItem("Random");
 			mntmRandom.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					model.getRawDataSet().clear();
+					model.getChartDataset().clear();
 					model.generateRandomData(//TODO make this completely random
 							10,
 							50, 
@@ -1117,7 +1137,7 @@ public class SVMMain implements ActionListener, IObserver{
 			JMenuItem mntmTPoints = new JMenuItem("T points");
 			mntmTPoints.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					model.setDataset("T points");
+					model.loadPredefinedDataset("T points");
 				}
 			});
 			mnData.add(mntmTPoints);
@@ -1126,7 +1146,7 @@ public class SVMMain implements ActionListener, IObserver{
 			JMenuItem mntmNewMenuItem = new JMenuItem("Triangle 2");
 			mntmNewMenuItem.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					model.setDataset("Triangle 2");
+					model.loadPredefinedDataset("Triangle 2");
 				}
 			});
 			mnData.add(mntmNewMenuItem);
@@ -1168,7 +1188,7 @@ public class SVMMain implements ActionListener, IObserver{
 	private SVMPanel createChartPanel(){
 
 		chart = ChartFactory.createScatterPlot
-		("Weighted Support Vector Machine", "X", "Y", model.getRawDataSet());
+		("Weighted Support Vector Machine", "X", "Y", model.getChartDataset());
 
         return new SVMPanel(chart, model);
 	}
@@ -1178,16 +1198,16 @@ public class SVMMain implements ActionListener, IObserver{
 		model.solveSVM();
 		chartPanel.updateWSVMSolutions();
 		
-		perfMatrix.setValue(0, 0, model.getNumActualPositives());
-		perfMatrix.setValue(0, 1, model.getNumPredictedPositives());
-		perfMatrix.setValue(1, 0, model.getNumActualNegatives());
-		perfMatrix.setValue(1, 1, model.getNumPredictedNegatives());
+		perfMatrix.setValue(0, 0, model.numTruePositives);
+		perfMatrix.setValue(0, 1, model.numFalseNegatives);
+		perfMatrix.setValue(1, 0, model.numFalsePositives);
+		perfMatrix.setValue(1, 1, model.numTrueNegatives);
 	}
 	
 	private void findWRCH(double mu1, double mu2){
 		model.setMu(mu1, mu2);
-		model.findWRCH(0);
-		model.findWRCH(1);
+		model.solveWRCH(0);
+		model.solveWRCH(1);
 		chartPanel.updateWRCHSolutions();
 	}
 	

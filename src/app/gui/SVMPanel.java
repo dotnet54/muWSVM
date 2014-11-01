@@ -198,7 +198,7 @@ public class SVMPanel extends ChartPanel
 		
 
 		//Dataset settings
-		inputData = model.getRawDataSet();
+		inputData = model.getChartDataset();
 		thisPlot.setDataset(1, model.getSolutionDataSet());
 		thisPlot.setRenderer(1, new XYLineAndShapeRenderer(false, true));
 		
@@ -371,93 +371,61 @@ public class SVMPanel extends ChartPanel
 	}
 
 	public void updateWSVMSolutions(){
-		SVMDataItem w = model.getW();
-		double b = model.getB();
-		SVMDataItem p =  WSK.getNearestPositivePoint();
-		SVMDataItem n = WSK.getNearestNegativePoint();			
-		
-		double y1 = -500;
-		double y2 = 500;
-		double x1 = (b - (w.getY() * y1))/ w.getX();
-		double x2 = (b - (w.getY() * y2))/ w.getX();
-		
-		if (hyperPlane != null){
-	    	thisPlot.removeAnnotation(hyperPlane);
-	    }
-		if (marginPos != null){
-	    	thisPlot.removeAnnotation(marginPos);
-	    }
-		if (marginNeg != null){
-	    	thisPlot.removeAnnotation(marginNeg);
-	    }
-		
-		hyperPlane = new XYLineAnnotation(x1, y1, x2, y2);
-		b = p.getDotProduct(w);
-		x1 = (b - (w.getY() * y1))/ w.getX();
-		x2 = (b - (w.getY() * y2))/ w.getX();
-		marginPos = new XYLineAnnotation(x1, y1, x2, y2);
-		b = n.getDotProduct(w);
-		x1 = (b - (w.getY() * y1))/ w.getX();
-		x2 = (b - (w.getY() * y2))/ w.getX();
-		marginNeg = new XYLineAnnotation(x1, y1, x2, y2);
-		
-	    if (nearestPointLine != null){
-	    	thisPlot.removeAnnotation(nearestPointLine);
-	    }
-	    nearestPointLine = new XYLineAnnotation(
-	    		WSK.getNearestPositivePoint().getXValue(), 
-	    		WSK.getNearestPositivePoint().getYValue(),
-	    		WSK.getNearestNegativePoint().getXValue(),
-	    		WSK.getNearestNegativePoint().getYValue());
-	    
-	    
-		
-		if (displayGeometricBoundary){
-			thisPlot.addAnnotation(hyperPlane);
+		try {
+			DVector w = model.getW();
+			double b = model.getB();
+			DVector p =  model.getNearestPositivePoint();
+			DVector n = model.getNearestNegativePoint();			
+			
+			double y1 = -10000;
+			double y2 = 10000;
+			double x1 = (b - (w.getY() * y1))/ w.getX();
+			double x2 = (b - (w.getY() * y2))/ w.getX();
+			
+			if (hyperPlane != null){
+				thisPlot.removeAnnotation(hyperPlane);
+			}
+			if (marginPos != null){
+				thisPlot.removeAnnotation(marginPos);
+			}
+			if (marginNeg != null){
+				thisPlot.removeAnnotation(marginNeg);
+			}
+			
+			hyperPlane = new XYLineAnnotation(x1, y1, x2, y2);
+			b = p.getDotProduct(w);
+			x1 = (b - (w.getY() * y1))/ w.getX();
+			x2 = (b - (w.getY() * y2))/ w.getX();
+			marginPos = new XYLineAnnotation(x1, y1, x2, y2);
+			b = n.getDotProduct(w);
+			x1 = (b - (w.getY() * y1))/ w.getX();
+			x2 = (b - (w.getY() * y2))/ w.getX();
+			marginNeg = new XYLineAnnotation(x1, y1, x2, y2);
+			
+			if (nearestPointLine != null){
+				thisPlot.removeAnnotation(nearestPointLine);
+			}
+			nearestPointLine = new XYLineAnnotation(
+					p.getX(), p.getY(),
+					n.getX(), n.getY());
+			
+			
+			
+			if (displayGeometricBoundary){
+				thisPlot.addAnnotation(hyperPlane);
+			}
+			if (displayMargins){
+				thisPlot.addAnnotation(marginPos);
+				thisPlot.addAnnotation(marginNeg);
+			}
+			if (displayNearestPointLine){
+			    thisPlot.addAnnotation(nearestPointLine);
+			}
+		} catch (Exception e) {
+			// TODO
+			e.printStackTrace();
 		}
-		if (displayMargins){
-			thisPlot.addAnnotation(marginPos);
-			thisPlot.addAnnotation(marginNeg);
-		}
-		
-		
-		if (displayNearestPointLine){
-		    thisPlot.addAnnotation(nearestPointLine);
-		}
-		
-		
-		
-		
-//	    if (hyperPlane != null){
-//	    	thisPlot.removeAnnotation(hyperPlane);
-//	    }
-//	    Line2D line = model.getLine(model.getW(), model.getB()+10);
-//	   // Line2D line = SVMModel.getPerpendicularBisector();
-//	    hyperPlane = new XYLineAnnotation(line.getX1(), line.getY1(),
-//	    		line.getX2(), line.getY2());
-//	    thisPlot.addAnnotation(hyperPlane);
-		
-//	    SVMDataItem vector = model.getHyperplane();
-//	    SVMDataItem midPoint = null;
-//	    double scaleFactor = 500.0;
-//	    
-//	    if (marginPos != null){
-//	    	thisPlot.removeAnnotation(marginPos);
-//	    }
-//	    midPoint = model.getPositiveMargin();
-//	    line = toLine(vector, midPoint, scaleFactor);
-//	    marginPos = new XYLineAnnotation(line.getX1(), line.getY1(), line.getX2(), line.getY2());
-//	    thisPlot.addAnnotation(marginPos);
-//	    
-//	    
-//	    if (marginNeg != null){
-//	    	thisPlot.removeAnnotation(marginNeg);
-//	    }
-//	    midPoint = model.getNegativeMargin();
-//	    line = toLine(vector, midPoint, scaleFactor);
-//	    marginNeg = new XYLineAnnotation(line.getX1(), line.getY1(),line.getX2(), line.getY2());
-//	    thisPlot.addAnnotation(marginNeg);
-		
+
 		System.out.format("SVM found w:%s b:%s \n", model.getW(), model.getB() );
 	}
 
@@ -583,7 +551,7 @@ public class SVMPanel extends ChartPanel
 			            
 			            SVMDataItem item  = (SVMDataItem) ss.getItems().get(i);
 			            
-			            if (d.equals(model.getRawDataSet())
+			            if (d.equals(model.getChartDataset())
 			            	&&	s == 0 
 			            	|| s == 1){ //assume index 0 and 1 = pos/neg 
 				            //ss.remove(i);

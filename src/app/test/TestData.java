@@ -100,7 +100,7 @@ public class TestData  extends ApplicationFrame{
 			public void actionPerformed(ActionEvent e) {
 				// TODO 
 				System.out.println("clicked");
-				chart.getXYPlot().setDataset(gen.getData());
+				chart.getXYPlot().loadPredefinedDataset(gen.getData());
 			}
 		});
 	}

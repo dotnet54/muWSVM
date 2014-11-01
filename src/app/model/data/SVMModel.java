@@ -1,18 +1,7 @@
 package app.model.data;
 
-import java.awt.Point;
-import java.awt.geom.Line2D;
-import java.io.ObjectInputStream.GetField;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-
-import org.jfree.data.xy.XYSeries;
-import org.jfree.data.xy.XYSeriesCollection;
-
-import app.model.algorithms.BBY;
 import app.model.algorithms.WRCH;
-import app.model.algorithms.WSK;
 
 public class SVMModel {
 	
@@ -24,20 +13,34 @@ public class SVMModel {
 	
 	private double mu1 = 1;
 	private double mu2 = 1;
-	private SVMDataItem w = new SVMDataItem(0,1);
+	private DVector w = new DVector(2);
 	private double b = 0;
+	private DVector nearestPositivePoint = null;
+	private DVector nearestNegativePoint = null;	
 		
 	private SVMDataItem centroid1;
 	private SVMDataItem centroid2;
-	
-	private SVMDataSet rawDataSet = null;
 
 	private SVMDataSet solutionDataSet = null;
-
 	private SVMDataSeries positiveSeries = null;
-
 	private SVMDataSeries negativeSeries = null;
+	
+	
+	private DData trainingData = null;
+	private DData testData = null;
+	private SVMDataSet chartData = null;
 
+	
+	
+	
+	public int numTruePositives;
+	public int numFalsePositives;
+	public int numTrueNegatives;
+	public int numFalseNegatives;
+	
+	
+	
+	
 	public SVMDataItem getCentroid1() {
 		return centroid1;
 	}
@@ -48,45 +51,20 @@ public class SVMModel {
 
 	int numActualPositives;
 	public int getNumActualPositives() {
-		numActualPositives = rawDataSet.getItemCount(0);
+		numActualPositives = chartData.getItemCount(0);
 		return numActualPositives;
 	}
 
 	public int getNumActualNegatives() {
-		numActualNegatives = rawDataSet.getItemCount(1);
+		numActualNegatives = chartData.getItemCount(1);
 		return numActualNegatives;
 	}
 
 	public int getNumPredictedPositives() {
-		
-		int count = 0;
-		double proj = 0.0;
-		SVMDataItem item = null;
-		
-		for (int i = 0; i < rawDataSet.getItemCount(0); i++){
-			item = rawDataSet.getSeries(0).getRawDataItem(i);
-			proj = getW().getDotProduct(item);
-			if (proj > 0){ //TODO fp comparison
-				count++;
-			}
-		}
-		numPredictedPositives = count;
 		return numPredictedPositives;
 	}
 
 	public int getNumPredictedNegatives() {
-		int count = 0;
-		double proj = 0.0;
-		SVMDataItem item = null;
-		
-		for (int i = 0; i < rawDataSet.getItemCount(0); i++){
-			item = rawDataSet.getSeries(0).getRawDataItem(i);
-			proj = getW().getDotProduct(item);
-			if (proj > 0){ //TODO fp comparison
-				count++;
-			}
-		}
-		numPredictedNegatives = count;
 		return numPredictedNegatives;
 	}
 
@@ -151,12 +129,12 @@ public class SVMModel {
 		this.solutionDataSet = solutionDataSet;
 	}
 
-	public SVMDataSet getRawDataSet() {
-		return rawDataSet;
+	public SVMDataSet getChartDataset() {
+		return chartData;
 	}
 
-	public void setRawDataSet(SVMDataSet rawDataSet) {
-		this.rawDataSet = rawDataSet;
+	public void setChartDataset(SVMDataSet chartData) {
+		this.chartData = chartData;
 	}
 
 	public SVMDataSeries getPositiveSeries() {
@@ -197,7 +175,7 @@ public class SVMModel {
 		return mu2;
 	}
 
-	public SVMDataItem getW(){
+	public DVector getW(){
 		return w;	//reference or value TODO
 	}
 
@@ -206,8 +184,8 @@ public class SVMModel {
 	}
 
 	public void clearDataSet(int series){
-		rawDataSet.getSeries(0).clear();
-		rawDataSet.getSeries(1).clear();
+		chartData.getSeries(0).clear();
+		chartData.getSeries(1).clear();
 		solutionDataSet.getSeries(0).clear();
 		solutionDataSet.getSeries(1).clear();
 		solutionDataSet.getSeries(2).clear();
@@ -229,12 +207,6 @@ public class SVMModel {
 	//TODO sync problem, run bgtask in debugger, before 1 task finishes 
 	public SVMModel(){
 		
-		rawDataSet = new SVMDataSet();
-		positiveSeries = new SVMDataSeries("Positive Class");
-		negativeSeries = new SVMDataSeries("Negative Class");
-		rawDataSet.addSeries(positiveSeries);
-		rawDataSet.addSeries(negativeSeries);
-		
 		solutionDataSet = new SVMDataSet();
 		SVMDataSeries series3 = new SVMDataSeries("Positive WRCH");
 		SVMDataSeries series4 = new SVMDataSeries("Negative WRCH");
@@ -243,68 +215,41 @@ public class SVMModel {
 		solutionDataSet.addSeries(series4);
 		solutionDataSet.addSeries(series5);
 
-		initializeData();
+		trainingData = new DData(2);		
+		testData = new DData(2);
+		
+		trainingData.setPositiveClass(+1);
+		trainingData.setNegativeClass(-1);
+		trainingData.setXDimension(0);
+		trainingData.setYDimension(1);
+		chartData = trainingData.getChartData();
+		
+		chartData.attach(trainingData);
+		//initializeData();
 	}
 	
 	public void generateRandomData(int numPoints, int percentPos, int softnessDelta){
 		SVMDataGenerator dataGen = new SVMDataGenerator(this, 3, 2);
-		dataGen.generateData(rawDataSet, numPoints, percentPos, softnessDelta);
+		dataGen.generateData(chartData, numPoints, percentPos, softnessDelta);
 	}
 	
-	public void setDataset(String name){
+	public void loadPredefinedDataset(String name){
 		SVMDataGenerator dataGen = new SVMDataGenerator(this, 3, 2);
-		dataGen.setPredefinedDataset(rawDataSet, name);
+		dataGen.setPredefinedDataset(chartData, name);
 	}
 	
 	private void initializeData(){
-		
-		
+
+		trainingData.generateRandomData(10);
 		SVMDataGenerator dataGen = new SVMDataGenerator(this, 3, 2);
-		dataGen.generateData(rawDataSet, 10, 50, 0);
+		dataGen.generateData(chartData, 10, 50, 0);
 		//dataGen.setPredefinedDataset(rawDataSet, "Triangle 1");
-		
-//		modelDataSet.getSeries(0).clear();
-//		modelDataSet.getSeries(1).clear();
-		
-//		rawDataSet.getSeries(0).add(new SVMDataItem(6, 2));
-//		rawDataSet.getSeries(0).add(new SVMDataItem(5, 3));
-//		rawDataSet.getSeries(0).add(new SVMDataItem(6, 6));
-		//modelDataSet.getSeries(0).add(new SVMDataItem(8, 4, 2));
-		
-//		dataset.getSeries(0).add(new SVMDataItem(4, 4));
-//		dataset.getSeries(0).add(new SVMDataItem(8, 8));
-//		dataset.getSeries(0).add(new SVMDataItem(8, 1));
-		
-		
-//		dataset.getSeries(0).add(new SVMDataItem(4, 4));
-//		dataset.getSeries(0).add(new SVMDataItem(8, 8));
-//		dataset.getSeries(0).add(new SVMDataItem(8, 1));
-		
-		
-		
-////
-//		rawDataSet.getSeries(1).add(new SVMDataItem(1.0, 5.0));
-//		rawDataSet.getSeries(1).add(new SVMDataItem(3.0, 5.0));
-//		rawDataSet.getSeries(1).add(new SVMDataItem(5.0, 5.0));
-//		rawDataSet.getSeries(1).add(new SVMDataItem(4.0, 8.0));
-		
+
 	}
 	
-	public void compute(){
-		centroid1 = WRCH.findCentroid(dataset1);
-		centroid1.setLabel("+");
-		centroid2 = WRCH.findCentroid(dataset2);
-		centroid2.setLabel("-");
-		SVMDataSeries s5= getSolutionDataSet().getSeries(2);
-		s5.clear();
-		s5.add(getCentroid1());
-		s5.add(getCentroid2());
-		
-	}
-	
-	public void findWRCH(int series){
-		dataset1 = rawDataSet.getSeries(0).toArrayList();
-		dataset2 = rawDataSet.getSeries(1).toArrayList();
+	public void solveWRCH(int series){
+		dataset1 = chartData.getSeries(0).toArrayList();
+		dataset2 = chartData.getSeries(1).toArrayList();
 		
 //		if (series == 0){
 //			rch1 = WRCH.calcWeightedReducedCHull(dataset1, mu1);
@@ -340,9 +285,15 @@ public class SVMModel {
 //			rch2 = wrchSolver.calcWRCH(dataset2, mu2);
 //			rch2 = wrchSolver.getWRCH();
 //		}
-		
-		
-		
+
+		centroid1 = WRCH.findCentroid(dataset1);
+		centroid1.setLabel("+");
+		centroid2 = WRCH.findCentroid(dataset2);
+		centroid2.setLabel("-");
+		SVMDataSeries s5= getSolutionDataSet().getSeries(2);
+		s5.clear();
+		s5.add(getCentroid1());
+		s5.add(getCentroid2());
 		
 		
 		SVMDataSeries s3 = getSolutionDataSet().getSeries(0);
@@ -358,150 +309,58 @@ public class SVMModel {
 		}
 	}
 	
-	public boolean solveSVM(){
-		SVMDataItem[] Ppos;
-		SVMDataItem[] Pneg;
-		
-		dataset1 = rawDataSet.getSeries(0).toArrayList();
-		dataset2 = rawDataSet.getSeries(1).toArrayList();
-		
-		Ppos = new SVMDataItem[dataset1.size()];
-		Pneg = new SVMDataItem[dataset2.size()];
-		double[] pweights = new double [Ppos.length];
-		double[] nweights = new double [Pneg.length];
-		
-		
-		
-		if (Ppos.length <= 0 || Pneg.length <= 0){
-			return false;
+	public void solveSVM(){
+		try {
+			Dwsk wskSolver = new Dwsk();
+			wskSolver.wsk(trainingData, getMu1(), getMu2());
+			
+			b = wskSolver.getB();
+			w = wskSolver.getW();
+			nearestPositivePoint = wskSolver.getNearestPositivePoint();
+			nearestNegativePoint = wskSolver.getNearestNegativePoint();
+			
+			
+			int count = 0;
+			double proj = 0.0;
+			DVector item = null;
+			
+			ArrayList<DVector> positiveClass = trainingData.getPositiveClass();
+			numActualPositives = positiveClass.size();
+			for (int i = 0; i < numActualPositives; i++){
+				item = positiveClass.get(i);
+				proj = getW().getDotProduct(item);
+				if (proj > 0){ //TODO fp comparison
+					count++;
+				}
+			}
+			numPredictedPositives = count;
+			
+			count = 0;
+			proj = 0.0;
+			ArrayList<DVector> negativeClass = trainingData.getPositiveClass();
+			numActualNegatives = negativeClass.size();
+			for (int i = 0; i < numActualNegatives; i++){
+				item = positiveClass.get(i);
+				proj = getW().getDotProduct(item);
+				if (proj > 0){ //TODO fp comparison
+					count++;
+				}
+			}
+			numPredictedNegatives = count;
+			
+			
+			numTruePositives = numActualPositives;
+			numTrueNegatives = numActualNegatives;
+			numFalsePositives = numPredictedPositives;
+			numFalseNegatives = numPredictedNegatives;
+		} catch (Exception e) {
+			// TODO
+			e.printStackTrace();
 		}
-		
-		
-		for (int i = 0; i < Ppos.length; i++){
-			Ppos[i] = new SVMDataItem(dataset1.get(i).getXValue(),
-					dataset1.get(i).getYValue(),
-					dataset1.get(i).getWeight());
-			Ppos[i].setDataClass(1);	//TODO
-			pweights[i] = dataset1.get(i).getWeight();
-		}
-		
-		for (int i = 0; i < Pneg.length; i++){
-			Pneg[i] = new SVMDataItem(dataset2.get(i).getXValue(),
-					dataset2.get(i).getYValue(),
-					dataset2.get(i).getWeight());
-			Pneg[i].setDataClass(-1);
-			nweights[i] = dataset2.get(i).getWeight();
-		}
-		
-		WSK.wsk(Ppos, Pneg,pweights,nweights,  getMu1(), getMu2());
-		
-		b = WSK.getFinalB();
-		w = WSK.getFinalW();
-		return true;
 	}
 
-	
-	public Line2D getLine(SVMDataItem w, double b){
-		SVMDataItem p =  WSK.getNearestPositivePoint();
-		SVMDataItem n = WSK.getNearestNegativePoint();
-		
-		SVMDataItem mid = new SVMDataItem(
-				(p.getXValue() + n.getXValue()) / 2,
-				(p.getYValue() + n.getYValue()) / 2);
-
-        
-        double f = 5000.0;
-        double delta = b / w.getMagnitude();
-      
-        SVMDataItem normal = new SVMDataItem(-w.getYValue(), w.getXValue());
-        //normal.setX(normal.getXValue() + delta);
-        //normal.setY(normal.getYValue() + delta);
-        
-//        Point.Double p1= new Point.Double(
-//        		(normal.getXValue() * f) + mid.getXValue(),
-//        		(normal.getYValue() * f) + mid.getYValue());
-//        Point.Double p2= new Point.Double(
-//        		(normal.getXValue() * -f) + mid.getXValue(),
-//        		(normal.getYValue() * -f) + mid.getYValue());
-        
-        
-        
-        
-      Point.Double p1= new Point.Double(
-		(normal.getXValue() * f + delta) ,
-		(normal.getYValue() * f + delta) );
-Point.Double p2= new Point.Double(
-		(normal.getXValue() * -f + delta) ,
-		(normal.getYValue() * -f + delta) );
-        //System.out.format("Line points:\np1:%s\np2:%s -- %f\n", p1, p2, delta );
-        return new Line2D.Double(p1, p2);
-        
-//        double yMin = -500;
-//        double yMax = 500;
-//        double xMin = ((b-(w.getYValue()*yMin))/w.getXValue());
-//        double xMax =   ((b-(w.getYValue()*yMax))/w.getXValue());
-//        
-//        Point.Double p1= new Point.Double(xMin, yMin);
-//        Point.Double p2= new Point.Double(xMax, yMax);
-//        return new Line2D.Double(p1, p2);
-	}
-	
-	public SVMDataItem getPositiveMargin(){
-		SVMDataSeries positives = getPositiveSeries();
-		SVMDataItem item = null;
-		SVMDataItem max = null;
-		double prod = 0.0;
-		double maxProd = 0.0;
-	
-		for (int i = 0; i < positives.getItemCount(); i++){
-			item = positives.getRawDataItem(i);
-			prod = item.getDotProduct(getW());
-			
-			if (max == null){
-				max = item;
-				maxProd = prod;
-			}
-			
-			if (prod < maxProd){
-				
-			}
-		}
-		
-		return null;
-	}
-	
-	public SVMDataItem getNegativeMargin(){
-		return null;
-	}
-	
-	public SVMDataItem getHyperplane(){
-		return getW().getAntiClockWiseNormal(); //TODO sure?
-	}
-	
-	public static Line2D getPerpendicularBisector(){
-		SVMDataItem p =  WSK.getNearestPositivePoint();
-		SVMDataItem n = WSK.getNearestNegativePoint();
-		
-		SVMDataItem mid = new SVMDataItem(
-			(p.getXValue() + p.getYValue()) / 2,
-			(n.getXValue() + n.getYValue()) / 2);
-		
-		double m =(p.getYValue() - n.getYValue())/
-				(p.getXValue() - n.getXValue());
-		double mp = -1.0/m;
-		
-		double b = mid.getYValue() / (mp * mid.getXValue());
-		
-		
-		double xMin = -500;
-        double xMax =   500;
-        double yMin = mp * xMin + b;
-        double yMax = mp * xMax + b;
-        
-		
-        Point.Double p1= new Point.Double(xMin, yMin);
-        Point.Double p2= new Point.Double(xMax, yMax);
-        return new Line2D.Double(p1, p2);
+	public DVector getHyperplane() throws Exception{
+		return getW().get2DAntiClockwiseNormal(); //TODO sure?
 	}
 	
 	public ArrayList<SVMDataItem> getRCH1(){
@@ -511,6 +370,13 @@ Point.Double p2= new Point.Double(
 	public ArrayList<SVMDataItem> getRCH2(){
 		return rch2;
 	}
-	
+
+	public DVector getNearestPositivePoint() {
+		return nearestPositivePoint;
+	}
+
+	public DVector getNearestNegativePoint() {
+		return nearestNegativePoint;
+	}
 
 }

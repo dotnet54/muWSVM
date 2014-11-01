@@ -8,7 +8,7 @@ import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
-public class DData {
+public class DData implements ISubject{
 
 	private ArrayList<DVector> data = new ArrayList<DVector>();
 	private int dimensions;
@@ -16,10 +16,65 @@ public class DData {
 	private int positiveClassID = +1;
 	private int negativeClassID = -1;
 	
+	
+	DataChangeEvent lastChange; 
+	//observer pattern 
+    private List<IObserver> observers;
+    private boolean changed;
+    private final Object MUTEX= new Object();
+    
+    public enum DataChangeType{
+    	DataAdded,
+    	DataRemoved,
+    	DatasetCleared
+    }
+    
+    public class DataChangeEvent{
+    	
+    	DataChangeType type;
+    	DVector item;
+    	int index;
+    	
+    	public DataChangeEvent(DataChangeType type, DVector item, int index){
+    		this.type = type;
+    		this.item = item;
+    		this.index = index;
+    	}
+    }
+	
+	private int xDimension = 0;
+	public int getXDimension() {
+		return xDimension;
+	}
+
+	public void setXDimension(int xDimension) {
+		this.xDimension = xDimension;
+	}
+
+	public int getYDimension() {
+		return yDimension;
+	}
+
+	public void setYDimension(int yDimension) {
+		this.yDimension = yDimension;
+	}
+
+	private int yDimension = 1;
+	
+	public double getX(int i) throws Exception{
+		return data.get(i).getVal(getXDimension());
+	}
+	
+	public double getY(int i) throws Exception{
+		return data.get(i).getVal(getYDimension());
+	}
+	
 	static Random rand = new Random();
 	
 	public DData(int numDimensions) {
 		dimensions = numDimensions;
+		
+		this.observers = new ArrayList<IObserver>();
 	}
 	
 	public void add(DVector vec) throws Exception{
@@ -28,12 +83,17 @@ public class DData {
 		}
 		
 		data.add(vec);
-		//TODO notify observers
+		lastChange = new DataChangeEvent(DataChangeType.DataAdded, vec, data.size() -1);
+		changed = true;
+		notifyObservers();
 	}
 	
 	public void remove(int index){
+		lastChange = new DataChangeEvent(DataChangeType.DataRemoved, data.get(index), index);
 		data.remove(index);
-		//TODO notify observers
+		
+		changed = true;
+		notifyObservers();
 	}
 	
 	public DVector get(int index){
@@ -42,7 +102,13 @@ public class DData {
 	
 	public void clear(){
 		data.clear();
-		//TODO notify observers
+		lastChange = new DataChangeEvent(DataChangeType.DatasetCleared, null, -1);
+		changed = true;
+		notifyObservers();
+	}
+	
+	public int size(){
+		return data.size();
 	}
 	
 	public int getDimensions(){
@@ -104,22 +170,24 @@ public class DData {
 	}
 	
 	
-	public XYSeriesCollection getChartData(int xDim, int yDim){
-		XYSeriesCollection dataset = new XYSeriesCollection();
-		dataset.addSeries(new XYSeries("Positive Class"));
-		dataset.addSeries(new XYSeries("Negative Class"));
+	public SVMDataSet getChartData(int xDim, int yDim){
+		SVMDataSet dataset = new SVMDataSet();
+		dataset.addSeries(new SVMDataSeries("Positive Class"));
+		dataset.addSeries(new SVMDataSeries("Negative Class"));
 		DVector vec = null;
 		
 		try{
 			ArrayList<DVector> dataClass = getPositiveClass();
 			for (int i= 0; i < dataClass.size(); i++){
 				vec = dataClass.get(i);
-				dataset.getSeries(0).add(new XYDataItem(vec.getVal(xDim), vec.getVal(yDim)));
+				dataset.getSeries(0).add(
+						new SVMDataItem(vec.getVal(xDim), vec.getVal(yDim), vec.getWeight()));
 			}
 			dataClass = getNegativeClass();
 			for (int i= 0; i < dataClass.size(); i++){
 				vec = dataClass.get(i);
-				dataset.getSeries(1).add(new XYDataItem(vec.getVal(xDim), vec.getVal(yDim)));
+				dataset.getSeries(1).add(
+						new SVMDataItem(vec.getVal(xDim), vec.getVal(yDim), vec.getWeight()));
 			}
 			
 			
@@ -133,10 +201,10 @@ public class DData {
 	
 	
 	
-	public XYSeriesCollection getChartData(){
-		XYSeriesCollection dataset = new XYSeriesCollection();
-		dataset.addSeries(new XYSeries("Positive Class"));
-		dataset.addSeries(new XYSeries("Negative Class"));
+	public SVMDataSet getChartData(){
+		SVMDataSet dataset = new SVMDataSet();
+		dataset.addSeries(new SVMDataSeries("Positive Class"));
+		dataset.addSeries(new SVMDataSeries("Negative Class"));
 		
 		
 		
@@ -146,14 +214,14 @@ public class DData {
 			DVector vec = null;
 			for (int i= 0; i < dataClass.size(); i++){
 				vec = dataClass.get(i);
-				dataset.getSeries(0).add(new XYDataItem(vec.getX(), vec.getY()));
+				dataset.getSeries(0).add(new SVMDataItem(vec.getX(), vec.getY(), vec.getWeight()));
 			}
 			
 			dataClass = getNegativeClass();
 			
 			for (int i= 0; i < dataClass.size(); i++){
 				vec = dataClass.get(i);
-				dataset.getSeries(1).add(new XYDataItem(vec.getX(), vec.getY()));
+				dataset.getSeries(1).add(new SVMDataItem(vec.getX(), vec.getY(), vec.getWeight()));
 			}
 			
 		} catch (Exception e) {
@@ -210,4 +278,59 @@ public class DData {
 	    int randomNum = rand.nextInt((max - min) + 1) + min;
 	    return randomNum;
 	}
+	
+	
+	
+	
+	public DataChangeEvent getLastChange(){
+		return lastChange;
+	}
+	
+	   
+    /**
+     * based on 
+     * http://www.journaldev.com/1739/observer-design-pattern-in-java-example-tutorial
+     * @param obj
+     */
+    @Override
+    public void register(IObserver obj) {
+        if(obj == null) throw new NullPointerException("Null Observer");
+        synchronized (MUTEX) {
+        if(!observers.contains(obj)) observers.add(obj);
+        }
+    }
+ 
+    /**
+     * http://www.journaldev.com/1739/observer-design-pattern-in-java-example-tutorial
+     * @param obj
+     */
+    @Override
+    public void unregister(IObserver obj) {
+        synchronized (MUTEX) {
+        observers.remove(obj);
+        }
+    }
+ 
+    /**
+     * http://www.journaldev.com/1739/observer-design-pattern-in-java-example-tutorial
+     */
+    @Override
+    public void notifyObservers() {
+        List<IObserver> observersLocal = null;
+        //synchronization is used to make sure any observer registered after message is received is not notified
+        synchronized (MUTEX) {
+            if (!changed)
+                return;
+            observersLocal = new ArrayList<IObserver>(this.observers);
+            this.changed=false;
+        }
+        for (IObserver obj : observersLocal) {
+            obj.update();
+        }
+ 
+    }
+	
+	
+	
+	
 }
