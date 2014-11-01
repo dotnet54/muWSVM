@@ -27,8 +27,8 @@ public class SVMDataItem extends XYDataItem{
 
 	public void setVector(DVector vec) {
 		try {
-			setX(vec.getX());
-			setY(vec.getY());
+			setX(vec.getXValue());
+			setY(vec.getYValue());
 			setWeight(vec.getWeight());
 			setClassID(vec.getClassID());
 			this.vector = vec;
@@ -49,8 +49,8 @@ public class SVMDataItem extends XYDataItem{
 	public SVMDataItem(DVector vec){
 		super(0, 0);
 		try {
-			setX(vec.getX());
-			setY(vec.getY());
+			setX(vec.getXValue());
+			setY(vec.getYValue());
 			setWeight(vec.getWeight());
 			setClassID(vec.getClassID());
 			vector = vec;

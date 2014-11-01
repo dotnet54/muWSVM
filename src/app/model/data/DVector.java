@@ -1,12 +1,13 @@
 package app.model.data;
 
-import org.jfree.data.xy.XYDataItem;
-
 import app.model.algorithms.DoubleMath;
 
-//TODO think about generic types to use float -> less memory than double
-public class DVector {
+public class DVector extends SVMDataItem{
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 4348757494167079122L;
 	private double values[];
 	private double weight;
 	private int classID;
@@ -15,6 +16,7 @@ public class DVector {
 	//TODO ArrayList<IObservers> observers = new ArrayList<IObservers>();
 
 	public DVector(double x, double y) {
+		super(x, y);
 		//by default dimensions = 2, weight = 1, class = +1
 		initialiseVector(2, 1.0, +1);
 		values[0] = x;
@@ -22,22 +24,26 @@ public class DVector {
 	}
 	
 	public DVector(double x, double y, double weight) {
+		super(x, y);
 		initialiseVector(2, weight, +1);
 		values[0] = x;
 		values[1] = y;
 	}
 
 	public DVector(double x, double y, double weight, int classID) {
+		super(x, y);
 		initialiseVector(2, weight, classID);
 		values[0] = x;
 		values[1] = y;
 	}
 	
 	public DVector(int dimensions) {
+		super(0, 0);
 		initialiseVector(dimensions, 1.0, +1);
 	}
 	
 	public DVector(double[] values, double weight, int classID) {
+		super(0, 0);
 		initialiseVector(values.length, weight, classID);
 		//deep copy
 		for (int i = 0; i < values.length; i++){
@@ -97,19 +103,29 @@ public class DVector {
 		values[index] = newValue;
 	}
 	
-	public double getX() throws Exception{
-		return getVal(0);
+	public double getXValue(){
+		try {
+			return getVal(0);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return Double.NaN;
 	}
 	
-	public double getY() throws Exception{
-		return getVal(1);
+	public double getYValue(){
+		try {
+			return getVal(1);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return Double.NaN;
 	}
 	
-	public void setX(double x) throws Exception{
+	public void setXValue(double x) throws Exception{
 		setVal(0, x);
 	}
 	
-	public void setY(double y) throws Exception{
+	public void setYValue(double y) throws Exception{
 		setVal(1, y);
 	}
 	
@@ -293,6 +309,6 @@ public class DVector {
 //			throw new Exception("DVector::get2DAntiClockwiseNormal: not a 2 dimensional dataset");
 //		}
 		
-		return new DVector( -1 * getY(), getX());
+		return new DVector( -1 * getYValue(), getXValue());
 	}
 }

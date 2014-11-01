@@ -379,8 +379,8 @@ public class SVMPanel extends ChartPanel
 			
 			double y1 = -10000;
 			double y2 = 10000;
-			double x1 = (b - (w.getY() * y1))/ w.getX();
-			double x2 = (b - (w.getY() * y2))/ w.getX();
+			double x1 = (b - (w.getYValue() * y1))/ w.getXValue();
+			double x2 = (b - (w.getYValue() * y2))/ w.getXValue();
 			
 			if (hyperPlane != null){
 				thisPlot.removeAnnotation(hyperPlane);
@@ -394,20 +394,20 @@ public class SVMPanel extends ChartPanel
 			
 			hyperPlane = new XYLineAnnotation(x1, y1, x2, y2);
 			b = p.getDotProduct(w);
-			x1 = (b - (w.getY() * y1))/ w.getX();
-			x2 = (b - (w.getY() * y2))/ w.getX();
+			x1 = (b - (w.getYValue() * y1))/ w.getXValue();
+			x2 = (b - (w.getYValue() * y2))/ w.getXValue();
 			marginPos = new XYLineAnnotation(x1, y1, x2, y2);
 			b = n.getDotProduct(w);
-			x1 = (b - (w.getY() * y1))/ w.getX();
-			x2 = (b - (w.getY() * y2))/ w.getX();
+			x1 = (b - (w.getYValue() * y1))/ w.getXValue();
+			x2 = (b - (w.getYValue() * y2))/ w.getXValue();
 			marginNeg = new XYLineAnnotation(x1, y1, x2, y2);
 			
 			if (nearestPointLine != null){
 				thisPlot.removeAnnotation(nearestPointLine);
 			}
 			nearestPointLine = new XYLineAnnotation(
-					p.getX(), p.getY(),
-					n.getX(), n.getY());
+					p.getXValue(), p.getYValue(),
+					n.getXValue(), n.getYValue());
 			
 			
 			
@@ -631,11 +631,20 @@ public class SVMPanel extends ChartPanel
 	
 	public void addPoint(int series){
 		
-		XYSeriesCollection d = (XYSeriesCollection) getChart().getXYPlot().getDataset();
-		XYSeries s =  d.getSeries(series);
-		
-		SVMDataItem i = new SVMDataItem(xChart, yChart);
-		s.add(i);
+		try {
+			XYSeriesCollection d = (XYSeriesCollection) getChart().getXYPlot().getDataset();
+			XYSeries s =  d.getSeries(series);
+			
+			SVMDataItem i = new SVMDataItem(xChart, yChart);
+			s.add(i);
+			if (series == 0){
+				model.getTrainingData().add(new DVector(xChart, yChart, 1, 1));
+			}else if(series == 1){
+				model.getTrainingData().add(new DVector(xChart, yChart, 1, -1));
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public void duplicateSelection(int numDuplicates){

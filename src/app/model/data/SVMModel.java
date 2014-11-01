@@ -27,6 +27,22 @@ public class SVMModel {
 	
 	
 	private DData trainingData = null;
+	public DData getTrainingData() {
+		return trainingData;
+	}
+
+	public void setTrainingData(DData trainingData) {
+		this.trainingData = trainingData;
+	}
+
+	public DData getTestData() {
+		return testData;
+	}
+
+	public void setTestData(DData testData) {
+		this.testData = testData;
+	}
+
 	private DData testData = null;
 	private SVMDataSet chartData = null;
 

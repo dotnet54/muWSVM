@@ -37,8 +37,8 @@ public class Dwrch {
 			DVector t =null;
 			for (int i=0; i< dataset.size(); i++){
 				t = new DVector(0,0);
-				t.setX(dataset.get(i).getX());
-				t.setY(dataset.get(i).getY());
+				t.setXValue(dataset.get(i).getX());
+				t.setYValue(dataset.get(i).getY());
 				t.setWeight(dataset.get(i).getWeight());
 				t.setClassID(dataset.get(i).getClassID());
 				P.add(t);
@@ -49,8 +49,8 @@ public class Dwrch {
 			SVMDataItem p;
 			for (int i=0; i< res.length; i++){ //TODO assume res != null
 				p = new SVMDataItem(0,0);
-				p.setX(res[i].getX());
-				p.setY(res[i].getY());
+				p.setX(res[i].getXValue());
+				p.setY(res[i].getYValue());
 				p.setLabel("");
 				r.add(p);
 			}
@@ -73,7 +73,7 @@ public class Dwrch {
 		try {
 			DVector n = new DVector(-1,0);
 			DVector l =  findExtremePoint(P, mu, n);
-			n.setX(1);
+			n.setXValue(1);
 			DVector r =  findExtremePoint(P, mu,  n);
 			
 			Set<DVector> result = rhull_aux(P, l ,r, mu);
@@ -103,17 +103,17 @@ public class Dwrch {
 			DVector h = new DVector(0,0);
 			
 			DVector diff = r.subtractVectors(l);
-			diff.setX(DoubleMath.dMinus(r.getX(), l.getX()));
-			diff.setY(DoubleMath.dMinus(r.getY(), l.getY()));
-			n.setX(-diff.getY());
-			n.setY(diff.getX());
+			diff.setXValue(DoubleMath.dMinus(r.getXValue(), l.getXValue()));
+			diff.setYValue(DoubleMath.dMinus(r.getYValue(), l.getYValue()));
+			n.setXValue(-diff.getYValue());
+			n.setYValue(diff.getXValue());
 
 			h =  findExtremePoint(P, mu,  n);
 			//System.out.format("h:%s,l:%s,r%s \n", h,l,r);
 
 			DVector facetNormal = l.subtractVectors(r);
-			facetNormal.setX(DoubleMath.dMinus(l.getX(), r.getX()));
-			facetNormal.setY(DoubleMath.dMinus(l.getY(), r.getY()));
+			facetNormal.setXValue(DoubleMath.dMinus(l.getXValue(), r.getXValue()));
+			facetNormal.setYValue(DoubleMath.dMinus(l.getYValue(), r.getYValue()));
 			facetNormal =  facetNormal.get2DAntiClockwiseNormal();
 			double pointOffset = h.getDotProduct(facetNormal);
 			double facetOffset = l.getDotProduct(facetNormal);
@@ -130,16 +130,16 @@ public class Dwrch {
 			DVector nr = new DVector(0,0);
 			
 			diff = h.subtractVectors(l);
-			diff.setX(DoubleMath.dMinus(h.getX(), l.getX()));
-			diff.setY(DoubleMath.dMinus(h.getY(), l.getY()));
-			nl.setX(-diff.getY());
-			nl.setY(diff.getX());
+			diff.setXValue(DoubleMath.dMinus(h.getXValue(), l.getXValue()));
+			diff.setYValue(DoubleMath.dMinus(h.getYValue(), l.getYValue()));
+			nl.setXValue(-diff.getYValue());
+			nl.setYValue(diff.getXValue());
 			
 			diff = r.subtractVectors(h);
-			diff.setX(DoubleMath.dMinus(r.getX(), h.getX()));
-			diff.setY(DoubleMath.dMinus(r.getY(), h.getY()));
-			nr.setX(-diff.getY());
-			nr.setY(diff.getX());
+			diff.setXValue(DoubleMath.dMinus(r.getXValue(), h.getXValue()));
+			diff.setYValue(DoubleMath.dMinus(r.getYValue(), h.getYValue()));
+			nr.setXValue(-diff.getYValue());
+			nr.setYValue(diff.getXValue());
 			
 			DVector[] supportPoints = new DVector[numSupportPoints];
 			for (int i = 0; i < numSupportPoints ; i++){

@@ -115,6 +115,9 @@ public class SVMMain implements ActionListener, IObserver{
 	private JPanel panelPerformance;
 
 	private PerformanceMatrix perfMatrix;
+
+	private JComboBox<String> xDimensionName;
+	private JComboBox<String> yDimensionName;
 	
 	/**
 	 * Entry point - Launch the application.
@@ -819,18 +822,39 @@ public class SVMMain implements ActionListener, IObserver{
 			JLabel lblXaxisAttribute = new JLabel("X-axis Attribute");
 			panel.add(lblXaxisAttribute);
 			
-			JComboBox comboBox = new JComboBox();
-			comboBox.setModel(new DefaultComboBoxModel(new String[] {"0"}));
-			comboBox.setMinimumSize(new Dimension(40, 20));
-			panel.add(comboBox);
+			xDimensionName = new JComboBox<String>();
+			xDimensionName.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					
+					JComboBox<String> combo = (JComboBox<String>) e.getSource();
+					chart.getXYPlot().getDomainAxis().setLabel(
+							model.getTestData().getAttributeNames()[combo.getSelectedIndex()]);
+					changeChartData();
+				}
+			});
+			xDimensionName.setModel(new DefaultComboBoxModel<String>(model.getTrainingData().getAttributeNames()));
+			xDimensionName.setMinimumSize(new Dimension(40, 20));
+			xDimensionName.setSelectedIndex(0);
+			panel.add(xDimensionName);
 			
 			JLabel lblYaxisAttribute = new JLabel("Y-axis Attribute");
 			panel.add(lblYaxisAttribute);
 			
-			JComboBox comboBox_1 = new JComboBox();
-			comboBox_1.setModel(new DefaultComboBoxModel(new String[] {"1"}));
-			comboBox_1.setMinimumSize(new Dimension(40, 20));
-			panel.add(comboBox_1);
+			yDimensionName = new JComboBox<String>();
+			yDimensionName.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					JComboBox<String> combo = (JComboBox<String>) e.getSource();
+					chart.getXYPlot().getRangeAxis().setLabel(
+							model.getTestData().getAttributeNames()[combo.getSelectedIndex()]);	
+					changeChartData();
+					
+					}
+					
+			});
+			yDimensionName.setModel(new DefaultComboBoxModel<String>(model.getTrainingData().getAttributeNames()));
+			yDimensionName.setMinimumSize(new Dimension(40, 20));
+			yDimensionName.setSelectedIndex(1); //TODO assumption index 1 exist
+			panel.add(yDimensionName);
 			frame.getContentPane().add(pSolveButtonsContainer);
 			
 			JButton btnClassify = new JButton("Classify");
@@ -1168,6 +1192,19 @@ public class SVMMain implements ActionListener, IObserver{
 		("Weighted Support Vector Machine", "X", "Y", model.getChartDataset());
 
         return new SVMPanel(chart, model);
+	}
+	
+	private void changeChartData(){
+		int xDim = 0;
+		int yDim = 0; 
+		if (xDimensionName != null){
+			xDim = xDimensionName.getSelectedIndex();
+		}
+		if (yDimensionName != null){
+			xDim = yDimensionName.getSelectedIndex();
+		}
+		//use model
+		//chart.getXYPlot().setDataset(model.getTrainingData().getChartData(xDim, yDim));
 	}
 
 	private void solveSVM(double mu1, double mu2){

@@ -12,6 +12,7 @@ public class DData implements ISubject{
 
 	private ArrayList<DVector> data = new ArrayList<DVector>();
 	private int dimensions;
+	private String[] attribNames;
 	
 	private int positiveClassID = +1;
 	private int negativeClassID = -1;
@@ -73,6 +74,11 @@ public class DData implements ISubject{
 	
 	public DData(int numDimensions) {
 		dimensions = numDimensions;
+		attribNames = new String[dimensions];
+		
+		for (int i = 0; i< dimensions;i++){
+			attribNames[i] = "Dimension: " + i;
+		}
 		
 		this.observers = new ArrayList<IObserver>();
 	}
@@ -113,6 +119,10 @@ public class DData implements ISubject{
 	
 	public int getDimensions(){
 		return dimensions;
+	}
+	
+	public String[] getAttributeNames(){
+		return attribNames;
 	}
 	
 	public int getClassCount(){
@@ -214,14 +224,14 @@ public class DData implements ISubject{
 			DVector vec = null;
 			for (int i= 0; i < dataClass.size(); i++){
 				vec = dataClass.get(i);
-				dataset.getSeries(0).add(new SVMDataItem(vec.getX(), vec.getY(), vec.getWeight()));
+				dataset.getSeries(0).add(new SVMDataItem(vec.getXValue(), vec.getYValue(), vec.getWeight()));
 			}
 			
 			dataClass = getNegativeClass();
 			
 			for (int i= 0; i < dataClass.size(); i++){
 				vec = dataClass.get(i);
-				dataset.getSeries(1).add(new SVMDataItem(vec.getX(), vec.getY(), vec.getWeight()));
+				dataset.getSeries(1).add(new SVMDataItem(vec.getXValue(), vec.getYValue(), vec.getWeight()));
 			}
 			
 		} catch (Exception e) {

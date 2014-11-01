@@ -124,7 +124,7 @@ public class SVMDataSet extends XYSeriesCollection implements IObserver{
 			DataChangeEvent event = datasource.getLastChange();
 			DVector item = event.item;
 			if (event.type == DataChangeType.DataAdded){
-				SVMDataItem newItem = new SVMDataItem(item.getX(), item.getY(), 
+				SVMDataItem newItem = new SVMDataItem(item.getXValue(), item.getYValue(), 
 						item.getWeight(), item.getClassID());
 				
 				if (item.getClassID() == +1){ //TODO if positive class changed??

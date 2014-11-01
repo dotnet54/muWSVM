@@ -53,9 +53,9 @@ public class Dwsk {
 		DVector w = null;
 		
 		DVector startDirection = new DVector(Dataset.getDimensions());
-		startDirection.setX(+1);
+		startDirection.setXValue(+1);
 		DVector oppositeDirection = new DVector(Dataset.getDimensions());
-		oppositeDirection.setX(-1);
+		oppositeDirection.setXValue(-1);
 
 		p = Dwrch.findExtremePoint(Dataset.getPositiveClass() , mu1, startDirection);
 		n = Dwrch.findExtremePoint(Dataset.getNegativeClass() , mu2, oppositeDirection);

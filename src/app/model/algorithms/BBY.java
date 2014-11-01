@@ -82,8 +82,8 @@ public class BBY {
 			
 			for (int i =  0; i < ans.size(); i++){
 				res.add(new SVMDataItem(
-						ans.get(i).getX(),
-						ans.get(i).getY(), 
+						ans.get(i).getXValue(),
+						ans.get(i).getYValue(), 
 						ans.get(i).getWeight()));
 			}
 		} catch (Exception e) {
@@ -102,9 +102,9 @@ public class BBY {
 			DVector rightEdge = null;
 			
 			DVector startDirection = new DVector(2);
-			startDirection.setX(-1);
+			startDirection.setXValue(-1);
 			DVector oppositeDirection = new DVector(2);
-			oppositeDirection.setX(+1);
+			oppositeDirection.setXValue(+1);
 
 			DVector leftMostVertex = Dwrch.findExtremePoint(points , mu, startDirection);
 			DVector rightMostVertex = Dwrch.findExtremePoint(points , mu, oppositeDirection);
@@ -246,8 +246,8 @@ public class BBY {
 
 			for (int j =  0; j < ans.size(); j++){
 				res.add(new SVMDataItem(
-						ans.get(j).getX(),
-						ans.get(j).getY(), 
+						ans.get(j).getXValue(),
+						ans.get(j).getYValue(), 
 						ans.get(j).getWeight()));
 			}
 			

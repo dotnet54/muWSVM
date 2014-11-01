@@ -82,35 +82,35 @@ public class TestSPLOM extends JFrame{
 				DVector neww = w.clone();
 				DVector h = w.clone();
 
-				h.setX(-w.getY());
-				h.setY(w.getX());
+				h.setXValue(-w.getYValue());
+				h.setYValue(w.getXValue());
 				
 				
-				x1 = h.getX() * scale + offset;
-				y1 = h.getY() * scale + offset;
-				x2 = h.getX() * -scale + offset;
-				y2 = h.getY() * -scale + offset;
+				x1 = h.getXValue() * scale + offset;
+				y1 = h.getYValue() * scale + offset;
+				x2 = h.getXValue() * -scale + offset;
+				y2 = h.getYValue() * -scale + offset;
 				
 				y1 = -500;
 				y2 = 500;
-				x1 = (b - (w.getY() * y1))/ w.getX();
-				x2 = (b - (w.getY() * y2))/ w.getX();
+				x1 = (b - (w.getYValue() * y1))/ w.getXValue();
+				x2 = (b - (w.getYValue() * y2))/ w.getXValue();
 				
 				XYLineAnnotation hyperplane = new XYLineAnnotation(x1, y1, x2, y2);
 				b = p.getDotProduct(w);
-				x1 = (b - (w.getY() * y1))/ w.getX();
-				x2 = (b - (w.getY() * y2))/ w.getX();
+				x1 = (b - (w.getYValue() * y1))/ w.getXValue();
+				x2 = (b - (w.getYValue() * y2))/ w.getXValue();
 				XYLineAnnotation posMargin = new XYLineAnnotation(x1, y1, x2, y2);
 				b = n.getDotProduct(w);
-				x1 = (b - (w.getY() * y1))/ w.getX();
-				x2 = (b - (w.getY() * y2))/ w.getX();
+				x1 = (b - (w.getYValue() * y1))/ w.getXValue();
+				x2 = (b - (w.getYValue() * y2))/ w.getXValue();
 				XYLineAnnotation negMargin = new XYLineAnnotation(x1, y1, x2, y2);
 				
 				XYLineAnnotation nearest = new XYLineAnnotation(
-						solver.getNearestPositivePoint().getX(),
-						solver.getNearestPositivePoint().getY(), 
-						solver.getNearestNegativePoint().getX(),
-						solver.getNearestNegativePoint().getY());
+						solver.getNearestPositivePoint().getXValue(),
+						solver.getNearestPositivePoint().getYValue(), 
+						solver.getNearestNegativePoint().getXValue(),
+						solver.getNearestNegativePoint().getYValue());
 				
 				chart.getXYPlot().clearAnnotations();
 				chart.getXYPlot().addAnnotation(hyperplane);
