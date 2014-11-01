@@ -1,6 +1,6 @@
 package app.model.data;
 
-import java.util.ArrayList;
+import org.jfree.data.xy.XYDataItem;
 
 import app.model.algorithms.DoubleMath;
 

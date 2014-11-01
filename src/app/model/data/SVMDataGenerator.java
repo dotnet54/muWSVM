@@ -145,11 +145,11 @@ public class SVMDataGenerator {
 			point.setX(point.getXValue() * maxVal);
 			point.setY(point.getYValue() * maxVal);
 			if ( proj> 0 && i < numPos){
-				point.setDataClass(1);
+				point.setClassID(1);
 				data.getSeries(0).add(point);
 				i++;
 			}else if (proj < 0 && j < numNeg){
-				point.setDataClass(-1);
+				point.setClassID(-1);
 				data.getSeries(1).add(point);
 				j++;
 			}else{

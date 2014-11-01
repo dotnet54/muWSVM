@@ -5,6 +5,60 @@ public class DoubleMath {
 	public static double PRECISION = 0.00001; //provide a set precision function
 	public static int DP = 6;
 	
+	
+	public static boolean isLessThan(double d1, double d2){
+		double df = (d1 - d2);
+		if (Math.abs(df) < PRECISION){//eq
+			return false;
+		}else if(df < 0){//note -0 and +0
+			return true;
+		}else{
+			return false;
+		}
+	}
+	
+	public static boolean isLessThanOrEq(double d1, double d2){
+		double df = (d1 - d2);
+		if (Math.abs(df) < PRECISION){//eq
+			return true;
+		}else if(df < 0){//note -0 and +0
+			return true;
+		}else{
+			return false;
+		}
+	}
+	
+	public static boolean isGreaterThan(double d1, double d2){
+		double df = (d1 - d2);
+		if (Math.abs(df) < PRECISION){//eq
+			return false;
+		}else if(df > 0){//note -0 and +0
+			return true;
+		}else{
+			return false;
+		}
+	}
+	
+	public static boolean isGreaterThanEq(double d1, double d2){
+		double df = (d1 - d2);
+		if (Math.abs(df) < PRECISION){//eq
+			return true;
+		}else if(df > 0){//note -0 and +0
+			return true;
+		}else{
+			return false;
+		}
+	}
+	
+	public static boolean isEqual(double d1, double d2){
+		double df = Math.abs(d1 - d2);
+		if (df < PRECISION){
+			return true;
+		}else{
+			return false;
+		}
+	}
+	
 	public static double dAdd(double d1, double d2){
 		double r = d1+d2;
 		double near = round(r, DP);
@@ -44,5 +98,6 @@ public class DoubleMath {
 	    long tmp = Math.round(value);
 	    return (double) tmp / factor;
 	}
+	
 	
 }

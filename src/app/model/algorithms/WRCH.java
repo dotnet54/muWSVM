@@ -46,7 +46,7 @@ public class WRCH {
 			t.setX(dataset.get(i).getX());
 			t.setY(dataset.get(i).getY());
 			t.setWeight(dataset.get(i).getWeight());
-			t.setDataClass(dataset.get(i).getDataClass());
+			t.setClassID(dataset.get(i).getClassID());
 			P[i] = t;
 			//PP.add(i,t);
 			weights[i] = dataset.get(i).getWeight();
@@ -148,7 +148,7 @@ public class WRCH {
 			tmp = nl.getDotProduct(P[i]);
 			for (int j = 0; j < scalerProjections.length; j++){
 //				if (tmp >= scalerpro[j]){//TODO double op
-				if (SVMDataItem.isGreaterThanEq(tmp, scalerProjections[j])){
+				if (DoubleMath.isGreaterThanEq(tmp, scalerProjections[j])){
 					TMP[k] = P[i];	//index wrong
 					k++;
 					break;
@@ -176,7 +176,7 @@ public class WRCH {
 			tmp = nr.getDotProduct(P[i]);
 			for (int j = 0; j < scalerProjections.length; j++){
 //				if (tmp >= scalerpro[j]){ //TODO double op
-				if (SVMDataItem.isGreaterThanEq(tmp, scalerProjections[j])){
+				if (DoubleMath.isGreaterThanEq(tmp, scalerProjections[j])){
 					TMP[k] = P[i];	//index wrong
 					k++;
 					break;
@@ -216,7 +216,7 @@ public class WRCH {
 		//TODO S not used
 		
 		//TODO if mu is zero return centroid of P
-		if (SVMDataItem.isEqual(mu, 0)){
+		if (DoubleMath.isEqual(mu, 0)){
 			return findCentroid(P);
 		}
 		
@@ -244,7 +244,7 @@ public class WRCH {
 		
 		int count = 0;
 		
-		while (SVMDataItem.isLessThan(s, 1.0)){
+		while (DoubleMath.isLessThan(s, 1.0)){
 			if (k >= A.length){
 				System.out.println("k fixed");
 				k = 0;
@@ -273,8 +273,8 @@ public class WRCH {
 				System.out.println("index out of bounds");
 			}
 
-			v.setX(SVMDataItem.dAdd(v.getXValue(), SVMDataItem.dMult(A[i], X.get(i).getXValue())));
-			v.setY(SVMDataItem.dAdd(v.getYValue(), SVMDataItem.dMult(A[i], X.get(i).getYValue())));
+			v.setX(DoubleMath.dAdd(v.getXValue(), DoubleMath.dMult(A[i], X.get(i).getXValue())));
+			v.setY(DoubleMath.dAdd(v.getYValue(), DoubleMath.dMult(A[i], X.get(i).getYValue())));
 	
 		}
 		
@@ -317,8 +317,8 @@ public class WRCH {
 			double dx, dy;
 	//		dx = p1.getXValue() - p2.getXValue(); //TODO double op
 	//		dy = p1.getYValue() - p2.getYValue(); //TODO double op
-			dx = SVMDataItem.dMinus(p1.getXValue(), p2.getXValue());
-			dy = SVMDataItem.dMinus(p1.getYValue(), p2.getYValue());
+			dx = DoubleMath.dMinus(p1.getXValue(), p2.getXValue());
+			dy = DoubleMath.dMinus(p1.getYValue(), p2.getYValue());
 			
 			SVMDataItem n = new SVMDataItem(0,0);
 			n.setX(-dy);
@@ -449,12 +449,12 @@ public class WRCH {
 				//TODO double op
 	//			v.setX(v.getXValue() + (A[sortedInd[i]] * P.get(sortedInd[i]).getXValue()));
 	//			v.setY(v.getYValue() + (A[sortedInd[i]] * P.get(sortedInd[i]).getYValue()));
-				v.setX(SVMDataItem.dAdd(v.getXValue(),
-						SVMDataItem.dMult(A[sortedInd[i]], 
+				v.setX(DoubleMath.dAdd(v.getXValue(),
+						DoubleMath.dMult(A[sortedInd[i]], 
 								P.get(sortedInd[i]).getXValue())));
 				
-				v.setY(SVMDataItem.dAdd(v.getYValue(),
-						SVMDataItem.dMult(A[sortedInd[i]], 
+				v.setY(DoubleMath.dAdd(v.getYValue(),
+						DoubleMath.dMult(A[sortedInd[i]], 
 								P.get(sortedInd[i]).getYValue())));
 		
 			}

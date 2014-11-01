@@ -6,8 +6,6 @@ import javax.swing.JDialog;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import javax.swing.ButtonGroup;
 import javax.swing.JFileChooser;
 import javax.swing.JMenuBar;
@@ -32,22 +30,7 @@ import javax.swing.JTabbedPane;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.labels.ItemLabelAnchor;
-import org.jfree.chart.labels.ItemLabelPosition;
-import org.jfree.chart.labels.StandardXYToolTipGenerator;
-import org.jfree.chart.labels.XYItemLabelGenerator;
-import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
-import org.jfree.data.xy.XYDataItem;
-import org.jfree.data.xy.XYDataset;
-import org.jfree.data.xy.XYSeries;
-import org.jfree.data.xy.XYSeriesCollection;
-import org.jfree.ui.TextAnchor;
-import org.jfree.util.ShapeUtilities;
-
 import app.model.data.IObserver;
-import app.model.data.ISubject;
-import app.model.data.SVMDataItem;
 import app.model.data.SVMModel;
 import app.test.PerformanceMatrix;
 
@@ -60,17 +43,12 @@ import java.awt.BorderLayout;
 import java.awt.Font;
 import javax.swing.UIManager;
 import javax.swing.JCheckBox;
-import javax.swing.JTable;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.ListSelectionModel;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.io.File;
 import java.awt.Panel;
 import java.awt.FlowLayout;
 import java.awt.Dimension;
-
-import jogamp.opengl.util.jpeg.JPEGDecoder.EXIF;
 
 /**
  * Main GUI window for the application
@@ -88,7 +66,6 @@ public class SVMMain implements ActionListener, IObserver{
 	private SVMSPLOM frameSPLOM;
 	private JFreeChart chart;
 	public static SVMPanel chartPanel;	//TODO change static public, only for debug
-	private String tool;
 	
 	//components
 	private JTextField textField_class1;

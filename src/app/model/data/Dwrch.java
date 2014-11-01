@@ -40,7 +40,7 @@ public class Dwrch {
 				t.setX(dataset.get(i).getX());
 				t.setY(dataset.get(i).getY());
 				t.setWeight(dataset.get(i).getWeight());
-				t.setClassID(dataset.get(i).getDataClass());
+				t.setClassID(dataset.get(i).getClassID());
 				P.add(t);
 			}
 		
@@ -304,8 +304,8 @@ public class Dwrch {
 	
 	private static SVMDataItem normal(SVMDataItem p1, SVMDataItem p2){
 			double dx, dy;
-			dx = SVMDataItem.dMinus(p1.getXValue(), p2.getXValue());
-			dy = SVMDataItem.dMinus(p1.getYValue(), p2.getYValue());
+			dx = DoubleMath.dMinus(p1.getXValue(), p2.getXValue());
+			dy = DoubleMath.dMinus(p1.getYValue(), p2.getYValue());
 			SVMDataItem n = new SVMDataItem(0,0);
 			n.setX(-dy);
 			n.setY(dx);

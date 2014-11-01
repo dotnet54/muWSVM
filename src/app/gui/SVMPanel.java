@@ -75,7 +75,7 @@ public class SVMPanel extends ChartPanel
 	
 	
 	private SVMModel model = null;
-	private SVMDataSet inputData = null;
+	private SVMDataSet chartData = null;
 	private SVMDataSet overlayData = null;
 	
 	private  XYShapeAnnotation anoHull1 = null;
@@ -198,7 +198,7 @@ public class SVMPanel extends ChartPanel
 		
 
 		//Dataset settings
-		inputData = model.getChartDataset();
+		chartData = model.getChartDataset();
 		thisPlot.setDataset(1, model.getSolutionDataSet());
 		thisPlot.setRenderer(1, new XYLineAndShapeRenderer(false, true));
 		

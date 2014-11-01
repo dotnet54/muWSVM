@@ -1,8 +1,11 @@
 package app.model.data;
 
 import java.awt.Point;
+import java.util.Vector;
 
 import org.jfree.data.xy.XYDataItem;
+
+import app.model.algorithms.DoubleMath;
 
 
 public class SVMDataItem extends XYDataItem{
@@ -11,11 +14,30 @@ public class SVMDataItem extends XYDataItem{
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	private int DataClass = 1;
+	private int classID = 1;
 	private double weight = 1;//defaults
 	private double scProjection = 0;
 	private String label = "";
 	
+	private DVector vector = null; //TODO THINK ABOUT THIS
+	
+	public DVector getVector() {
+		return vector;
+	}
+
+	public void setVector(DVector vec) {
+		try {
+			setX(vec.getX());
+			setY(vec.getY());
+			setWeight(vec.getWeight());
+			setClassID(vec.getClassID());
+			this.vector = vec;
+		} catch (Exception e) {
+			// TODO
+			e.printStackTrace();
+		}
+	}
+
 	public String getLabel() {
 		return label;
 	}
@@ -23,58 +45,66 @@ public class SVMDataItem extends XYDataItem{
 	public void setLabel(String label) {
 		this.label = label;
 	}
+	
+	public SVMDataItem(DVector vec){
+		super(0, 0);
+		try {
+			setX(vec.getX());
+			setY(vec.getY());
+			setWeight(vec.getWeight());
+			setClassID(vec.getClassID());
+			vector = vec;
 
-	public static double PRECISION = 0.001; //provide a set precision function
-	public static int DP = 4;
+		} catch (Exception e) {
+			// TODO
+			e.printStackTrace();
+		}
+	}
 	
 	public SVMDataItem(double x, double y) {
 		super(x, y);
-		setX(x);//TODO rounding
-		setY(y);
-		setWeight(1);
-		setLabel(getWeight() + "");
+		initialise(x,y, 1, 1);
 	}
 	
 	public SVMDataItem(double x, double y, double weight) {
 		super(x, y);
-		setX(x);//TODO rounding
-		setY(y);
-		setWeight(weight);
-		setLabel(getWeight() + "");
+		initialise(x,y, weight, 1);
 	}
 	
-	public SVMDataItem(double x, double y, double weight, int dclass) {
+	public SVMDataItem(double x, double y, double weight, int classID) {
 		super(x, y);
-		setX(x);//TODO rounding
+		initialise(x,y, weight, classID);
+	}
+	
+	
+	private void initialise(double x, double y, double weight, int classID){
+		setX(x);
 		setY(y);
 		setWeight(weight);
-		setDataClass(dclass);
+		setClassID(classID);
 		setLabel(getWeight() + "");
+		vector = null;
 	}
 	
 	public Double getX(){
 		return super.getXValue();
 	}
 	public void setX(double x){
-		 super.setX(round(x, DP));
+		 super.setX(DoubleMath.round(x, DoubleMath.DP));
 	}
 	public Double getY(){
 		return super.getYValue();
 	}
 	public void setY(double y){
-		super.setY(round(y, DP));
+		super.setY(DoubleMath.round(y, DoubleMath.DP));
 	}
 	
 	
-	
 	public double getDotProduct(SVMDataItem p2){
-//		double dot1 = getXValue() * p2.getXValue(); //TODO double op
-//		double dot2 = getYValue() * p2.getYValue(); //TODO double op
-//		double dot = dot1+ dot2; //TODO double op
-		
-		double dot1 = dMult(getXValue(), p2.getXValue()); 
-		double dot2 = dMult(getYValue(), p2.getYValue());
-		double dot = dAdd(dot1, dot2); 
+
+		double dot1 = DoubleMath.dMult(getXValue(), p2.getXValue()); 
+		double dot2 = DoubleMath.dMult(getYValue(), p2.getYValue());
+		double dot = DoubleMath.dAdd(dot1, dot2); 
 		return  dot;
 	}
 	
@@ -99,19 +129,12 @@ public class SVMDataItem extends XYDataItem{
 		weight = w;
 	}
 	
-	public int getDataClass(){
-		return DataClass;
+	public int getClassID(){
+		return classID;
 	}
 	
-	public void setDataClass(int dClass){
-		
-		//TODO two class
-		if (dClass < 0){
-			this.DataClass = -1;
-		}else{
-			this.DataClass = +1;
-		}
-		//DataClass = dClass;
+	public void setClassID(int classID){
+		this.classID = classID;
 	}
 	
 	public Point toPoint(){
@@ -124,15 +147,18 @@ public class SVMDataItem extends XYDataItem{
 	
 	//TODO check weight, classs
 	public boolean equals(Object obj){
-		SVMDataItem d= (SVMDataItem) obj;
-//		if (this.getXValue() == d.getXValue()  //TODO double op
-//		&& this.getYValue() == d.getYValue()){ //TODO double op
-		if (isEqual(this.getXValue(), d.getXValue())
-		&& isEqual(this.getYValue(), d.getYValue())){ 	
-			return true;
-		}else{
-			return false;
+		
+		if (obj instanceof SVMDataItem){
+			SVMDataItem d= (SVMDataItem) obj;
+			if (DoubleMath.isEqual(this.getXValue(), d.getXValue())
+			&& DoubleMath.isEqual(this.getYValue(), d.getYValue()) 
+			&& DoubleMath.isEqual(this.getWeight(), d.getWeight())
+			&& getClassID() == d.getClassID()){ 	
+				return true;
+			}
 		}
+		
+		return false;
 	}
 	
 	public int custCompareTo(SVMDataItem o2){
@@ -184,99 +210,6 @@ public class SVMDataItem extends XYDataItem{
 //    public int compareTo(Object o1) {
 //		return DataClass;
 //    }
-	
-	public static boolean isLessThan(double d1, double d2){
-		double df = (d1 - d2);
-		if (Math.abs(df) < PRECISION){//eq
-			return false;
-		}else if(df < 0){//note -0 and +0
-			return true;
-		}else{
-			return false;
-		}
-	}
-	
-	public static boolean isLessThanOrEq(double d1, double d2){
-		double df = (d1 - d2);
-		if (Math.abs(df) < PRECISION){//eq
-			return true;
-		}else if(df < 0){//note -0 and +0
-			return true;
-		}else{
-			return false;
-		}
-	}
-	
-	public static boolean isGreaterThan(double d1, double d2){
-		double df = (d1 - d2);
-		if (Math.abs(df) < PRECISION){//eq
-			return false;
-		}else if(df > 0){//note -0 and +0
-			return true;
-		}else{
-			return false;
-		}
-	}
-	
-	public static boolean isGreaterThanEq(double d1, double d2){
-		double df = (d1 - d2);
-		if (Math.abs(df) < PRECISION){//eq
-			return true;
-		}else if(df > 0){//note -0 and +0
-			return true;
-		}else{
-			return false;
-		}
-	}
-	
-	public static boolean isEqual(double d1, double d2){
-		double df = Math.abs(d1 - d2);
-		if (df < PRECISION){
-			return true;
-		}else{
-			return false;
-		}
-	}
-	
-	public static double dAdd(double d1, double d2){
-		double r = d1+d2;
-		double near = round(r, DP);
-		double df = Math.abs(r - near);
-		if (df <PRECISION){
-			return (double) near;
-		}
-		return r;
-	}
-	
-	public static double dMinus(double d1, double d2){
-		double r = d1-d2;
-		double near = round(r, DP);
-		double df = Math.abs(r - near);
-		if (df <PRECISION){
-			return (double) near;
-		}
-		return r;
-	}
-	
-	public static double dMult(double d1, double d2){
-		double r = d1*d2;
-		double near = round(r, DP);
-		double df = Math.abs(r - near);
-		if (df <PRECISION){
-			return (double) near;
-		}
-		return r;
-	}
-	
-	//new BigDecimal(value).setScale(places, RoundingMode.HALF_UP).doubleValue()
-	public static double round(double value, int places) {
-	    if (places < 0) throw new IllegalArgumentException();
 
-	    long factor = (long) Math.pow(10, places);
-	    value = value * factor;
-	    long tmp = Math.round(value);
-	    return (double) tmp / factor;
-	}
-	
 	
 }
