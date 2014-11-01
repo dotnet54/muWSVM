@@ -70,6 +70,8 @@ import java.awt.Panel;
 import java.awt.FlowLayout;
 import java.awt.Dimension;
 
+import jogamp.opengl.util.jpeg.JPEGDecoder.EXIF;
+
 /**
  * Main GUI window for the application
  * 
@@ -83,6 +85,7 @@ public class SVMMain implements ActionListener, IObserver{
 	
 	//GUI globals
 	private JFrame frame;
+	private SVMSPLOM frameSPLOM;
 	private JFreeChart chart;
 	public static SVMPanel chartPanel;	//TODO change static public, only for debug
 	private String tool;
@@ -854,6 +857,11 @@ public class SVMMain implements ActionListener, IObserver{
 			pSolveButtonsContainer.add(btnClassify);
 			
 			JButton btndScatterMatrix = new JButton("2D Scatter Matrix");
+			btndScatterMatrix.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					showScatterPlotMatrix();
+				}
+			});
 			btndScatterMatrix.setBounds(196, 0, 117, 23);
 			pSolveButtonsContainer.add(btndScatterMatrix);
 			frame.getContentPane().add(tabbedPane);
@@ -1181,6 +1189,16 @@ public class SVMMain implements ActionListener, IObserver{
 		model.findWRCH(0);
 		model.findWRCH(1);
 		chartPanel.updateWRCHSolutions();
+	}
+	
+	private void showScatterPlotMatrix(){
+
+		frameSPLOM = new SVMSPLOM(model);
+		
+		frameSPLOM.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		frameSPLOM.setPreferredSize(new Dimension(600,400));
+		frameSPLOM.pack();
+		frameSPLOM.setVisible(true);
 	}
 
 	private JSlider setupSlider(JSlider slider, boolean useMuScale, int maxValue){

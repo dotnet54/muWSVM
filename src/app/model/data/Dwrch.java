@@ -28,6 +28,10 @@ public class Dwrch {
 	
 	private static double epsilon = 0.001;
 	
+	private static long startTime = 0;
+	private static long endTime = 0;
+	private static long elapsedTime = 0;
+	
 	public static ArrayList<SVMDataItem> calcWeightedReducedCHull2(ArrayList<SVMDataItem> dataset, double mu) {
 		ArrayList<SVMDataItem> r = new ArrayList<SVMDataItem>();
 		
@@ -66,6 +70,8 @@ public class Dwrch {
 	
 	private static DVector[] rhull(ArrayList<DVector> P, double mu) throws StackOverflowError{
 
+		startTime = System.nanoTime();
+		
 		DVector[] Ret = null;
 		try {
 			DVector n = new DVector(-1,0);
@@ -82,6 +88,10 @@ public class Dwrch {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		
+		endTime = System.nanoTime();
+		elapsedTime = endTime - startTime;
+		System.out.println("Elapsed Time for WRCH: " + elapsedTime / 1e6 +" ms");
 		
 		return Ret;
 	}

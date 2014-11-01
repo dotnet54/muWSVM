@@ -12,6 +12,7 @@ public class WSK {
 	
 	private static SVMDataItem finalW;
 	private static double finalB;
+
 	
 	public static SVMDataItem getFinalW() {
 		return finalW;

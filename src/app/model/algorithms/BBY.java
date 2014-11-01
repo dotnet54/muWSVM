@@ -9,6 +9,7 @@ import java.util.List;
 
 import app.model.data.DData;
 import app.model.data.DVector;
+import app.model.data.Dwrch;
 import app.model.data.Dwsk;
 import app.model.data.SVMDataItem;
 
@@ -105,8 +106,8 @@ public class BBY {
 			DVector oppositeDirection = new DVector(2);
 			oppositeDirection.setX(+1);
 
-			DVector leftMostVertex = Dwsk.findExtremePoint(points , mu, startDirection);
-			DVector rightMostVertex = Dwsk.findExtremePoint(points , mu, oppositeDirection);
+			DVector leftMostVertex = Dwrch.findExtremePoint(points , mu, startDirection);
+			DVector rightMostVertex = Dwrch.findExtremePoint(points , mu, oppositeDirection);
 			
 			vertexList.add(leftMostVertex);
 			vertexList.add(rightMostVertex);
@@ -118,7 +119,7 @@ public class BBY {
 			while (facet != null){
 				
 				DVector n = facet.getNormal();
-				DVector h = Dwsk.findExtremePoint(points, mu, n);
+				DVector h = Dwrch.findExtremePoint(points, mu, n);
 				System.out.println(h + " : " + facetList.size()
 						+" : " + vertexList.size());
 

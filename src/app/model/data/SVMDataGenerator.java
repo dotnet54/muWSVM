@@ -110,7 +110,7 @@ public class SVMDataGenerator {
 			SVMMain.chartPanel.drawLine(normal); //TODO temporary
 		}
 		
-		System.out.println(normal);
+		//System.out.println(normal);
 		int numPos = (int) ((percentPos / 100.0) *  numDataPoints);
 		int numNeg = numDataPoints - numPos;
 		

@@ -30,6 +30,14 @@ public class SVMModel {
 	private SVMDataItem centroid1;
 	private SVMDataItem centroid2;
 	
+	private SVMDataSet rawDataSet = null;
+
+	private SVMDataSet solutionDataSet = null;
+
+	private SVMDataSeries positiveSeries = null;
+
+	private SVMDataSeries negativeSeries = null;
+
 	public SVMDataItem getCentroid1() {
 		return centroid1;
 	}
@@ -134,25 +142,7 @@ public class SVMModel {
 	public long getTimeElapsedForWRCH(){
 		return 0;
 	}
-	
-	public class inParam{
-		private double mu[];	//mu per class
-		private boolean useSameMu = false;
-		
-		private int maxIterationWSK = 50;
-		private int maxRecursionWRCH = 100;
-		private double epsilon = 0.001;
-		private int roundOff = 2;
-	}
-	
-	public class outParam{
-		private int numSV[];	//num SV per class
-		private double alphas[][];	//alphas per class
-	}
-		
-	private SVMDataSet rawDataSet = null;
-	private SVMDataSet solutionDataSet = null;
-	
+
 	public SVMDataSet getSolutionDataSet() {
 		return solutionDataSet;
 	}
@@ -169,7 +159,6 @@ public class SVMModel {
 		this.rawDataSet = rawDataSet;
 	}
 
-	private SVMDataSeries positiveSeries = null;
 	public SVMDataSeries getPositiveSeries() {
 		return positiveSeries;
 	}
@@ -177,7 +166,6 @@ public class SVMModel {
 	public void setPositiveSeries(SVMDataSeries positiveSeries) {
 		this.positiveSeries = positiveSeries;
 	}
-	private SVMDataSeries negativeSeries = null;
 	public SVMDataSeries getNegativeSeries() {
 		return negativeSeries;
 	}
@@ -272,8 +260,8 @@ public class SVMModel {
 		
 		
 		SVMDataGenerator dataGen = new SVMDataGenerator(this, 3, 2);
-		//dataGen.generateData(rawDataSet, 10, 50, 0);
-		dataGen.setPredefinedDataset(rawDataSet, "Triangle 1");
+		dataGen.generateData(rawDataSet, 10, 50, 0);
+		//dataGen.setPredefinedDataset(rawDataSet, "Triangle 1");
 		
 //		modelDataSet.getSeries(0).clear();
 //		modelDataSet.getSeries(1).clear();

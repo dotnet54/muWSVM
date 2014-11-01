@@ -332,26 +332,17 @@ public class SVMPanel extends ChartPanel
 		thisPlot.clearAnnotations();
 	
 		ArrayList<SVMDataItem> rch1 = model.getRCH1();
-	
-		if (!rch1.isEmpty()) {
-	
-			double[] xPoints = new double[rch1.size()];
-			double[] yPoints = new double[rch1.size()];
-	
-			for (int i = 0; i < rch1.size(); i++) {
-				xPoints[i] = rch1.get(i).getXValue();
-				yPoints[i] = rch1.get(i).getYValue();
-			}
+		ArrayList<SVMDataItem> rch2 = model.getRCH2();
+		
+		if (rch1 != null && !rch1.isEmpty() && displayPositiveWRCH) {
 			path = new Path2D.Double();
-	
-			path.moveTo(xPoints[0], yPoints[0]);
-			for (int i = 1; i < xPoints.length; ++i) {
-				path.lineTo(xPoints[i], yPoints[i]);
+			path.moveTo(rch1.get(0).getXValue(), rch1.get(0).getYValue());
+			for (int i = 1; i < rch1.size(); i++) {
+				path.lineTo(rch1.get(i).getXValue(), rch1.get(i).getYValue());
 			}
 			path.closePath();
 			shapes[0] = path;
-	
-			
+
 			if (anoRHull1 != null) {
 				thisPlot.removeAnnotation(anoRHull1);
 			}
@@ -359,22 +350,12 @@ public class SVMPanel extends ChartPanel
 			anoRHull1 = new XYShapeAnnotation(shapes[0], dashed, Color.blue);
 			thisPlot.addAnnotation(anoRHull1);
 		}
-	
-		ArrayList<SVMDataItem> rch2 = model.getRCH2();
-	
-		if (!rch2.isEmpty()) {
-			double[] xPoints3 = new double[rch2.size()];
-			double[] yPoints3 = new double[rch2.size()];
-	
-			for (int i = 0; i < rch2.size(); i++) {
-				xPoints3[i] = rch2.get(i).getXValue();
-				yPoints3[i] = rch2.get(i).getYValue();
-			}
+
+		if (rch2 != null && !rch2.isEmpty() && displayNegativeWRCH) {
 			path = new Path2D.Double();
-	
-			path.moveTo(xPoints3[0], yPoints3[0]);
-			for (int i = 1; i < xPoints3.length; ++i) {
-				path.lineTo(xPoints3[i], yPoints3[i]);
+			path.moveTo(rch2.get(0).getXValue(), rch2.get(0).getYValue());
+			for (int i = 1; i < rch2.size(); i++) {
+				path.lineTo(rch2.get(i).getXValue(), rch2.get(i).getYValue());
 			}
 			path.closePath();
 			shapes[1] = path;
@@ -385,7 +366,6 @@ public class SVMPanel extends ChartPanel
 	
 			anoRHull2 = new XYShapeAnnotation(shapes[1], dashed, Color.blue);
 			thisPlot.addAnnotation(anoRHull2);
-	
 		}
 	
 	}
@@ -421,10 +401,29 @@ public class SVMPanel extends ChartPanel
 		x2 = (b - (w.getY() * y2))/ w.getX();
 		marginNeg = new XYLineAnnotation(x1, y1, x2, y2);
 		
-		thisPlot.addAnnotation(hyperPlane);
-		thisPlot.addAnnotation(marginPos);
-		thisPlot.addAnnotation(marginNeg);
-
+	    if (nearestPointLine != null){
+	    	thisPlot.removeAnnotation(nearestPointLine);
+	    }
+	    nearestPointLine = new XYLineAnnotation(
+	    		WSK.getNearestPositivePoint().getXValue(), 
+	    		WSK.getNearestPositivePoint().getYValue(),
+	    		WSK.getNearestNegativePoint().getXValue(),
+	    		WSK.getNearestNegativePoint().getYValue());
+	    
+	    
+		
+		if (displayGeometricBoundary){
+			thisPlot.addAnnotation(hyperPlane);
+		}
+		if (displayMargins){
+			thisPlot.addAnnotation(marginPos);
+			thisPlot.addAnnotation(marginNeg);
+		}
+		
+		
+		if (displayNearestPointLine){
+		    thisPlot.addAnnotation(nearestPointLine);
+		}
 		
 		
 		
@@ -459,19 +458,7 @@ public class SVMPanel extends ChartPanel
 //	    marginNeg = new XYLineAnnotation(line.getX1(), line.getY1(),line.getX2(), line.getY2());
 //	    thisPlot.addAnnotation(marginNeg);
 		
-	    
-	    
-	    if (nearestPointLine != null){
-	    	thisPlot.removeAnnotation(nearestPointLine);
-	    }
-	    nearestPointLine = new XYLineAnnotation(
-	    		WSK.getNearestPositivePoint().getXValue(), 
-	    		WSK.getNearestPositivePoint().getYValue(),
-	    		WSK.getNearestNegativePoint().getXValue(),
-	    		WSK.getNearestNegativePoint().getYValue());
-	    thisPlot.addAnnotation(nearestPointLine);
-		
-		System.out.format("SVM found w:%s b:%s ", model.getW(), model.getB() );
+		System.out.format("SVM found w:%s b:%s \n", model.getW(), model.getB() );
 	}
 
 

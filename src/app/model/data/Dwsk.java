@@ -21,6 +21,12 @@ public class Dwsk {
 	private DVector nearestPositivePoint = null;
 	private DVector nearestNegativePoint = null;	
 	
+	private int iterations = 0;
+	
+	private long startTime = 0;
+	private long endTime = 0;
+	private long elapsedTime = 0;
+	
 	public DVector getW() {
 		return w;
 	}
@@ -40,10 +46,11 @@ public class Dwsk {
 	
 	public void wsk(DData Dataset, double mu1,double mu2) throws Exception{
 
+		startTime = System.nanoTime();
+		
 		DVector p = null;
 		DVector n = null;
 		DVector w = null;
-		int iterations = 0;
 		
 		DVector startDirection = new DVector(Dataset.getDimensions());
 		startDirection.setX(+1);
@@ -111,12 +118,19 @@ public class Dwsk {
 		nearestPositivePoint = p;
 		nearestNegativePoint = n;
 		
+		endTime = System.nanoTime();
+		elapsedTime = endTime - startTime;
+		
 		//System.out.println("w = " + finalW.getXValue() + ", "+finalW.getYValue());
 		//System.out.println("b = " + finalB);
 		System.out.println("it = " + iterations);
+		System.out.println("Elapsed Time for WSK: " + elapsedTime / 1e6 +" ms");
 		//System.out.println("p = " + p + ", n = " + n);
 		
 	}
+	
+	
+	//TODO NOTE WSK is n dimension whole WRCH is 2 dimension
 	
 	
 //	public static DVector findExtremePoint(ArrayList<DVector> list, double mu, final DVector n){
