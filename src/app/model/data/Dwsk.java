@@ -156,7 +156,7 @@ public class Dwsk {
 		
 		while (s < 1.0){ //TODO fp comparison
 			if (k >= A.length){
-				System.out.println("k fixed");
+				//System.out.println("k fixed");
 				k = 0;
 				//return findCentroid(P); //TODO if all A are used then return centroid
 			}

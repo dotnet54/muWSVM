@@ -283,4 +283,12 @@ public class DVector {
 		return newVec;
 	}
 	
+	//TODO verify clockwise or anticlockwise
+	public DVector get2DAntiClockwiseNormal() throws Exception{
+//		if (getDimensions() != 2){
+//			throw new Exception("DVector::get2DAntiClockwiseNormal: not a 2 dimensional dataset");
+//		}
+		
+		return new DVector( -1 * getY(), getX());
+	}
 }

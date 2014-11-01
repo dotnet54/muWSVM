@@ -10,6 +10,7 @@ import java.util.Random;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
+import app.model.algorithms.BBY;
 import app.model.algorithms.WRCH;
 import app.model.algorithms.WSK;
 
@@ -317,14 +318,33 @@ public class SVMModel {
 		dataset1 = rawDataSet.getSeries(0).toArrayList();
 		dataset2 = rawDataSet.getSeries(1).toArrayList();
 		
+//		if (series == 0){
+//			rch1 = WRCH.calcWeightedReducedCHull(dataset1, mu1);
+//		}else if (series == 1){
+//			rch2 = WRCH.calcWeightedReducedCHull(dataset2, mu2);
+//		}else{
+//			rch1 = WRCH.calcWeightedReducedCHull(dataset1, mu1);
+//			rch2 = WRCH.calcWeightedReducedCHull(dataset2, mu2);
+//		}
+		
+		BBY wrchSolver = new BBY();
+		
 		if (series == 0){
-			rch1 = WRCH.calcWeightedReducedCHull(dataset1, mu1);
+			rch1 = wrchSolver.calcWRCH(dataset1, mu1);
+			rch1 = wrchSolver.getWRCH();
 		}else if (series == 1){
-			rch2 = WRCH.calcWeightedReducedCHull(dataset2, mu2);
+			rch2 = wrchSolver.calcWRCH(dataset2, mu2);
+			rch2 = wrchSolver.getWRCH();
 		}else{
-			rch1 = WRCH.calcWeightedReducedCHull(dataset1, mu1);
-			rch2 = WRCH.calcWeightedReducedCHull(dataset2, mu2);
+			rch1 = wrchSolver.calcWRCH(dataset1, mu1);
+			rch1 = wrchSolver.getWRCH();
+			rch2 = wrchSolver.calcWRCH(dataset2, mu2);
+			rch2 = wrchSolver.getWRCH();
 		}
+		
+		
+		
+		
 		
 		SVMDataSeries s3 = getSolutionDataSet().getSeries(0);
 		s3.clear();
