@@ -361,7 +361,7 @@ public class SVMMain implements ActionListener, IObserver{
 					if (src instanceof JSlider){
 						JSlider j = (JSlider) src;
 						model.setMu1((double)j.getValue()/100) ;
-						System.out.println("actionPerformed " + model.getMu1() + arg0.getActionCommand());
+						//System.out.println("actionPerformed " + model.getMu1() + arg0.getActionCommand());
 					}
 				}
 			});

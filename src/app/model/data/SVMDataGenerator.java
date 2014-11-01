@@ -35,9 +35,12 @@ public class SVMDataGenerator {
 			data.addItem(0, new SVMDataItem(1, 1, 1, 1));
 			data.addItem(0, new SVMDataItem(3, 1, 1, 1));
 			data.addItem(0, new SVMDataItem(6, 1, 1, 1));
+			data.addItem(0, new SVMDataItem(4, 1, 1, 1));
 			
-			data.addItem(1, new SVMDataItem(1, 4, 1, -1));
-			data.addItem(1, new SVMDataItem(3, 4, 1, -1));
+			data.addItem(1, new SVMDataItem(1, 1, 1, -1));
+			data.addItem(1, new SVMDataItem(2, 2, 1, -1));
+			data.addItem(1, new SVMDataItem(3, 3, 1, -1));
+			data.addItem(1, new SVMDataItem(4, 4, 1, -1));
 		}else if (name == "Collinear Points 2"){
 			data.addItem(0, new SVMDataItem(1, 1, 1, 1));
 			data.addItem(0, new SVMDataItem(3, 1.001, 1, 1));
@@ -78,7 +81,7 @@ public class SVMDataGenerator {
 			data.addItem(1, new SVMDataItem(1, 4, 1, -1));
 		}else if (name == "T points"){
 			data.addItem(0, new SVMDataItem(1, 1, 1, 1));
-			data.addItem(0, new SVMDataItem(1, 3, 1, 1));
+			data.addItem(0, new SVMDataItem(1, 4, 2, 1));
 			data.addItem(0, new SVMDataItem(1, 5, 1, 1));
 			data.addItem(0, new SVMDataItem(1, 3, 1, 1));
 			data.addItem(0, new SVMDataItem(3, 3, 1, 1));

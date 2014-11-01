@@ -2,6 +2,8 @@ package app.model.data;
 
 import java.util.ArrayList;
 
+import app.model.algorithms.DoubleMath;
+
 //TODO think about generic types to use float -> less memory than double
 public class DVector {
 	
@@ -141,8 +143,9 @@ public class DVector {
 	}
 	
 	public String toString(){
-		return new String(String.format("[%.4f,%.4f]:w=%.2f :c=%d :d=%d", 
-				values[0], values[1], getWeight(), getClassID(), getDimensions()));
+//		return new String(String.format("[%.4f,%.4f]:w=%.2f :c=%d :d=%d", 
+//				values[0], values[1], getWeight(), getClassID(), getDimensions()));
+		return new String(String.format("[%.4f,%.4f]", values[0], values[1]));
 	}
 	
 	public DVector clone(){
@@ -242,7 +245,8 @@ public class DVector {
 		double product = 0.0;
 		
 		for (int i = 0; i < getDimensions(); i++){
-			product += (values[i] * op2.getVal(i));
+			product = DoubleMath.dAdd(product, DoubleMath.dMult(values[i], op2.getVal(i)));
+			//product += (values[i] * op2.getVal(i));
 		}
 		
 		return product;

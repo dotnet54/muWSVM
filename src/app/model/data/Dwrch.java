@@ -5,10 +5,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import app.model.algorithms.DoubleMath;
 import app.model.data.SVMDataItem;
 
 //
@@ -23,6 +25,8 @@ public class Dwrch {
 	
 	private static DVector [] Z;
 	private static int numSupportPoints;
+	
+	private static double epsilon = 0.001;
 	
 	public static ArrayList<SVMDataItem> calcWeightedReducedCHull2(ArrayList<SVMDataItem> dataset, double mu) {
 		ArrayList<SVMDataItem> r = new ArrayList<SVMDataItem>();
@@ -42,7 +46,7 @@ public class Dwrch {
 			DVector[] res = rhull(P, mu);
 			
 			SVMDataItem p;
-			for (int i=0; i< res.length; i++){
+			for (int i=0; i< res.length; i++){ //TODO assume res != null
 				p = new SVMDataItem(0,0);
 				p.setX(res[i].getX());
 				p.setY(res[i].getY());
@@ -69,15 +73,12 @@ public class Dwrch {
 			n.setX(1);
 			DVector r =  findExtremePoint(P, mu,  n);
 			
-			DVector [] A = rhull_aux(P, l ,r, mu);
-			DVector [] B = rhull_aux(P, r, l, mu);
-			
-			Set<DVector> set = new LinkedHashSet<DVector>();
-			set.addAll(Arrays.asList(A));
-			set.addAll(Arrays.asList(B));
+			Set<DVector> result = rhull_aux(P, l ,r, mu);
+			Set<DVector> B = rhull_aux(P, r, l, mu);
+			result.addAll(B);
 
-			Ret = new DVector[set.size()];
-			Ret = set.toArray(Ret);
+			Ret = new DVector[result.size()];
+			Ret = result.toArray(Ret);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -85,36 +86,51 @@ public class Dwrch {
 		return Ret;
 	}
 	
-	private static DVector[] rhull_aux(ArrayList<DVector> P, 
+	private static Set<DVector> rhull_aux(ArrayList<DVector> P, 
 			DVector l, DVector r, double mu) throws StackOverflowError{
 		
-		DVector[] Ret = null;
+		Set<DVector> result = new LinkedHashSet<DVector>();
+		
 		try {
 			DVector n = new DVector(0,0);
 			DVector h = new DVector(0,0);
 			
 			DVector diff = r.subtractVectors(l);
+			diff.setX(DoubleMath.dMinus(r.getX(), l.getX()));
+			diff.setY(DoubleMath.dMinus(r.getY(), l.getY()));
 			n.setX(-diff.getY());
 			n.setY(diff.getX());
 
 			h =  findExtremePoint(P, mu,  n);
-			System.out.format("h:%s,l:%s,r%s \n", h,l,r);
+			//System.out.format("h:%s,l:%s,r%s \n", h,l,r);
 
-			if (h.equals(l) || h.equals(r)){
-				DVector[] res = new DVector[2];
-				res[0]= l;
-				res[1]= r;
-				return res;
+			DVector facetNormal = l.subtractVectors(r);
+			facetNormal.setX(DoubleMath.dMinus(l.getX(), r.getX()));
+			facetNormal.setY(DoubleMath.dMinus(l.getY(), r.getY()));
+			facetNormal =  facetNormal.get2DAntiClockwiseNormal();
+			double pointOffset = h.getDotProduct(facetNormal);
+			double facetOffset = l.getDotProduct(facetNormal);
+			
+			if (Math.abs(pointOffset - facetOffset) < epsilon){
+				result.add(l);
+				result.add(r);
+				return result;
 			}
+			
+			
 			
 			DVector nl = new DVector(0,0);
 			DVector nr = new DVector(0,0);
 			
 			diff = h.subtractVectors(l);
+			diff.setX(DoubleMath.dMinus(h.getX(), l.getX()));
+			diff.setY(DoubleMath.dMinus(h.getY(), l.getY()));
 			nl.setX(-diff.getY());
 			nl.setY(diff.getX());
 			
 			diff = r.subtractVectors(h);
+			diff.setX(DoubleMath.dMinus(r.getX(), h.getX()));
+			diff.setY(DoubleMath.dMinus(r.getY(), h.getY()));
 			nr.setX(-diff.getY());
 			nr.setY(diff.getX());
 			
@@ -123,79 +139,47 @@ public class Dwrch {
 				supportPoints[i] = Z[i];
 			}
 			double scalerProjections[] = new double [numSupportPoints];
-			double tmp;
+			double minOffset;
+			ArrayList<DVector> L = new ArrayList<DVector>();
+			ArrayList<DVector> R = new ArrayList<DVector>();
+			
 			
 			for (int i = 0; i < numSupportPoints; i++){
 				scalerProjections[i] = nl.getDotProduct(supportPoints[i]);
 			}
-
-			DVector[] TMP = new DVector[P.size()];	//too big
-			for (int i = 0, k = 0; i < P.size(); i++){
-				tmp = nl.getDotProduct(P.get(i));
-				for (int j = 0; j < scalerProjections.length; j++){
-					if (tmp >= scalerProjections[j]){
-						TMP[k] = P.get(i);	//index wrong
-						k++;
-						break;
-					}
-				}
-			}
-			int c = 0;
-			for (int i = 0; i < TMP.length; i++){
-				if (TMP[i] != null){
-					c++;
-				}
-			}
-			ArrayList<DVector> L = new ArrayList<DVector>();
-			for (int i = 0; i < TMP.length; i++){
-				if (TMP[i] != null){
-					L.add(TMP[i]);
+			minOffset = minValue(scalerProjections);
+			int size = P.size();
+			double projection = 0.0;
+			for (int i = 0; i < size; i++){
+				projection = P.get(i).getDotProduct(nl);
+				if (Math.abs(projection - minOffset) < epsilon ||
+						projection > minOffset){
+					L.add(P.get(i));
 				}
 			}
 
 			for (int i = 0; i < numSupportPoints; i++){
 				scalerProjections[i] = nr.getDotProduct(supportPoints[i]);
 			}
-			TMP = new DVector[P.size()];
-			for (int i = 0, k = 0; i < P.size(); i++){
-				tmp = nr.getDotProduct(P.get(i));
-				for (int j = 0; j < scalerProjections.length; j++){
-					if (tmp >= scalerProjections[j]){
-						TMP[k] = P.get(i);	//index wrong
-						k++;
-						break;
-					}
+			minOffset = minValue(scalerProjections);
+			for (int i = 0; i < size; i++){
+				projection = P.get(i).getDotProduct(nr);
+				if (Math.abs(projection - minOffset) < epsilon || 
+						projection > minOffset){
+					R.add(P.get(i));
 				}
 			}
-			c = 0;
-			for (int i = 0; i < TMP.length; i++){
-				if (TMP[i] != null){
-					c++;
-				}
-			}
-			ArrayList<DVector> R = new ArrayList<DVector>();
-			for (int i = 0; i < TMP.length; i++){
-				if (TMP[i] != null){
-					R.add(TMP[i]);
-				}
-			}
-
-			DVector [] A = rhull_aux(L, l ,h, mu);
-			DVector [] B = rhull_aux(R, h, r, mu);
 			
-			Set<DVector> set = new LinkedHashSet<DVector>();
-			set.addAll(Arrays.asList(A));
-			set.addAll(Arrays.asList(B));
-
-			Ret = new DVector[set.size()];
-			Ret = set.toArray(Ret);
+			
+			result = rhull_aux(L, l ,h, mu);
+			Set<DVector> B = rhull_aux(R, h, r, mu);
+			result.addAll(B);
+			
 		} catch (Exception e) {
 			// TODO
 			e.printStackTrace();
 		}
-		
-
-		return Ret;
+		return result;
 	}
 	
 	
@@ -214,15 +198,37 @@ public class Dwrch {
 				try {
 					double p1 = o1.getDotProduct(n);
 					double p2 = o2.getDotProduct(n);
-					if (p1 < p2){
-						return -1;
-					}else if (p2 > p1){
+					//double diff = Math.abs(DoubleMath.dMinus(p1, p2));
+					double diff = Math.abs(p1 - p2);
+					
+					double d1 = o1.getWeight();
+					double d2 = o2.getWeight();
+					//double diffWeight =  Math.abs(DoubleMath.dMinus(d1, d2));
+					double diffWeight =  Math.abs(d1 - d2);
+					
+					//TODO Exception: Comparison violates general contract
+					if ((diff - epsilon) < 0){
+//						if ((diffWeight - epsilon) < 0){
+//							return 0;
+//						}else if(d1 > d2){
+//							return 1;
+//						}else{
+//							return -1;
+//						}
+						//System.out.format("0: %f : %f = %f\n", p1, p2, diff);
+						return 0;
+					}else if (p1 > p2){
+						//System.out.format("1: %f : %f = %f\n", p1, p2, diff);
 						return 1;
 					}else{
-						return 0;
+						//System.out.format("-1: %f : %f = %f\n", p1, p2, diff);
+						return -1;
 					}
+					
 				} catch (Exception e) {
+					System.out.println("Exception In Comparison");
 					e.printStackTrace();
+					
 					return 0;
 				}
 			}
@@ -276,6 +282,19 @@ public class Dwrch {
 		return v;
 	}
 
+	private static double minValue(double[] array){
+		double min = Double.NaN;
+		if (array != null && array.length > 0){
+			min = array[0];
+			for (int i = 1; i < array.length; i++){
+				if (array[i] < min){ //TODO fp comparison
+					min = array[i];
+				}
+			}
+		}
+		return min;
+	}
+	
 	private static SVMDataItem normal(SVMDataItem p1, SVMDataItem p2){
 			double dx, dy;
 			dx = SVMDataItem.dMinus(p1.getXValue(), p2.getXValue());

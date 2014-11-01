@@ -327,20 +327,31 @@ public class SVMModel {
 //			rch2 = WRCH.calcWeightedReducedCHull(dataset2, mu2);
 //		}
 		
-		BBY wrchSolver = new BBY();
 		
 		if (series == 0){
-			rch1 = wrchSolver.calcWRCH(dataset1, mu1);
-			rch1 = wrchSolver.getWRCH();
+			rch1 = Dwrch.calcWeightedReducedCHull2(dataset1, mu1);
 		}else if (series == 1){
-			rch2 = wrchSolver.calcWRCH(dataset2, mu2);
-			rch2 = wrchSolver.getWRCH();
+			rch2 = Dwrch.calcWeightedReducedCHull2(dataset2, mu2);
 		}else{
-			rch1 = wrchSolver.calcWRCH(dataset1, mu1);
-			rch1 = wrchSolver.getWRCH();
-			rch2 = wrchSolver.calcWRCH(dataset2, mu2);
-			rch2 = wrchSolver.getWRCH();
+			rch1 = Dwrch.calcWeightedReducedCHull2(dataset1, mu1);
+			rch2 = Dwrch.calcWeightedReducedCHull2(dataset2, mu2);
 		}
+		
+		
+		
+//		BBY wrchSolver = new BBY();
+//		if (series == 0){
+//			rch1 = wrchSolver.calcWRCH(dataset1, mu1);
+//			rch1 = wrchSolver.getWRCH();
+//		}else if (series == 1){
+//			rch2 = wrchSolver.calcWRCH(dataset2, mu2);
+//			rch2 = wrchSolver.getWRCH();
+//		}else{
+//			rch1 = wrchSolver.calcWRCH(dataset1, mu1);
+//			rch1 = wrchSolver.getWRCH();
+//			rch2 = wrchSolver.calcWRCH(dataset2, mu2);
+//			rch2 = wrchSolver.getWRCH();
+//		}
 		
 		
 		
@@ -348,7 +359,7 @@ public class SVMModel {
 		
 		SVMDataSeries s3 = getSolutionDataSet().getSeries(0);
 		s3.clear();
-		for (int i = 0; i < rch1.size(); i++){//TODO null exception 23/10
+		for (int i = 0; i < rch1.size(); i++){//TODO null exception 23/10 handle stackoverflow
 			s3.add(rch1.get(i));
 		}
 		
