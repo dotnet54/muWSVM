@@ -183,43 +183,65 @@ public class BBY {
 			//TODO assume index 0 exist
 			Facet currentFacet = null;
 			if (facetList.size() > 1){
-				currentFacet = facetList.get(0);
-				ans.add(currentFacet.left);
-				ans.add(currentFacet.right);
+				//currentFacet = facetList.get(0);
+				
 			}else{
 				return null;
 			}
-
+			
+			Facet nn = null;
 			for (int i = 0; i < facetList.size(); i++){
-				facetList.get(i).isFinal = false;	//use isFinal for tagging
-			}
-			int count = 1;
-			int i = 1;
-			while(count < facetList.size()){
-				for (i = 1; i < facetList.size(); i++){
+				if (i == 0){
 					currentFacet = facetList.get(i);
-					if (!currentFacet.isFinal){
-						if (ans.get(ans.size() - 1).equals(currentFacet.left)){ //start == end
-							ans.add(currentFacet.right); 
-							currentFacet.isFinal = true;
-							count++;
-						}else if(ans.get(ans.size() - 1).equals(currentFacet.right)){
-							ans.add(currentFacet.left); 
-							currentFacet.isFinal = true;
-							count++;
+					ans.add(currentFacet.left);
+					ans.add(currentFacet.right);
+				}else{
+					nn = getRightNeighbour(currentFacet);
+					if (nn != null){
+						if (ans.get(ans.size() - 1).equals(nn.left)){ //start == end
+							ans.add(nn.right);
+							currentFacet = nn;
+						}else if(ans.get(ans.size() - 1).equals(nn.right)){
+							ans.add(nn.left); 
+							currentFacet = nn;
 						}else{
-							//we will visit this facet next round
+							//assert error??
 						}
-					}
+					} else {
+						System.out.println("Error: disjoint facet found:" + nn);
+					}					
 				}
-				if (count  < facetList.size()){
-					i = 1;
-					if (getNonFinal() != null){
-						System.out.println("non final exist round");
-					}
-					System.out.println("next round");
-				}
+				//facetList.get(i).isFinal = false;	//use isFinal for tagging
 			}
+			
+			
+//			int count = 1;
+//			int i = 1;
+//			while(count < facetList.size()){
+//				for (i = 1; i < facetList.size(); i++){
+//					currentFacet = facetList.get(i);
+//					if (!currentFacet.isFinal){
+//						if (ans.get(ans.size() - 1).equals(currentFacet.left)){ //start == end
+//							ans.add(currentFacet.right); 
+//							currentFacet.isFinal = true;
+//							count++;
+//						}else if(ans.get(ans.size() - 1).equals(currentFacet.right)){
+//							ans.add(currentFacet.left); 
+//							currentFacet.isFinal = true;
+//							count++;
+//						}else{
+//							//we will visit this facet next round
+//						}
+//					}
+//				}
+//				if (count  < facetList.size()){
+//					i = 1;
+//					if (getNonFinal() != null){
+//						System.out.println("non final exist round");
+//					}
+//					System.out.println("next round");
+//				}
+//			}
 
 			for (int j =  0; j < ans.size(); j++){
 				res.add(new SVMDataItem(
@@ -267,6 +289,47 @@ public class BBY {
 		}
 		return null;
 	}
+	
+	private Facet findNeighnour(Facet facet){
+		Facet currentFacet = null; 
+		for (int i = 0; i < facetList.size(); i++){
+			currentFacet = facetList.get(i);
+			if (facet.right.equals(currentFacet.left)
+					&& !currentFacet.equals(facet)){
+				return facetList.get(i);
+			}
+		}
+		
+		
+		
+		return null;
+	}
+	
+	private Facet getLeftNeighbour(Facet facet){
+		Facet currentFacet = null; 
+		for (int i = 0; i < facetList.size(); i++){
+			currentFacet = facetList.get(i);
+			if (currentFacet.right.equals(facet.left) 
+					|| currentFacet.left.equals(facet.left)
+					&& !currentFacet.equals(facet)){
+				return facetList.get(i);
+			}
+		}
+		return null;
+	}
+	private Facet getRightNeighbour(Facet facet){
+		Facet currentFacet = null; 
+		for (int i = 0; i < facetList.size(); i++){
+			currentFacet = facetList.get(i);
+			if (currentFacet.left.equals(facet.right)
+					|| currentFacet.right.equals(facet.right)
+					&& !currentFacet.equals(facet)){
+				return facetList.get(i);
+			}
+		}
+		return null;
+	}
+	
 
 	private ArrayList<DVector> getBoundaryVertices(){
 		int size = facetList.size();
