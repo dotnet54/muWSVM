@@ -29,16 +29,16 @@ public class Dwrch {
 	private static long endTime = 0;
 	private static long elapsedTime = 0;
 	
-	public static ArrayList<SVMDataItem> calcWeightedReducedCHull2(ArrayList<SVMDataItem> dataset, double mu) {
-		ArrayList<SVMDataItem> r = new ArrayList<SVMDataItem>();
+	public static ArrayList<DVector> calcWeightedReducedCHull2(ArrayList<DVector> dataset, double mu) {
+		ArrayList<DVector> r = new ArrayList<DVector>();
 		
 		try{
 			ArrayList<DVector> P =  new ArrayList<DVector>();
 			DVector t =null;
 			for (int i=0; i< dataset.size(); i++){
 				t = new DVector(0,0);
-				t.setXValue(dataset.get(i).getX());
-				t.setYValue(dataset.get(i).getY());
+				t.setX(dataset.get(i).getX());
+				t.setY(dataset.get(i).getY());
 				t.setWeight(dataset.get(i).getWeight());
 				t.setClassID(dataset.get(i).getClassID());
 				P.add(t);
@@ -46,9 +46,9 @@ public class Dwrch {
 		
 			DVector[] res = rhull(P, mu);
 			
-			SVMDataItem p;
+			DVector p;
 			for (int i=0; i< res.length; i++){ //TODO assume res != null
-				p = new SVMDataItem(0,0);
+				p = new DVector(0,0);
 				p.setX(res[i].getXValue());
 				p.setY(res[i].getYValue());
 				p.setLabel("");
@@ -302,22 +302,22 @@ public class Dwrch {
 		return min;
 	}
 	
-	private static SVMDataItem normal(SVMDataItem p1, SVMDataItem p2){
+	private static DVector normal(DVector p1, DVector p2){
 			double dx, dy;
 			dx = DoubleMath.dMinus(p1.getXValue(), p2.getXValue());
 			dy = DoubleMath.dMinus(p1.getYValue(), p2.getYValue());
-			SVMDataItem n = new SVMDataItem(0,0);
+			DVector n = new DVector(0,0);
 			n.setX(-dy);
 			n.setY(dx);
 			return n;
 		}
 
-	private static SVMDataItem findCentroid(SVMDataItem P[]){
-		SVMDataItem cent = new SVMDataItem(0, 0);
+	public static DVector findCentroid(DVector P[]){
+		DVector cent = new DVector(0, 0);
 		
 		for (int i = 0; i < P.length; i++){
-			cent.setX(cent.getX() + P[i].getXValue() * P[i].getWeight());
-			cent.setY(cent.getY() + P[i].getYValue() * P[i].getWeight());
+			cent.setX(cent.getXValue() + P[i].getXValue() * P[i].getWeight());
+			cent.setY(cent.getYValue() + P[i].getYValue() * P[i].getWeight());
 		}
 		
 		double totalWeight = 0;
@@ -332,6 +332,24 @@ public class Dwrch {
 		return cent;
 	}
 	
-	
+	public static DVector findCentroid(ArrayList<DVector> dataset){
+		DVector cent = new DVector(0, 0);
+		
+		for (int i = 0; i < dataset.size(); i++){
+			cent.setX(cent.getXValue() + dataset.get(i).getXValue() * dataset.get(i).getWeight());
+			cent.setY(cent.getYValue() + dataset.get(i).getYValue() * dataset.get(i).getWeight());
+		}
+		
+		double totalWeight = 0;
+		for (int i = 0; i < dataset.size(); i++){
+			totalWeight += dataset.get(i).getWeight();
+		}
+		//ASSERT totalWeight != 0;
+		
+		cent.setX(cent.getXValue() / totalWeight);
+		cent.setY(cent.getYValue() / totalWeight);
+		
+		return cent;
+	}
 	
 }

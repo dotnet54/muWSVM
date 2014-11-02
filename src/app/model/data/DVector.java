@@ -105,6 +105,41 @@ public class DVector extends XYDataItem{
 		values[index] = newValue;
 	}
 	
+	
+	public Double getX(){
+		return getXValue();
+	}
+	
+	public Double getY(){
+		return getYValue();
+	}
+	
+	public void setX(Number x){
+		setX(x.doubleValue());
+	}
+	public void setY(Number y){
+		setY(y.doubleValue());
+	}
+	
+	public void setX(double x){
+		try {
+			setXValue(x);
+		} catch (Exception e) {
+			System.out.println("Error: set value x, dimension 0 do not exist in vector");
+			e.printStackTrace();
+		}
+	}
+	
+	public void setY(double y){
+		try {
+			setYValue(y);
+		} catch (Exception e) {
+			System.out.println("Error: set value y, dimension 1 do not exist in vector");
+			e.printStackTrace();
+		}
+	}
+	
+	
 	public double getXValue(){
 		try {
 			return getVal(0);
@@ -313,4 +348,16 @@ public class DVector extends XYDataItem{
 		
 		return new DVector( -1 * getYValue(), getXValue());
 	}
+	
+	public String toFormatedString(int dp){
+		String sdp = dp + "";
+		
+		
+		String str1 = String.format("%." + sdp +"f", getXValue());
+		String str2 = String.format("%." + sdp +"f", getYValue());
+		String str3 = String.format("%." + sdp +"f", getWeight());
+		return "[" + str1+ "," 
+		+ str2 + "]"+ ": " + str3 ;//  : " + getDataClass() ;
+	}
+	
 }

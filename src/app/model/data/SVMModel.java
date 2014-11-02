@@ -5,11 +5,11 @@ import app.model.algorithms.WRCH;
 
 public class SVMModel {
 	
-	private ArrayList<SVMDataItem> dataset1 = new ArrayList<SVMDataItem>();
-	private ArrayList<SVMDataItem> dataset2 = new ArrayList<SVMDataItem>();	
+	private ArrayList<DVector> dataset1 = new ArrayList<DVector>();
+	private ArrayList<DVector> dataset2 = new ArrayList<DVector>();	
 
-	private ArrayList<SVMDataItem> rch1 = new ArrayList<SVMDataItem>();
-	private ArrayList<SVMDataItem> rch2 = new ArrayList<SVMDataItem>();
+	private ArrayList<DVector> rch1 = new ArrayList<DVector>();
+	private ArrayList<DVector> rch2 = new ArrayList<DVector>();
 	
 	private double mu1 = 1;
 	private double mu2 = 1;
@@ -18,8 +18,8 @@ public class SVMModel {
 	private DVector nearestPositivePoint = null;
 	private DVector nearestNegativePoint = null;	
 		
-	private SVMDataItem centroid1;
-	private SVMDataItem centroid2;
+	private DVector centroid1;
+	private DVector centroid2;
 
 	private SVMDataSet solutionDataSet = null;
 	private SVMDataSeries positiveSeries = null;
@@ -55,11 +55,11 @@ public class SVMModel {
 	
 	
 	
-	public SVMDataItem getCentroid1() {
+	public DVector getCentroid1() {
 		return centroid1;
 	}
 
-	public SVMDataItem getCentroid2() {
+	public DVector getCentroid2() {
 		return centroid2;
 	}
 
@@ -317,9 +317,9 @@ public class SVMModel {
 //			rch2 = wrchSolver.getWRCH();
 //		}
 
-		centroid1 = WRCH.findCentroid(dataset1);
+		centroid1 = Dwrch.findCentroid(dataset1);
 		centroid1.setLabel("+");
-		centroid2 = WRCH.findCentroid(dataset2);
+		centroid2 = Dwrch.findCentroid(dataset2);
 		centroid2.setLabel("-");
 		SVMDataSeries s5= getSolutionDataSet().getSeries(2);
 		s5.clear();
@@ -353,7 +353,7 @@ public class SVMModel {
 			
 			int count = 0;
 			double proj = 0.0;
-			SVMDataItem item = null;
+			DVector item = null;
 			
 			SVMDataSeries positiveClass = trainingData.getSeries(trainingData.getPositiveSeriesID());
 			numActualPositives = positiveClass.getItemCount();
@@ -395,11 +395,11 @@ public class SVMModel {
 		return getW().get2DAntiClockwiseNormal(); //TODO sure?
 	}
 	
-	public ArrayList<SVMDataItem> getRCH1(){
+	public ArrayList<DVector> getRCH1(){
 		return rch1;
 	}
 	
-	public ArrayList<SVMDataItem> getRCH2(){
+	public ArrayList<DVector> getRCH2(){
 		return rch2;
 	}
 

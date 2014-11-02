@@ -85,7 +85,7 @@ public class SVMPanel extends ChartPanel
 	private double yChart=0;
 	
 	private XYItemEntity selectedEntity = null;
-	private SVMDataItem selectedDataItem = null;
+	private DVector selectedDataItem = null;
 
 	
 	//Rendering Options
@@ -140,7 +140,7 @@ public class SVMPanel extends ChartPanel
             if (dataset instanceof SVMDataSet){
             	SVMDataSet svmData = (SVMDataSet) dataset;
             	SVMDataSeries svmSeries =  svmData.getSeries(series);
-            	SVMDataItem svmItem = svmSeries.getDataItem(item);
+            	DVector svmItem = svmSeries.getDataItem(item);
             	//return svmItem.toFormatedString(2);
             	return svmItem.getLabel();
             }
@@ -315,8 +315,8 @@ public class SVMPanel extends ChartPanel
 		final Shape[] shapes = new Shape[3];
 		thisPlot.clearAnnotations();
 	
-		ArrayList<SVMDataItem> rch1 = model.getRCH1();
-		ArrayList<SVMDataItem> rch2 = model.getRCH2();
+		ArrayList<DVector> rch1 = model.getRCH1();
+		ArrayList<DVector> rch2 = model.getRCH2();
 		
 		if (rch1 != null && !rch1.isEmpty() && displayPositiveWRCH) {
 			path = new Path2D.Double();
@@ -415,26 +415,31 @@ public class SVMPanel extends ChartPanel
 
 
 
-	public void drawLine(SVMDataItem vector){
-		thisPlot.clearAnnotations();
-		
-		double length = 500;
-		
-		
-		XYLineAnnotation line = new XYLineAnnotation(
-				vector.getXValue() * length, vector.getYValue() * length,
-				vector.getXValue() * -length, vector.getYValue() * -length);
-	    //thisPlot.addAnnotation(line);
-	    
-	    vector = vector.getAntiClockWiseNormal();
-		final float dash1[] = { 2.0f, 2.0f };
-		final BasicStroke dashed = new BasicStroke(1.0f, BasicStroke.CAP_BUTT,
-				BasicStroke.JOIN_MITER, 10.0f, dash1, 0.0f);
-		XYLineAnnotation line2 = new XYLineAnnotation(
-				vector.getXValue() * length, vector.getYValue() * length,
-				vector.getXValue() * -length, vector.getYValue() * -length,
-				dashed, Color.blue);
-	    thisPlot.addAnnotation(line2);
+	public void drawLine(DVector vector){
+		try {
+			thisPlot.clearAnnotations();
+			
+			double length = 500;
+			
+			
+			XYLineAnnotation line = new XYLineAnnotation(
+					vector.getXValue() * length, vector.getYValue() * length,
+					vector.getXValue() * -length, vector.getYValue() * -length);
+			//thisPlot.addAnnotation(line);
+			
+			vector = vector.get2DAntiClockwiseNormal();
+			final float dash1[] = { 2.0f, 2.0f };
+			final BasicStroke dashed = new BasicStroke(1.0f, BasicStroke.CAP_BUTT,
+					BasicStroke.JOIN_MITER, 10.0f, dash1, 0.0f);
+			XYLineAnnotation line2 = new XYLineAnnotation(
+					vector.getXValue() * length, vector.getYValue() * length,
+					vector.getXValue() * -length, vector.getYValue() * -length,
+					dashed, Color.blue);
+			thisPlot.addAnnotation(line2);
+		} catch (Exception e) {
+			// TODO
+			e.printStackTrace();
+		}
 	}
 
 	private void initPopUpMenu(){
@@ -491,7 +496,7 @@ public class SVMPanel extends ChartPanel
 	            if (dataset instanceof SVMDataSet){
 	            	SVMDataSet svmData = (SVMDataSet) dataset;
 	            	SVMDataSeries series =  svmData.getSeries(e.getSeriesIndex());
-	            	SVMDataItem item = series.getDataItem(e.getItem());
+	            	DVector item = series.getDataItem(e.getItem());
 		            double weight = item.getWeight();
 					String input = JOptionPane.showInputDialog("Enter weight of the point"  ,weight);
 					if (input != null){
@@ -507,7 +512,7 @@ public class SVMPanel extends ChartPanel
 		
 	}
 
-	public SVMDataItem getSelectedDataItem(){
+	public DVector getSelectedDataItem(){
 		return selectedDataItem;
 	}
 	
@@ -537,7 +542,7 @@ public class SVMPanel extends ChartPanel
 			            XYSeriesCollection dd = (XYSeriesCollection) e.getDataset();
 			            XYSeries ss =  dd.getSeries(s);
 			            
-			            SVMDataItem item  = (SVMDataItem) ss.getItems().get(i);
+			            DVector item  = (DVector) ss.getItems().get(i);
 			            
 			            if (d.equals(model.getChartDataset())
 			            	&&	s == 0 
@@ -591,7 +596,7 @@ public class SVMPanel extends ChartPanel
 	}
 	
 	public void addPoint(int series) throws Exception{
-		chartData.addItem(series, new SVMDataItem(xChart, yChart));
+		chartData.addItem(series, new DVector(xChart, yChart));
 	}
 	
 	public void duplicateSelection(int numDuplicates) throws Exception{
@@ -601,7 +606,7 @@ public class SVMPanel extends ChartPanel
             if (dataset instanceof SVMDataSet){
             	SVMDataSet svmData = (SVMDataSet) dataset;
             	SVMDataSeries series =  svmData.getSeries(e.getSeriesIndex());
-            	SVMDataItem item = series.getDataItem(e.getItem());
+            	DVector item = series.getDataItem(e.getItem());
             	
                 for (int k = 0; k < numDuplicates; k++){
                 	series.add(item);
@@ -631,7 +636,7 @@ public class SVMPanel extends ChartPanel
             if (dataset instanceof SVMDataSet){
             	SVMDataSet svmData = (SVMDataSet) dataset;
             	SVMDataSeries series =  svmData.getSeries(e.getSeriesIndex());
-            	SVMDataItem item = series.getDataItem(e.getItem());
+            	DVector item = series.getDataItem(e.getItem());
             	//TODO item.setWeight(w)
             }
             

@@ -65,7 +65,7 @@ public class SVMDataSet extends XYSeriesCollection {
 		}
 	}
 	
-	public void addItem(int seriesIndex, SVMDataItem item) throws Exception{
+	public void addItem(int seriesIndex, DVector item) throws Exception{
 		//TODO check if dimensions match, add to right class
 		getSeries(seriesIndex).add(item);
 	}
@@ -81,11 +81,22 @@ public class SVMDataSet extends XYSeriesCollection {
 		}
 	}
 	
-	public ArrayList<SVMDataItem> getPositiveClass(){
+
+	public double getXValue(int series, int item) {
+		return getSeries(series).getRawDataItem(item).getXValue();
+	}
+
+	public double getYValue(int series, int item) {
+		return getSeries(series).getRawDataItem(item).getYValue();
+	}
+	
+	
+	
+	public ArrayList<DVector> getPositiveClass(){
 		return getSeries(getPositiveSeriesID()).toArrayList();
 	}
 	
-	public ArrayList<SVMDataItem> getNegativeClass(){
+	public ArrayList<DVector> getNegativeClass(){
 		return getSeries(getNegativeSeriesID()).toArrayList();
 	}
 	
@@ -98,7 +109,7 @@ public class SVMDataSet extends XYSeriesCollection {
 		BufferedReader br = new BufferedReader(new InputStreamReader(fis));
 	 
 		String line = null;
-		SVMDataItem item = null;
+		DVector item = null;
 		
 		clearData();
 		
@@ -112,7 +123,7 @@ public class SVMDataSet extends XYSeriesCollection {
 			st.nextToken();// skip attrib id
 			double y = Double.parseDouble(st.nextToken());
 				
-			item = new SVMDataItem(x, y, 1,className);
+			item = new DVector(x, y, 1,className);
 			System.out.println(item);
 			if (className >= 0){	//TODO add class 0 for positive
 				addItem(0, item);
@@ -131,7 +142,7 @@ public class SVMDataSet extends XYSeriesCollection {
 	          File file = new File("example.txt");
 	          BufferedWriter output = new BufferedWriter(new FileWriter(fout));
 	          
-	          SVMDataItem item = null;
+	          DVector item = null;
 	          //TODO hard coded dataclass, series index
 	          for (int i = 0; i < getItemCount(0); i++){
 	        	  item = getSeries(0).getDataItem(i);

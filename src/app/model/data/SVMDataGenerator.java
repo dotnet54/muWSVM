@@ -45,68 +45,68 @@ public class SVMDataGenerator {
 		
 		try {
 			if (name == "Two points 1"){
-				data.addItem(0, new SVMDataItem(1, 1, 1, 1));
-				data.addItem(0, new SVMDataItem(3, 1, 1, 1));
+				data.addItem(0, new DVector(1, 1, 1, 1));
+				data.addItem(0, new DVector(3, 1, 1, 1));
 				
-				data.addItem(1, new SVMDataItem(1, 4, 1, -1));
-				data.addItem(1, new SVMDataItem(3, 4, 1, -1));
+				data.addItem(1, new DVector(1, 4, 1, -1));
+				data.addItem(1, new DVector(3, 4, 1, -1));
 			}else if (name == "Collinear Points 1"){
-				data.addItem(0, new SVMDataItem(1, 1, 1, 1));
-				data.addItem(0, new SVMDataItem(3, 1, 1, 1));
-				data.addItem(0, new SVMDataItem(6, 1, 1, 1));
-				data.addItem(0, new SVMDataItem(4, 1, 1, 1));
+				data.addItem(0, new DVector(1, 1, 1, 1));
+				data.addItem(0, new DVector(3, 1, 1, 1));
+				data.addItem(0, new DVector(6, 1, 1, 1));
+				data.addItem(0, new DVector(4, 1, 1, 1));
 				
-				data.addItem(1, new SVMDataItem(1, 1, 1, -1));
-				data.addItem(1, new SVMDataItem(2, 2, 1, -1));
-				data.addItem(1, new SVMDataItem(3, 3, 1, -1));
-				data.addItem(1, new SVMDataItem(4, 4, 1, -1));
+				data.addItem(1, new DVector(1, 1, 1, -1));
+				data.addItem(1, new DVector(2, 2, 1, -1));
+				data.addItem(1, new DVector(3, 3, 1, -1));
+				data.addItem(1, new DVector(4, 4, 1, -1));
 			}else if (name == "Collinear Points 2"){
-				data.addItem(0, new SVMDataItem(1, 1, 1, 1));
-				data.addItem(0, new SVMDataItem(3, 1.001, 1, 1));
-				data.addItem(0, new SVMDataItem(6, 1, 1, 1));
+				data.addItem(0, new DVector(1, 1, 1, 1));
+				data.addItem(0, new DVector(3, 1.001, 1, 1));
+				data.addItem(0, new DVector(6, 1, 1, 1));
 				
-				data.addItem(1, new SVMDataItem(1, 4, 1, -1));
-				data.addItem(1, new SVMDataItem(3, 4, 1, -1));
+				data.addItem(1, new DVector(1, 4, 1, -1));
+				data.addItem(1, new DVector(3, 4, 1, -1));
 			}else if (name == "Triangle 1"){
-				data.addItem(0, new SVMDataItem(1, 1, 1, 1));
-				data.addItem(0, new SVMDataItem(1, 3, 1, 1));
-				data.addItem(0, new SVMDataItem(3, 1, 1, 1));
+				data.addItem(0, new DVector(1, 1, 1, 1));
+				data.addItem(0, new DVector(1, 3, 1, 1));
+				data.addItem(0, new DVector(3, 1, 1, 1));
 				
-				data.addItem(1, new SVMDataItem(4, 1, 1, -1));
+				data.addItem(1, new DVector(4, 1, 1, -1));
 			}else if (name == "Triangle 2"){
-				data.addItem(0, new SVMDataItem(1, 1, 1, 1));
-				data.addItem(0, new SVMDataItem(4, 4, 1, 1));
-				data.addItem(0, new SVMDataItem(4, 1, 1, 1));
+				data.addItem(0, new DVector(1, 1, 1, 1));
+				data.addItem(0, new DVector(4, 4, 1, 1));
+				data.addItem(0, new DVector(4, 1, 1, 1));
 				
-				data.addItem(1, new SVMDataItem(6, 4, 1, -1));
-				data.addItem(1, new SVMDataItem(6, 1, 1, -1));
-				data.addItem(1, new SVMDataItem(9, 1, 1, -1));
+				data.addItem(1, new DVector(6, 4, 1, -1));
+				data.addItem(1, new DVector(6, 1, 1, -1));
+				data.addItem(1, new DVector(9, 1, 1, -1));
 			}else if (name == "Parallelogram"){
-				data.addItem(0, new SVMDataItem(1, 1, 1, 1));
-				data.addItem(0, new SVMDataItem(4, 1, 1, 1));
-				data.addItem(0, new SVMDataItem(2, 4, 1, 1));
-				data.addItem(0, new SVMDataItem(5, 4, 1, 1));
+				data.addItem(0, new DVector(1, 1, 1, 1));
+				data.addItem(0, new DVector(4, 1, 1, 1));
+				data.addItem(0, new DVector(2, 4, 1, 1));
+				data.addItem(0, new DVector(5, 4, 1, 1));
 				
-				data.addItem(1, new SVMDataItem(1, 4, 1, -1));
-				data.addItem(1, new SVMDataItem(1, 4, 1, -1));
-				data.addItem(1, new SVMDataItem(1, 4, 1, -1));
-				data.addItem(1, new SVMDataItem(1, 4, 1, -1));
+				data.addItem(1, new DVector(1, 4, 1, -1));
+				data.addItem(1, new DVector(1, 4, 1, -1));
+				data.addItem(1, new DVector(1, 4, 1, -1));
+				data.addItem(1, new DVector(1, 4, 1, -1));
 			}else if (name == "Trapezium"){
-				data.addItem(0, new SVMDataItem(1, 1, 1, 1));
-				data.addItem(0, new SVMDataItem(5, 1, 1, 1));
-				data.addItem(0, new SVMDataItem(2, 3, 1, 1));
-				data.addItem(0, new SVMDataItem(4, 3, 1, 1));
+				data.addItem(0, new DVector(1, 1, 1, 1));
+				data.addItem(0, new DVector(5, 1, 1, 1));
+				data.addItem(0, new DVector(2, 3, 1, 1));
+				data.addItem(0, new DVector(4, 3, 1, 1));
 				
-				data.addItem(1, new SVMDataItem(1, 4, 1, -1));
+				data.addItem(1, new DVector(1, 4, 1, -1));
 			}else if (name == "T points"){
-				data.addItem(0, new SVMDataItem(1, 1, 1, 1));
-				data.addItem(0, new SVMDataItem(1, 4, 2, 1));
-				data.addItem(0, new SVMDataItem(1, 5, 1, 1));
-				data.addItem(0, new SVMDataItem(1, 3, 1, 1));
-				data.addItem(0, new SVMDataItem(3, 3, 1, 1));
-				data.addItem(0, new SVMDataItem(5, 3, 1, 1));
+				data.addItem(0, new DVector(1, 1, 1, 1));
+				data.addItem(0, new DVector(1, 4, 2, 1));
+				data.addItem(0, new DVector(1, 5, 1, 1));
+				data.addItem(0, new DVector(1, 3, 1, 1));
+				data.addItem(0, new DVector(3, 3, 1, 1));
+				data.addItem(0, new DVector(5, 3, 1, 1));
 				
-				data.addItem(1, new SVMDataItem(1, 4, 1, -1));
+				data.addItem(1, new DVector(1, 4, 1, -1));
 			}else {
 				
 			}
@@ -126,10 +126,10 @@ public class SVMDataGenerator {
 			double maxVal = 10;
 			
 			
-			SVMDataItem normal = new SVMDataItem(
+			DVector normal = new DVector(
 					(randGen.nextDouble() * 2.0) - 1, 
 					(randGen.nextDouble() * 2.0) - 1);
-			normal.scale(maxVal);
+			normal.multiplyByScaler(maxVal);
 			if (SVMMain.chartPanel != null){
 				SVMMain.chartPanel.drawLine(normal); //TODO temporary
 			}
@@ -145,12 +145,12 @@ public class SVMDataGenerator {
 			numNeg -= softNeg;
 			//TODO 100000 point scaling problem
 			for (int k = 0; k < softPos; k++){
-				data.addItem(0, new SVMDataItem(
+				data.addItem(0, new DVector(
 						randGen.nextDouble()* maxVal, 
 						randGen.nextDouble()* maxVal, 1, +1));
 			}
 			for (int k = 0; k < softNeg; k++){
-				data.addItem(1, new SVMDataItem(
+				data.addItem(1, new DVector(
 						randGen.nextDouble()* maxVal, 
 						randGen.nextDouble()* maxVal, 1, -1));
 			}
@@ -163,7 +163,7 @@ public class SVMDataGenerator {
 				y = (randGen.nextDouble() * 2.0) - 1;
 				double weight = 1;
 				
-				SVMDataItem point = new SVMDataItem(x, y, weight);
+				DVector point = new DVector(x, y, weight);
 				
 				proj = normal.getDotProduct(point);
 				point.setX(point.getXValue() * maxVal);

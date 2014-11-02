@@ -192,13 +192,13 @@ public class DData implements ISubject{
 			for (int i= 0; i < dataClass.size(); i++){
 				vec = dataClass.get(i);
 				dataset.getSeries(0).add(
-						new SVMDataItem(vec.getVal(xDim), vec.getVal(yDim), vec.getWeight()));
+						new DVector(vec.getVal(xDim), vec.getVal(yDim), vec.getWeight()));
 			}
 			dataClass = getNegativeClass();
 			for (int i= 0; i < dataClass.size(); i++){
 				vec = dataClass.get(i);
 				dataset.getSeries(1).add(
-						new SVMDataItem(vec.getVal(xDim), vec.getVal(yDim), vec.getWeight()));
+						new DVector(vec.getVal(xDim), vec.getVal(yDim), vec.getWeight()));
 			}
 			
 			
@@ -223,14 +223,14 @@ public class DData implements ISubject{
 			DVector vec = null;
 			for (int i= 0; i < dataClass.size(); i++){
 				vec = dataClass.get(i);
-				dataset.getSeries(0).add(new SVMDataItem(vec.getXValue(), vec.getYValue(), vec.getWeight()));
+				dataset.getSeries(0).add(new DVector(vec.getXValue(), vec.getYValue(), vec.getWeight()));
 			}
 			
 			dataClass = getNegativeClass();
 			
 			for (int i= 0; i < dataClass.size(); i++){
 				vec = dataClass.get(i);
-				dataset.getSeries(1).add(new SVMDataItem(vec.getXValue(), vec.getYValue(), vec.getWeight()));
+				dataset.getSeries(1).add(new DVector(vec.getXValue(), vec.getYValue(), vec.getWeight()));
 			}
 			
 		} catch (Exception e) {

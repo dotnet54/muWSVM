@@ -24,7 +24,7 @@ public class SVMDataSeries extends XYSeries {
 	
 	//override these methods
 	
-	public void add(SVMDataItem item) throws Exception{
+	public void add(DVector item) throws Exception{
 		if (item.getDimensions() == dimensions){
 			super.add(item);
 		}else{
@@ -32,13 +32,13 @@ public class SVMDataSeries extends XYSeries {
 		}
 	}
 	
-	public SVMDataItem remove(int index){
-		return (SVMDataItem) super.remove(index);
+	public DVector remove(int index){
+		return (DVector) super.remove(index);
 	}
 	
 	//TODO returns internal data NOTE -> notification issue
-	public SVMDataItem getRawDataItem(int index) {
-		return (SVMDataItem) this.data.get(index);
+	public DVector getRawDataItem(int index) {
+		return (DVector) this.data.get(index);
 	}
 	
 //	public double getVal(int dim, int index){
@@ -75,19 +75,19 @@ public class SVMDataSeries extends XYSeries {
 	
 	
 	
-	public ArrayList<SVMDataItem> toArrayList(){
-		ArrayList<SVMDataItem> list = new ArrayList<SVMDataItem>();
+	public ArrayList<DVector> toArrayList(){
+		ArrayList<DVector> list = new ArrayList<DVector>();
 		
-		SVMDataItem item =  null;
+		DVector item =  null;
 		for (int i = 0; i < getItemCount(); i++){
-			item = (SVMDataItem) getItems().get(i);
+			item = (DVector) getItems().get(i);
 			list.add(item);
 		}
 		return list;
 	}
 	
 	//TODO note jfreechart modified to make this public 
-    public SVMDataItem getDataItem(int index) {
-        return (SVMDataItem) this.data.get(index);
+    public DVector getDataItem(int index) {
+        return (DVector) this.data.get(index);
     }
 }
