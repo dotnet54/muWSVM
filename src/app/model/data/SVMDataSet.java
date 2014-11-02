@@ -94,13 +94,13 @@ public class SVMDataSet extends XYSeriesCollection implements IObserver{
 	          SVMDataItem item = null;
 	          //TODO hard coded dataclass, series index
 	          for (int i = 0; i < getItemCount(0); i++){
-	        	  item = getSeries(0).getRawDataItem(i);
+	        	  item = getSeries(0).getDataItem(i);
 	        	  text = "+1  1:" 
 	        	  		+ item.getXValue() + " 2:" + item.getYValue();
 	        	  output.write(text + "\n");
 	          }
 	          for (int i = 0; i < getItemCount(1); i++){
-	        	  item = getSeries(1).getRawDataItem(i);
+	        	  item = getSeries(1).getDataItem(i);
 	        	  text =  "-1  1:" 
 	        	  		+ item.getXValue() + " 2:" + item.getYValue();
 	        	  output.write(text + "\n");

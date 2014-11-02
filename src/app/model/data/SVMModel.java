@@ -223,6 +223,16 @@ public class SVMModel {
 	//TODO sync problem, run bgtask in debugger, before 1 task finishes 
 	public SVMModel(){
 		
+		trainingData = new DData(2);		
+		testData = new DData(2);
+		
+		trainingData.setPositiveClass(+1);
+		trainingData.setNegativeClass(-1);
+		trainingData.setXDimension(0);
+		trainingData.setYDimension(1);
+		
+		chartData = trainingData.getChartData();
+		
 		solutionDataSet = new SVMDataSet();
 		SVMDataSeries series3 = new SVMDataSeries("Positive WRCH");
 		SVMDataSeries series4 = new SVMDataSeries("Negative WRCH");
@@ -231,17 +241,18 @@ public class SVMModel {
 		solutionDataSet.addSeries(series4);
 		solutionDataSet.addSeries(series5);
 
-		trainingData = new DData(2);		
-		testData = new DData(2);
-		
-		trainingData.setPositiveClass(+1);
-		trainingData.setNegativeClass(-1);
-		trainingData.setXDimension(0);
-		trainingData.setYDimension(1);
-		chartData = trainingData.getChartData();
-		
-		chartData.attach(trainingData);
 		//initializeData();
+	}
+	
+	public void updateTrainingSet(SVMDataSet chartData){
+		//update positive class
+		for (int i = 0; i < chartData.getItemCount(0); i++){
+			
+		}
+		//update negative class
+		for (int i = 0; i < chartData.getItemCount(1); i++){
+			
+		}
 	}
 	
 	public void generateRandomData(int numPoints, int percentPos, int softnessDelta){

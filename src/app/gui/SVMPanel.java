@@ -3,14 +3,11 @@ package app.gui;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Insets;
-import java.awt.MenuItem;
 import java.awt.Point;
-import java.awt.Polygon;
 import java.awt.Shape;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
-import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
@@ -36,21 +33,19 @@ import org.jfree.chart.labels.ItemLabelPosition;
 import org.jfree.chart.labels.StandardXYToolTipGenerator;
 import org.jfree.chart.labels.XYItemLabelGenerator;
 import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.renderer.xy.XYDotRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYDataset;
-import org.jfree.data.xy.XYRangeInfo;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.TextAnchor;
 import org.jfree.util.ShapeUtilities;
 
-import app.model.algorithms.WSK;
 import app.model.data.DVector;
 import app.model.data.IObserver;
 import app.model.data.ISubject;
 import app.model.data.SVMDataItem;
+import app.model.data.SVMDataSeries;
 import app.model.data.SVMDataSet;
 import app.model.data.SVMModel;
 
@@ -78,10 +73,8 @@ public class SVMPanel extends ChartPanel
 	private SVMDataSet chartData = null;
 	private SVMDataSet overlayData = null;
 	
-	private  XYShapeAnnotation anoHull1 = null;
-	private  XYShapeAnnotation anoRHull1 = null;
-	private  XYShapeAnnotation anoHull2 = null;
-	private  XYShapeAnnotation anoRHull2 = null;
+	private  XYShapeAnnotation annotationWRCH1 = null;
+	private  XYShapeAnnotation annotationWRCH2 = null;
 	
 	private  XYLineAnnotation hyperPlane = null;
 	private  XYLineAnnotation marginPos = null;
@@ -90,16 +83,10 @@ public class SVMPanel extends ChartPanel
 	
 	private double xChart =0;
 	private double yChart=0;
-	private double xPanel =0;
-	private double yPanel=0;
 	
 	private XYItemEntity selectedEntity = null;
-	private XYSeries selectedSeries = null;
 	private SVMDataItem selectedDataItem = null;
-		
-	
-	
-	
+
 	
 	//Rendering Options
 	
@@ -150,14 +137,13 @@ public class SVMPanel extends ChartPanel
     private class LabelGenerator implements XYItemLabelGenerator {
         @Override
         public String generateLabel(XYDataset dataset, int series, int item) {
-        	XYSeriesCollection dd = (XYSeriesCollection) dataset;
-            XYSeries ss =  dd.getSeries(series);
-	    	XYDataItem ditem =  (XYDataItem) ss.getItems().get(item);
-	    	if (ditem instanceof SVMDataItem){
-	    		SVMDataItem svmItem = (SVMDataItem) ditem;
-	    		//return svmItem.toFormatedString(2);
-	    		return svmItem.getLabel();
-	    	}
+            if (dataset instanceof SVMDataSet){
+            	SVMDataSet svmData = (SVMDataSet) dataset;
+            	SVMDataSeries svmSeries =  svmData.getSeries(series);
+            	SVMDataItem svmItem = svmSeries.getDataItem(item);
+            	//return svmItem.toFormatedString(2);
+            	return svmItem.getLabel();
+            }
             return "";
         }
     }
@@ -293,6 +279,8 @@ public class SVMPanel extends ChartPanel
 				popup.setVisible(false);
 			}
 		}
+		
+		
 		//TODO 
 		thisPlot.getRangeAxis().setAutoRange(false);
 		thisPlot.getDomainAxis().setAutoRange(false);
@@ -306,10 +294,6 @@ public class SVMPanel extends ChartPanel
 
 	@Override
 	public void chartMouseMoved(ChartMouseEvent event) {
-		// TODO Auto-generated method stub
-		List l = event.getEntities();
-		// System.out.println("#:" + l.size());
-		report(event);
 	}
 	
 	public void clearPlot(){
@@ -343,12 +327,12 @@ public class SVMPanel extends ChartPanel
 			path.closePath();
 			shapes[0] = path;
 
-			if (anoRHull1 != null) {
-				thisPlot.removeAnnotation(anoRHull1);
+			if (annotationWRCH1 != null) {
+				thisPlot.removeAnnotation(annotationWRCH1);
 			}
 	
-			anoRHull1 = new XYShapeAnnotation(shapes[0], dashed, Color.blue);
-			thisPlot.addAnnotation(anoRHull1);
+			annotationWRCH1 = new XYShapeAnnotation(shapes[0], dashed, Color.blue);
+			thisPlot.addAnnotation(annotationWRCH1);
 		}
 
 		if (rch2 != null && !rch2.isEmpty() && displayNegativeWRCH) {
@@ -360,12 +344,12 @@ public class SVMPanel extends ChartPanel
 			path.closePath();
 			shapes[1] = path;
 	
-			if (anoRHull2 != null) {
-				thisPlot.removeAnnotation(anoRHull2);
+			if (annotationWRCH2 != null) {
+				thisPlot.removeAnnotation(annotationWRCH2);
 			}
 	
-			anoRHull2 = new XYShapeAnnotation(shapes[1], dashed, Color.blue);
-			thisPlot.addAnnotation(anoRHull2);
+			annotationWRCH2 = new XYShapeAnnotation(shapes[1], dashed, Color.blue);
+			thisPlot.addAnnotation(annotationWRCH2);
 		}
 	
 	}
@@ -454,7 +438,6 @@ public class SVMPanel extends ChartPanel
 	}
 
 	private void initPopUpMenu(){
-		//popup menu
 		itp.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -488,32 +471,22 @@ public class SVMPanel extends ChartPanel
 			@Override
 			public void actionPerformed(ActionEvent ev) {
 	            XYItemEntity e = (XYItemEntity) selectedEntity;
-	            XYDataset d = e.getDataset(); //TODO check selection for null
-	            int s = e.getSeriesIndex();
-	            int i = e.getItem();
-	            //System.out.println("X:" + d.getX(s, i) + ", Y:" + d.getY(s, i));
 	            
-	            XYSeriesCollection dd = (XYSeriesCollection) e.getDataset();
-	            XYSeries ss =  dd.getSeries(s);
-	            
-	            
-	            XYDataItem item =  (XYDataItem) ss.getItems().get(i);
-	            System.out.println("rem:" + item);
-	           
-				if (item instanceof SVMDataItem){
-					SVMDataItem svmItem = (SVMDataItem) item;
-		            double weight = svmItem.getWeight();
+	            XYDataset dataset = e.getDataset();
+	            if (dataset instanceof SVMDataSet){
+	            	SVMDataSet svmData = (SVMDataSet) dataset;
+	            	SVMDataSeries series =  svmData.getSeries(e.getSeriesIndex());
+	            	SVMDataItem item = series.getDataItem(e.getItem());
+		            double weight = item.getWeight();
 					String input = JOptionPane.showInputDialog("Enter weight of the point"  ,weight);
 					if (input != null){
 						weight = Double.parseDouble(input); // try catch TODO parse error handle
-						svmItem.setWeight(weight);
-						svmItem.setLabel(weight + "");
+						item.setWeight(weight);
+						item.setLabel(weight + "");
 						thisChart.fireChartChanged();
-						System.out.println( svmItem);
+						System.out.println( item);
 					}
-					
-					
-				}
+	            }
 			}
 		});
 		
@@ -555,7 +528,6 @@ public class SVMPanel extends ChartPanel
 			            	&&	s == 0 
 			            	|| s == 1){ //assume index 0 and 1 = pos/neg 
 				            //ss.remove(i);
-				            selectedSeries = ss;
 				            selectedEntity = e;
 				            selectedDataItem = item;
 				            System.out.format("Selected Item:%s:%s\n",i, item);
@@ -581,35 +553,10 @@ public class SVMPanel extends ChartPanel
 				plotArea, plot.getDomainAxisEdge());
 	}
 	
-	private double toChartY(int y){
-		//TODO translate function not used *ScaleFactor not done
-		Rectangle2D plotArea = this.getScreenDataArea();
-		XYPlot plot = (XYPlot) getChart().getPlot(); // your plot
-		return  plot.getRangeAxis().java2DToValue(y,
-				plotArea, plot.getRangeAxisEdge());
-	}
-	
-	
-	private int toPanelX(double x){
-		//TODO translate function not used *ScaleFactor not done
-		Rectangle2D plotArea = this.getScreenDataArea();
-		XYPlot plot = (XYPlot) getChart().getPlot(); // your plot
-		return  (int) plot.getDomainAxis().valueToJava2D(x,
-				plotArea, plot.getDomainAxisEdge());
-	}
-	
-	private int toPanelY(double y){
-		//TODO translate function not used *ScaleFactor not done
-		Rectangle2D plotArea = this.getScreenDataArea();
-		XYPlot plot = (XYPlot) getChart().getPlot(); // your plot
-		return  (int) plot.getRangeAxis().valueToJava2D(y,
-				plotArea, plot.getRangeAxisEdge());
-	}
-	
 	private Point2D panelToChart(Point p){
 		Point2D pp = this.translateScreenToJava2D(p);
 		Rectangle2D plotArea = this.getScreenDataArea();
-		XYPlot plot = (XYPlot) getChart().getPlot(); // your plot
+		XYPlot plot = (XYPlot) getChart().getPlot(); 
 		double chartX = plot.getDomainAxis().java2DToValue(pp.getX(),
 				plotArea, plot.getDomainAxisEdge());
 		double chartY = plot.getRangeAxis().java2DToValue(pp.getY(),
@@ -618,9 +565,8 @@ public class SVMPanel extends ChartPanel
 	}
 	
 	private Point chartToPanel (Point2D pp){
-		//Point2D pp = this.translateScreenToJava2D(p);
 		Rectangle2D plotArea = this.getScreenDataArea();
-		XYPlot plot = (XYPlot) getChart().getPlot(); // your plot
+		XYPlot plot = (XYPlot) getChart().getPlot(); 
 		double panelX = plot.getDomainAxis().valueToJava2D(pp.getX(),
 				plotArea, plot.getDomainAxisEdge());
 		double panelY = plot.getRangeAxis().valueToJava2D(pp.getY(),
@@ -630,75 +576,54 @@ public class SVMPanel extends ChartPanel
 	}
 	
 	public void addPoint(int series){
-		
-		try {
-			XYSeriesCollection d = (XYSeriesCollection) getChart().getXYPlot().getDataset();
-			XYSeries s =  d.getSeries(series);
-			
-			SVMDataItem i = new SVMDataItem(xChart, yChart);
-			s.add(i);
-			if (series == 0){
-				model.getTrainingData().add(new DVector(xChart, yChart, 1, 1));
-			}else if(series == 1){
-				model.getTrainingData().add(new DVector(xChart, yChart, 1, -1));
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		chartData.addItem(series, new SVMDataItem(xChart, yChart));
 	}
 	
 	public void duplicateSelection(int numDuplicates){
 		if (hasSelectedItem()){
 			XYItemEntity e = (XYItemEntity) selectedEntity;
-            XYDataset d = e.getDataset(); //TODO check selection for null
-            int s = e.getSeriesIndex();
-            int i = e.getItem();
-            //System.out.println("X:" + d.getX(s, i) + ", Y:" + d.getY(s, i));
-            
-            XYSeriesCollection dd = (XYSeriesCollection) e.getDataset();
-            XYSeries ss =  dd.getSeries(s);
-            
-            System.out.println("duplicated:" + ss.getItems().get(i));
-            for (int k = 0; k < numDuplicates; k++){
-            	ss.add((XYDataItem) ss.getItems().get(i));
+            XYDataset dataset = e.getDataset();
+            if (dataset instanceof SVMDataSet){
+            	SVMDataSet svmData = (SVMDataSet) dataset;
+            	SVMDataSeries series =  svmData.getSeries(e.getSeriesIndex());
+            	SVMDataItem item = series.getDataItem(e.getItem());
+            	
+                for (int k = 0; k < numDuplicates; k++){
+                	series.add(item);
+                }
             }
-            
 		}
 	}
 	
 	public void removeSelection(){
 		if (hasSelectedItem()){
 			XYItemEntity e = (XYItemEntity) selectedEntity;
-            XYDataset d = e.getDataset(); //TODO check selection for null
-            int s = e.getSeriesIndex();
-            int i = e.getItem();
-            //System.out.println("X:" + d.getX(s, i) + ", Y:" + d.getY(s, i));
-            
-            XYSeriesCollection dd = (XYSeriesCollection) e.getDataset();
-            XYSeries ss =  dd.getSeries(s);
-            
-            System.out.println("rem:" + ss.getItems().get(i));
-            ss.remove(i);
+            XYDataset dataset = e.getDataset();
+            if (dataset instanceof SVMDataSet){
+            	SVMDataSet svmData = (SVMDataSet) dataset;
+            	SVMDataSeries series =  svmData.getSeries(e.getSeriesIndex());
+                series.remove(e.getItem());
+            }
             
             clearSelection();
 		}
 	}
 	
 	public void changeSelectionWeight(){
-		
+		if (hasSelectedItem()){
+			XYItemEntity e = (XYItemEntity) selectedEntity;
+            XYDataset dataset = e.getDataset();
+            if (dataset instanceof SVMDataSet){
+            	SVMDataSet svmData = (SVMDataSet) dataset;
+            	SVMDataSeries series =  svmData.getSeries(e.getSeriesIndex());
+            	SVMDataItem item = series.getDataItem(e.getItem());
+            	//TODO item.setWeight(w)
+            }
+            
+            clearSelection();
+		}
 	}
-	
-    private void report(ChartMouseEvent cme) {
-        ChartEntity ce = cme.getEntity();
-        
-        if (ce instanceof XYItemEntity) {
-            XYItemEntity e = (XYItemEntity) ce;
-            XYDataset d = e.getDataset();
-            int s = e.getSeriesIndex();
-            int i = e.getItem();
-            //System.out.println("X:" + d.getX(s, i) + ", Y:" + d.getY(s, i));
-        }
-    }
+
     
     public boolean hasSelectedItem(){
     	if (selectedEntity != null && selectedDataItem != null){
@@ -711,7 +636,6 @@ public class SVMPanel extends ChartPanel
     private void clearSelection(){
     	selectedDataItem = null;
     	selectedEntity = null;
-    	selectedSeries = null;
     	
     	this.changed = true;
     	notifyObservers();

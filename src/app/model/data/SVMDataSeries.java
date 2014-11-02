@@ -28,7 +28,7 @@ public class SVMDataSeries extends XYSeries {
 		return list;
 	}
 	
-    public SVMDataItem getRawDataItem(int index) {
+    public SVMDataItem getDataItem(int index) {
         return (SVMDataItem) this.data.get(index);
     }
 }
