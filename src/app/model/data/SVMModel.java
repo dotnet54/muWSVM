@@ -239,7 +239,9 @@ public class SVMModel implements DatasetChangeListener,ISubject {
 			int numDimensions = 2;
 			
 			trainingData = SVMDataGenerator.getDefaultSVMDataset();		
-			testData = SVMDataGenerator.getDefaultSVMDataset();
+			testData = new SVMDataSet(numDimensions);
+			SVMDataSeries series6 = new SVMDataSeries("Unlabelled Data", numDimensions);
+			testData.addSeries(series6);
 
 			solutionDataSet = new SVMDataSet(numDimensions);
 			SVMDataSeries series3 = new SVMDataSeries("Positive WRCH", numDimensions);
@@ -273,29 +275,21 @@ public class SVMModel implements DatasetChangeListener,ISubject {
 		}
 	}
 	
-	public void generateRandomData(int numPoints, int percentPos, int softnessDelta){
-		SVMDataGenerator dataGen = new SVMDataGenerator(this, 3, 2);
-		dataGen.generateData(trainingData, numPoints, percentPos, softnessDelta);
+	public void generateRandomTrainingData(int numDims,
+			int numPoints, int percentPos, int softnessDelta, double min, double max){
+		SVMDataGenerator dataGen = new SVMDataGenerator(this, 3, 2, 2);
+		dataGen.generateData(trainingData, numPoints, percentPos, softnessDelta, min, max);
+	}
+	
+	public void generateRandomTestData(int numDims,
+			int numPoints, int percentPos, int softnessDelta, double min, double max){
+		SVMDataGenerator dataGen = new SVMDataGenerator(this, 3, 2, 2);
+		dataGen.generateDataSeries(testData, 0, numPoints, percentPos, softnessDelta, min, max);
 	}
 	
 	public void loadPredefinedDataset(String name){
-		SVMDataGenerator dataGen = new SVMDataGenerator(this, 3, 2);
+		SVMDataGenerator dataGen = new SVMDataGenerator(this, 3, 2, 2);
 		dataGen.setPredefinedDataset(trainingData, name);
-	}
-	
-	private void initializeData(){
-
-		
-		
-		
-		
-		
-		
-		//trainingData.generateRandomData(10);
-		SVMDataGenerator dataGen = new SVMDataGenerator(this, 3, 2);
-		dataGen.generateData(trainingData, 10, 50, 0);
-		//dataGen.setPredefinedDataset(rawDataSet, "Triangle 1");
-
 	}
 	
 	public void solveWRCH(int series) throws Exception{

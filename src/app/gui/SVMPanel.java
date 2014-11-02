@@ -87,30 +87,175 @@ public class SVMPanel extends ChartPanel
 	private XYItemEntity selectedEntity = null;
 	private DVector selectedDataItem = null;
 
+	private XYLineAndShapeRenderer trainingDatasetRenderer;
+	private XYLineAndShapeRenderer solutionRenderer;
 	
 	//Rendering Options
 	
-	private boolean displayPositiveWeights = true;
-	private boolean displayNegativeWeights = true;
-	
-	private boolean displayPositiveAlpha = false;
-	private boolean displayNegativeAlpha = false;
+
+	public void setDisplayWeights(boolean displayWeights) {
+		this.displayWeights = displayWeights;
+		trainingDatasetRenderer.setBaseItemLabelsVisible(displayWeights);
+	}
+
+	public boolean isDisplayWeights() {
+		return displayWeights;
+		
+	}
+
+	public boolean isDisplayPositiveClass() {
+		return displayPositiveClass;
+	}
+
+	public void setDisplayPositiveClass(boolean displayPositiveClass) {
+		this.displayPositiveClass = displayPositiveClass;
+		updateChart();
+	}
+
+	public boolean isDisplayNegativeClass() {
+		return displayNegativeClass;
+	}
+
+	public void setDisplayNegativeClass(boolean displayNegativeClass) {
+		this.displayNegativeClass = displayNegativeClass;
+		updateChart();
+	}
+
+	public boolean isDisplayPositiveWRCH() {
+		return displayPositiveWRCH;
+	}
+
+	public void setDisplayPositiveWRCH(boolean displayPositiveWRCH) {
+		this.displayPositiveWRCH = displayPositiveWRCH;
+		solutionRenderer.setSeriesVisible(0,displayPositiveWRCH);
+		updateWRCHSolutions();
+	}
+
+	public boolean isDisplayNegativeWRCH() {
+		return displayNegativeWRCH;
+	}
+
+	public void setDisplayNegativeWRCH(boolean displayNegativeWRCH) {
+		this.displayNegativeWRCH = displayNegativeWRCH;
+		solutionRenderer.setSeriesVisible(1,displayNegativeWRCH);
+		updateWRCHSolutions();
+	}
+
+	public boolean isDisplayPositiveSupportVectors() {
+		return displayPositiveSupportVectors;
+	}
+
+	public void setDisplayPositiveSupportVectors(
+			boolean displayPositiveSupportVectors) {
+		this.displayPositiveSupportVectors = displayPositiveSupportVectors;
+	}
+
+	public boolean isDisplayNegativeSupportVectors() {
+		return displayNegativeSupportVectors;
+	}
+
+	public void setDisplayNegativeSupportVectors(
+			boolean displayNegativeSupportVectors) {
+		this.displayNegativeSupportVectors = displayNegativeSupportVectors;
+	}
+
+	public boolean isDisplayGeometricBoundary() {
+		return displayGeometricBoundary;
+	}
+
+	public void setDisplayGeometricBoundary(boolean displayGeometricBoundary) {
+		this.displayGeometricBoundary = displayGeometricBoundary;
+		updateWSVMSolutions();
+	}
+
+	public boolean isDisplayKKTBoundary() {
+		return displayKKTBoundary;
+	}
+
+	public void setDisplayKKTBoundary(boolean displayKKTBoundary) {
+		this.displayKKTBoundary = displayKKTBoundary;
+	}
+
+	public boolean isDisplayNearestPointLine() {
+		return displayNearestPointLine;
+	}
+
+	public void setDisplayNearestPointLine(boolean displayNearestPointLine) {
+		this.displayNearestPointLine = displayNearestPointLine;
+	}
+
+	public boolean isDisplayCentroidConnectingLine() {
+		return displayCentroidConnectingLine;
+	}
+
+	public void setDisplayCentroidConnectingLine(
+			boolean displayCentroidConnectingLine) {
+		this.displayCentroidConnectingLine = displayCentroidConnectingLine;
+	}
+
+	public boolean isDisplayMargins() {
+		return displayMargins;
+	}
+
+	public void setDisplayMargins(boolean displayMargins) {
+		this.displayMargins = displayMargins;
+		updateWSVMSolutions();
+	}
+
+	public boolean isDisplaySlackVariables() {
+		return displaySlackVariables;
+	}
+
+	public void setDisplaySlackVariables(boolean displaySlackVariables) {
+		this.displaySlackVariables = displaySlackVariables;
+	}
+
+	public boolean isDisplayslackAmount() {
+		return displayslackAmount;
+	}
+
+	public void setDisplayslackAmount(boolean displayslackAmount) {
+		this.displayslackAmount = displayslackAmount;
+	}
+
+	public boolean isDisplayAlphaValues() {
+		return displayAlphaValues;
+	}
+
+	public void setDisplayAlphaValues(boolean displayAlphaValues) {
+		this.displayAlphaValues = displayAlphaValues;
+	}
+
+	public boolean isDisplayCentroids() {
+		return displayCentroids;
+	}
+
+	public void setDisplayCentroids(boolean displayCentroids) {
+		this.displayCentroids = displayCentroids;
+		updateChart();
+	}
+
+	public boolean isEnableZoom() {
+		return enableZoom;
+	}
+
+	public void setEnableZoom(boolean enableZoom) {
+		this.enableZoom = enableZoom;
+	}
+
+	private boolean displayWeights = true;	
+	private boolean displayAlphaValues = false;
+	private boolean displayCentroids = true;
 	
 	private boolean displayPositiveClass = true;
 	private boolean displayNegativeClass = true;
-	
-	private boolean displayPositiveCH = false;
-	private boolean displayNegativeCH = false;
-	
+
 	private boolean displayPositiveWRCH = true;
 	private boolean displayNegativeWRCH = true;
 	
 	private boolean displayPositiveSupportVectors = false;
 	private boolean displayNegativeSupportVectors = false;
-	
-	private boolean displayPositiveCentroid = true;
-	private boolean displayNegativeCentroid = true;
-	
+
 	private boolean displayGeometricBoundary = true;
 	private boolean displayKKTBoundary = false;
 	private boolean displayNearestPointLine = true;
@@ -187,6 +332,11 @@ public class SVMPanel extends ChartPanel
 		chartData = model.getChartDataset();
 		thisPlot.setDataset(1, model.getSolutionDataSet());
 		thisPlot.setRenderer(1, new XYLineAndShapeRenderer(false, true));
+		thisPlot.setDataset(2, model.getTestData());
+		thisPlot.setRenderer(2, new XYLineAndShapeRenderer(false, true));
+		
+		thisPlot.getRenderer(2).setSeriesShape(0, ShapeUtilities.createUpTriangle(2));
+		thisPlot.getRenderer(2).setSeriesPaint(0, Color.GREEN.brighter());
 		
         //Renderer settings
 //		XYDotRenderer rawDataRenderer = new XYDotRenderer();
@@ -194,17 +344,17 @@ public class SVMPanel extends ChartPanel
 //		rawDataRenderer.setDotHeight(4);
 //		thisPlot.setRenderer(rawDataRenderer);
 		
-        XYLineAndShapeRenderer rawDataRenderer = (XYLineAndShapeRenderer) thisPlot.getRenderer();
-        XYLineAndShapeRenderer solutionRenderer = (XYLineAndShapeRenderer) thisPlot.getRenderer(1);
+        trainingDatasetRenderer = (XYLineAndShapeRenderer) thisPlot.getRenderer();
+        solutionRenderer = (XYLineAndShapeRenderer) thisPlot.getRenderer(1);
 
-        rawDataRenderer.setBaseItemLabelGenerator(new LabelGenerator());
-        rawDataRenderer.setBaseItemLabelPaint(Color.black);
-        rawDataRenderer.setBaseItemLabelsVisible(true);
-        rawDataRenderer.setBaseToolTipGenerator(new StandardXYToolTipGenerator());        
-        rawDataRenderer.setBasePositiveItemLabelPosition(
+        trainingDatasetRenderer.setBaseItemLabelGenerator(new LabelGenerator());
+        trainingDatasetRenderer.setBaseItemLabelPaint(Color.black);
+        trainingDatasetRenderer.setBaseItemLabelsVisible(true);
+        trainingDatasetRenderer.setBaseToolTipGenerator(new StandardXYToolTipGenerator());        
+        trainingDatasetRenderer.setBasePositiveItemLabelPosition(
             new ItemLabelPosition(ItemLabelAnchor.OUTSIDE1, TextAnchor.BOTTOM_LEFT));
-        rawDataRenderer.setBaseItemLabelFont(
-        		rawDataRenderer.getBaseItemLabelFont().deriveFont(8f));
+        trainingDatasetRenderer.setBaseItemLabelFont(
+        		trainingDatasetRenderer.getBaseItemLabelFont().deriveFont(8f));
         
         solutionRenderer.setSeriesShape(0, ShapeUtilities.createDiagonalCross(1, 1));
         solutionRenderer.setSeriesPaint(0, Color.RED.brighter());
@@ -213,7 +363,7 @@ public class SVMPanel extends ChartPanel
         solutionRenderer.setSeriesPaint(1, Color.BLUE.brighter());
         
         solutionRenderer.setSeriesShape(2, ShapeUtilities.createDiagonalCross(2, 2));
-        solutionRenderer.setSeriesPaint(2, Color.GREEN.brighter());
+        solutionRenderer.setSeriesPaint(2, Color.DARK_GRAY.brighter());
 	}
 
 	public void mousePressed(MouseEvent event) {
@@ -303,8 +453,18 @@ public class SVMPanel extends ChartPanel
 	}
 	
 	public void updateChart(){
-		updateWRCHSolutions();
-		updateWSVMSolutions();
+		
+		
+		trainingDatasetRenderer.setSeriesVisible(
+				model.getTrainingData().getPositiveSeriesID(), isDisplayPositiveClass());
+	
+		trainingDatasetRenderer.setSeriesVisible(
+				model.getTrainingData().getNegativeSeriesID(), isDisplayNegativeClass());
+		
+		
+		solutionRenderer.setSeriesVisible(2,isDisplayCentroids());
+		//updateWRCHSolutions();
+		//updateWSVMSolutions();
 	}
 
 	public void updateWRCHSolutions(){
@@ -353,6 +513,7 @@ public class SVMPanel extends ChartPanel
 		}
 	
 	}
+
 
 	public void updateWSVMSolutions(){
 		try {

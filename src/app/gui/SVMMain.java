@@ -55,6 +55,7 @@ import java.io.File;
 import java.awt.Panel;
 import java.awt.FlowLayout;
 import java.awt.Dimension;
+import javax.swing.JRadioButtonMenuItem;
 
 /**
  * Main GUI window for the application
@@ -104,7 +105,7 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 	private final SVMAboutDialog aboutDialog = new SVMAboutDialog();
 	private final SVMHelpDialog helpDialog = new SVMHelpDialog();
 	private final JFileChooser fc = new JFileChooser(".");
-	private JTextField numDimensions;
+	private JTextField txtNumDimensions;
 
 	private JRadioButton rdbtnAddTool;
 
@@ -579,33 +580,48 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 			chckbxAutoUpdateWsvm.setBounds(144, 2, 158, 23);
 			pContainerParameters.add(chckbxAutoUpdateWsvm);
 			
-			JPanel pContainerTrainingData = new JPanel();
-			tabbedPane.addTab("Training Data", null, pContainerTrainingData, null);
-			pContainerTrainingData.setLayout(null);
+			JPanel pContainerLoadData = new JPanel();
+			tabbedPane.addTab("Load Data", null, pContainerLoadData, null);
+			pContainerLoadData.setLayout(null);
 			
-			JComboBox<String> cmbDataDistType = new JComboBox<String>();
-			cmbDataDistType.setBounds(11, 221, 156, 23);
-			cmbDataDistType.setModel(new DefaultComboBoxModel<String>(new String[] {"Hard Margin SVM", "Soft Margin SVM"}));
-			pContainerTrainingData.add(cmbDataDistType);
+			final JComboBox<String> cmbDataType = new JComboBox<String>();
+			cmbDataType.setBounds(100, 7, 156, 23);
+			cmbDataType.setModel(new DefaultComboBoxModel(new String[] {"Training Data", "Test Data"}));
+			pContainerLoadData.add(cmbDataType);
 			
 			JButton btnGenerateData = new JButton("Generate Random Data");
 			btnGenerateData.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					model.clearDataSet(2);
+					//model.clearDataSet(2);
 					
 					
+					int numDims = Integer.parseInt(txtNumDimensions.getText());
 					int numPoints = Integer.parseInt(textField_NumDataPoints.getText());
 					int percentPos = Integer.parseInt(textField_PercentPos.getText());
 					int separationDelta = Integer.parseInt(textField_SeparationDelta.getText());
+					double min = Double.parseDouble(txtMin.getText());
+					double max = Double.parseDouble(txtMax.getText());
 					
-					model.generateRandomData(numPoints, percentPos, separationDelta);
-					chart.getXYPlot().setDataset(0, model.getChartDataset()); 
+					if (cmbDataType.getSelectedIndex() == 0){
+						model.generateRandomTrainingData(numDims,
+							numPoints, percentPos, separationDelta, min, max);
+						//dataset 0 for training set
+						chart.getXYPlot().setDataset(0, model.getTrainingData()); 
+					}else if(cmbDataType.getSelectedIndex() == 1){
+						model.generateRandomTestData
+						(numDims, numPoints, percentPos, separationDelta, min, max);
+						//dataset 2 for training set
+						chart.getXYPlot().setDataset(2, model.getTestData());
+					}
+					
+					
+					
 				}
 			});
 			btnGenerateData.setBounds(10, 294, 145, 23);
-			pContainerTrainingData.add(btnGenerateData);
+			pContainerLoadData.add(btnGenerateData);
 			
-			final JButton btnLoadData = new JButton("Load Data ");
+			final JButton btnLoadData = new JButton("Load From File");
 			btnLoadData.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					try {
@@ -621,32 +637,32 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 					}
 				}
 			});
-			btnLoadData.setBounds(11, 11, 92, 23);
-			pContainerTrainingData.add(btnLoadData);
+			btnLoadData.setBounds(10, 87, 118, 23);
+			pContainerLoadData.add(btnLoadData);
 			
 			JLabel lblNumDataPoints = new JLabel("Number of Data Points:");
-			lblNumDataPoints.setBounds(10, 92, 155, 14);
-			pContainerTrainingData.add(lblNumDataPoints);
+			lblNumDataPoints.setBounds(10, 175, 155, 14);
+			pContainerLoadData.add(lblNumDataPoints);
 			
 			textField_NumDataPoints = new JTextField();
 			textField_NumDataPoints.setText("10");
-			textField_NumDataPoints.setBounds(10, 109, 105, 20);
-			pContainerTrainingData.add(textField_NumDataPoints);
-			textField_NumDataPoints.setColumns(10);
+			textField_NumDataPoints.setBounds(10, 200, 105, 20);
+			pContainerLoadData.add(textField_NumDataPoints);
+			textField_NumDataPoints.setColumns(6);
 			
 			JLabel lblPercentPos = new JLabel("Percentage of Positive Data:");
-			lblPercentPos.setBounds(10, 140, 157, 14);
-			pContainerTrainingData.add(lblPercentPos);
+			lblPercentPos.setBounds(10, 231, 157, 14);
+			pContainerLoadData.add(lblPercentPos);
 			
 			textField_PercentPos = new JTextField();
 			textField_PercentPos.setText("50");
-			textField_PercentPos.setBounds(10, 165, 105, 20);
-			pContainerTrainingData.add(textField_PercentPos);
-			textField_PercentPos.setColumns(10);
+			textField_PercentPos.setBounds(177, 228, 46, 20);
+			pContainerLoadData.add(textField_PercentPos);
+			textField_PercentPos.setColumns(3);
 			
-			JLabel lblDataDistType = new JLabel("Data Distribution Type");
-			lblDataDistType.setBounds(10, 196, 145, 14);
-			pContainerTrainingData.add(lblDataDistType);
+			JLabel lblDatasetType = new JLabel("Dataset Type");
+			lblDatasetType.setBounds(11, 11, 79, 14);
+			pContainerLoadData.add(lblDatasetType);
 			
 			JButton btnClearPlot = new JButton("Clear Plot");
 			btnClearPlot.addActionListener(new ActionListener() {
@@ -654,67 +670,67 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 					model.clearDataSet(2);
 				}
 			});
-			btnClearPlot.setBounds(113, 11, 79, 23);
-			pContainerTrainingData.add(btnClearPlot);
+			btnClearPlot.setBounds(219, 294, 79, 23);
+			pContainerLoadData.add(btnClearPlot);
 			
 			JComboBox<String> cmbPredefinedData = new JComboBox<String>();
 			cmbPredefinedData.setModel(new DefaultComboBoxModel<String>(new String[] {"Triangle"}));
 			cmbPredefinedData.setBounds(164, 45, 134, 20);
-			pContainerTrainingData.add(cmbPredefinedData);
+			pContainerLoadData.add(cmbPredefinedData);
 			
 			JButton btnPredefinedDatasets = new JButton("Predefined Datasets");
 			btnPredefinedDatasets.setBounds(11, 45, 143, 23);
-			pContainerTrainingData.add(btnPredefinedDatasets);
+			pContainerLoadData.add(btnPredefinedDatasets);
 			
-			JLabel lblOverlapDelta = new JLabel("Separation Delta");
-			lblOverlapDelta.setBounds(11, 253, 104, 14);
-			pContainerTrainingData.add(lblOverlapDelta);
+			JLabel lblOverlapDelta = new JLabel("Separation Delta:");
+			lblOverlapDelta.setBounds(10, 256, 104, 14);
+			pContainerLoadData.add(lblOverlapDelta);
 			
 			textField_SeparationDelta = new JTextField();
 			textField_SeparationDelta.setText("0");
-			textField_SeparationDelta.setBounds(113, 255, 55, 20);
-			pContainerTrainingData.add(textField_SeparationDelta);
-			textField_SeparationDelta.setColumns(10);
+			textField_SeparationDelta.setBounds(177, 253, 46, 20);
+			pContainerLoadData.add(textField_SeparationDelta);
+			textField_SeparationDelta.setColumns(3);
 			
-			JButton btnSaveData = new JButton("Save Data");
+			JButton btnSaveData = new JButton("Save To File");
 			btnSaveData.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					File file = new File("wsvm_out.txt");
 					model.getChartDataset().saveToFile(file);
 				}
 			});
-			btnSaveData.setBounds(209, 294, 89, 23);
-			pContainerTrainingData.add(btnSaveData);
+			btnSaveData.setBounds(166, 87, 132, 23);
+			pContainerLoadData.add(btnSaveData);
 			
-			numDimensions = new JTextField();
-			numDimensions.setText("2");
-			numDimensions.setBounds(271, 89, 27, 20);
-			pContainerTrainingData.add(numDimensions);
-			numDimensions.setColumns(2);
+			txtNumDimensions = new JTextField();
+			txtNumDimensions.setText("2");
+			txtNumDimensions.setBounds(128, 141, 27, 20);
+			pContainerLoadData.add(txtNumDimensions);
+			txtNumDimensions.setColumns(2);
 			
 			JLabel lblNumberOfDimensions = new JLabel("Number of dimensions");
-			lblNumberOfDimensions.setBounds(150, 92, 105, 14);
-			pContainerTrainingData.add(lblNumberOfDimensions);
+			lblNumberOfDimensions.setBounds(10, 144, 105, 14);
+			pContainerLoadData.add(lblNumberOfDimensions);
 			
 			JLabel lblMin = new JLabel("Min:");
-			lblMin.setBounds(164, 125, 32, 14);
-			pContainerTrainingData.add(lblMin);
+			lblMin.setBounds(164, 141, 32, 14);
+			pContainerLoadData.add(lblMin);
 			
 			JLabel lblMax = new JLabel("Max:");
-			lblMax.setBounds(164, 156, 46, 14);
-			pContainerTrainingData.add(lblMax);
+			lblMax.setBounds(164, 172, 46, 14);
+			pContainerLoadData.add(lblMax);
 			
 			txtMin = new JTextField();
 			txtMin.setText("0");
-			txtMin.setBounds(212, 122, 86, 20);
-			pContainerTrainingData.add(txtMin);
-			txtMin.setColumns(10);
+			txtMin.setBounds(212, 138, 86, 20);
+			pContainerLoadData.add(txtMin);
+			txtMin.setColumns(6);
 			
 			txtMax = new JTextField();
 			txtMax.setText("10");
-			txtMax.setBounds(212, 153, 86, 20);
-			pContainerTrainingData.add(txtMax);
-			txtMax.setColumns(10);
+			txtMax.setBounds(212, 169, 86, 20);
+			pContainerLoadData.add(txtMax);
+			txtMax.setColumns(6);
 			
 			JPanel pContainerDataEditing = new JPanel();
 			tabbedPane.addTab("Data Editing", null, pContainerDataEditing, null);
@@ -830,27 +846,11 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 			lblConfusionMatrix.setBounds(10, 11, 102, 14);
 			pContainerPerformance.add(lblConfusionMatrix);
 			
-			JLabel lblNumberOfSupport = new JLabel("<html>Num. Pos.\r\n<br> Support Vectors");
-			lblNumberOfSupport.setBounds(20, 273, 77, 28);
-			pContainerPerformance.add(lblNumberOfSupport);
-			
 			panelPerformance = new JPanel();
 			panelPerformance.setBounds(10, 36, 288, 225);
 			pContainerPerformance.add(panelPerformance);
 			perfMatrix = new PerformanceMatrix();
 			panelPerformance.add(perfMatrix);
-			
-			JLabel lblTimemsForWsk = new JLabel("Time(ms) for WSK");
-			lblTimemsForWsk.setBounds(113, 273, 109, 14);
-			pContainerPerformance.add(lblTimemsForWsk);
-			
-			JLabel lblTimemsForWrch = new JLabel("Time(ms) for WRCH");
-			lblTimemsForWrch.setBounds(107, 298, 99, 14);
-			pContainerPerformance.add(lblTimemsForWrch);
-			
-			JLabel lblNewLabel = new JLabel("numIterations");
-			lblNewLabel.setBounds(220, 273, 78, 14);
-			pContainerPerformance.add(lblNewLabel);
 			frame.getContentPane().setLayout(null);
 			frame.getContentPane().add(pChartContainer);
 			
@@ -897,8 +897,8 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 			panel.add(cmbYDimensionName);
 			frame.getContentPane().add(pSolveButtonsContainer);
 			
-			JButton btnClassify = new JButton("Classify");
-			btnClassify.setBounds(214, 29, 89, 23);
+			JButton btnClassify = new JButton("Classify Test Data");
+			btnClassify.setBounds(188, 29, 125, 23);
 			pSolveButtonsContainer.add(btnClassify);
 			
 			JButton btndScatterMatrix = new JButton("2D Scatter Matrix");
@@ -959,17 +959,45 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 			pContainerOptions.add(textField_NumDP);
 			textField_NumDP.setColumns(10);
 			
-			JPanel pContainerTestingData = new JPanel();
-			tabbedPane.addTab("Testing Data", null, pContainerTestingData, null);
-			pContainerTestingData.setLayout(null);
+			JPanel pContainerStatisticsData = new JPanel();
+			tabbedPane.addTab("Statistics", null, pContainerStatisticsData, null);
+			pContainerStatisticsData.setLayout(null);
 			
 			JButton btnLoadTestingData = new JButton("Load Testing Data");
-			btnLoadTestingData.setBounds(10, 11, 119, 23);
-			pContainerTestingData.add(btnLoadTestingData);
+			btnLoadTestingData.setBounds(116, 221, 119, 23);
+			pContainerStatisticsData.add(btnLoadTestingData);
 			
 			JButton btnPerformCrossValidation = new JButton("Perform Cross Validation");
-			btnPerformCrossValidation.setBounds(10, 55, 159, 23);
-			pContainerTestingData.add(btnPerformCrossValidation);
+			btnPerformCrossValidation.setBounds(115, 255, 159, 23);
+			pContainerStatisticsData.add(btnPerformCrossValidation);
+			
+			JLabel lblnumPositiveSupport = new JLabel("<html>Num. Positive\r\n<br> Support Vectors:");
+			lblnumPositiveSupport.setBounds(10, 11, 87, 28);
+			pContainerStatisticsData.add(lblnumPositiveSupport);
+			
+			JLabel label_1 = new JLabel("Time(ms) for WSK");
+			label_1.setBounds(10, 100, 109, 14);
+			pContainerStatisticsData.add(label_1);
+			
+			JLabel label_2 = new JLabel("Time(ms) for WRCH");
+			label_2.setBounds(10, 127, 99, 14);
+			pContainerStatisticsData.add(label_2);
+			
+			JLabel label_3 = new JLabel("numIterations");
+			label_3.setBounds(152, 100, 78, 14);
+			pContainerStatisticsData.add(label_3);
+			
+			JLabel lblnumNegativeSupport = new JLabel("<html>Num. Positive\r\n<br> Support Vectors:");
+			lblnumNegativeSupport.setBounds(10, 50, 87, 28);
+			pContainerStatisticsData.add(lblnumNegativeSupport);
+			
+			JLabel lblNumberOfPoints = new JLabel("Number of Points");
+			lblNumberOfPoints.setBounds(10, 175, 109, 14);
+			pContainerStatisticsData.add(lblNumberOfPoints);
+			
+			JLabel lblNumberOfDimensions_1 = new JLabel("Number of dimensions:");
+			lblNumberOfDimensions_1.setBounds(10, 200, 119, 14);
+			pContainerStatisticsData.add(lblNumberOfDimensions_1);
 			
 			Panel pContainerWeighting = new Panel();
 			tabbedPane.addTab("Weighting", null, pContainerWeighting, null);
@@ -979,7 +1007,7 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 			btnApplyAutoWeighting.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					//TODO check checkbox selections
-					model.getTrainingData().reduceWeightofOldData(10);
+					model.getTrainingData().reduceWeightofOldData(5);
 				}
 			});
 			btnApplyAutoWeighting.setBounds(10, 154, 200, 29);
@@ -1078,41 +1106,58 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 			JMenu mnDisplayLabels = new JMenu("Display Labels");
 			mnView.add(mnDisplayLabels);
 			
-			JCheckBoxMenuItem chckbxmntmDisplayWeights = new JCheckBoxMenuItem("Weights");
-			chckbxmntmDisplayWeights.setSelected(true);
-			mnDisplayLabels.add(chckbxmntmDisplayWeights);
+			JRadioButtonMenuItem rdbtnmntmWeights = new JRadioButtonMenuItem("Weights");
+			rdbtnmntmWeights.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					chartPanel.setDisplayWeights(!chartPanel.isDisplayWeights());
+		
+				}
+			});
+			rdbtnmntmWeights.setSelected(true);
+			mnDisplayLabels.add(rdbtnmntmWeights);
 			
-			JCheckBoxMenuItem chckbxmntmAlphaValues = new JCheckBoxMenuItem("Alpha Values");
-			mnDisplayLabels.add(chckbxmntmAlphaValues);
+			JRadioButtonMenuItem rdbtnmntmAlphaVlues = new JRadioButtonMenuItem("Alpha Vlues");
+			mnDisplayLabels.add(rdbtnmntmAlphaVlues);
 			
 			JMenu mnDataPoints = new JMenu("Data Points");
 			mnView.add(mnDataPoints);
 			
 			JCheckBoxMenuItem chckbxmntmDisplayDataPositiveClass = new JCheckBoxMenuItem("Positive Class");
+			chckbxmntmDisplayDataPositiveClass.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					chartPanel.setDisplayPositiveClass(!chartPanel.isDisplayPositiveClass());
+				}
+			});
 			chckbxmntmDisplayDataPositiveClass.setSelected(true);
 			mnDataPoints.add(chckbxmntmDisplayDataPositiveClass);
 			
 			JCheckBoxMenuItem chckbxmntmDisplayDataNegativeClass = new JCheckBoxMenuItem("Negative Class");
+			chckbxmntmDisplayDataNegativeClass.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					chartPanel.setDisplayNegativeClass(!chartPanel.isDisplayNegativeClass());
+				}
+			});
 			chckbxmntmDisplayDataNegativeClass.setSelected(true);
 			mnDataPoints.add(chckbxmntmDisplayDataNegativeClass);
-			
-			JMenu mnConvexHulls = new JMenu("Convex Hulls");
-			mnView.add(mnConvexHulls);
-			
-			JCheckBoxMenuItem mntmConvexHullpositive = new JCheckBoxMenuItem("Positive Class");
-			mnConvexHulls.add(mntmConvexHullpositive);
-			
-			JCheckBoxMenuItem mntmConvexHullnegative = new JCheckBoxMenuItem("Negative Class");
-			mnConvexHulls.add(mntmConvexHullnegative);
 			
 			JMenu mnWeightedRch = new JMenu("Weighted RCH");
 			mnView.add(mnWeightedRch);
 			
 			JCheckBoxMenuItem mntmWrchpositive = new JCheckBoxMenuItem("Positive Class");
+			mntmWrchpositive.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					chartPanel.setDisplayPositiveWRCH(!chartPanel.isDisplayPositiveWRCH());
+				}
+			});
 			mntmWrchpositive.setSelected(true);
 			mnWeightedRch.add(mntmWrchpositive);
 			
 			JCheckBoxMenuItem mntmWrchnegative = new JCheckBoxMenuItem("Negative Class");
+			mntmWrchnegative.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					chartPanel.setDisplayNegativeWRCH(!chartPanel.isDisplayNegativeWRCH());
+				}
+			});
 			mntmWrchnegative.setSelected(true);
 			mnWeightedRch.add(mntmWrchnegative);
 			
@@ -1125,22 +1170,31 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 			JCheckBoxMenuItem mntmDisplaySVNC = new JCheckBoxMenuItem("Negative Class");
 			mnSupportVectors.add(mntmDisplaySVNC);
 			
-			JMenu mnCentroids = new JMenu("Centroids");
-			mnView.add(mnCentroids);
-			
-			JCheckBoxMenuItem mntmDisplayCentroidPositiveClass = new JCheckBoxMenuItem("Positive Class");
-			mntmDisplayCentroidPositiveClass.setSelected(true);
-			mnCentroids.add(mntmDisplayCentroidPositiveClass);
-			
-			JCheckBoxMenuItem mntmDisplayCentroidNegativeClass = new JCheckBoxMenuItem("Negative Class");
-			mntmDisplayCentroidNegativeClass.setSelected(true);
-			mnCentroids.add(mntmDisplayCentroidNegativeClass);
+			JCheckBoxMenuItem chckbxmntmCentroids = new JCheckBoxMenuItem("Centroids");
+			chckbxmntmCentroids.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					chartPanel.setDisplayCentroids(!chartPanel.isDisplayCentroids());
+				}
+			});
+			chckbxmntmCentroids.setSelected(true);
+			mnView.add(chckbxmntmCentroids);
 			
 			JCheckBoxMenuItem mntmHyperplane = new JCheckBoxMenuItem("Hyperplane");
+			mntmHyperplane.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					chartPanel.setDisplayGeometricBoundary(!chartPanel.isDisplayGeometricBoundary());
+				}
+			});
 			mntmHyperplane.setSelected(true);
 			mnView.add(mntmHyperplane);
 			
 			JCheckBoxMenuItem mntmMargins = new JCheckBoxMenuItem("Margins");
+			mntmMargins.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					chartPanel.setDisplayMargins(!chartPanel.isDisplayMargins());
+				}
+			});
+			mntmMargins.setSelected(true);
 			mnView.add(mntmMargins);
 			
 			JMenu mnData = new JMenu("Data");
@@ -1199,10 +1253,10 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 			mntmRandom.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					model.getChartDataset().clearData();
-					model.generateRandomData(//TODO make this completely random
+					model.generateRandomTrainingData( 2, //TODO make this completely random
 							10,
 							50, 
-							0);
+							0,0,10);
 				}
 			});
 			
