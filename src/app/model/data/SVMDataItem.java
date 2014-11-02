@@ -21,6 +21,13 @@ public class SVMDataItem extends XYDataItem{
 	
 	private DVector vector = null; //TODO THINK ABOUT THIS
 	
+	private int dimensions;
+	
+	
+	public int getDimensions() {
+		return dimensions;
+	}
+
 	public DVector getVector() {
 		return vector;
 	}
@@ -54,7 +61,7 @@ public class SVMDataItem extends XYDataItem{
 			setWeight(vec.getWeight());
 			setClassID(vec.getClassID());
 			vector = vec;
-
+			this.dimensions = vec.getDimensions();
 		} catch (Exception e) {
 			// TODO
 			e.printStackTrace();
@@ -83,6 +90,7 @@ public class SVMDataItem extends XYDataItem{
 		setWeight(weight);
 		setClassID(classID);
 		setLabel(getWeight() + "");
+		this.dimensions = 2;
 		vector = null;
 	}
 	

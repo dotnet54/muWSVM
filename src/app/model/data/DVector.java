@@ -1,8 +1,10 @@
 package app.model.data;
 
+import org.jfree.data.xy.XYDataItem;
+
 import app.model.algorithms.DoubleMath;
 
-public class DVector extends SVMDataItem{
+public class DVector extends XYDataItem{
 	
 	/**
 	 * 

@@ -42,9 +42,9 @@ public class Dwsk {
 		return nearestNegativePoint;
 	}
 
-
+	//TODO handle n-dimension alg9 while wrch use 2 d a;g9
 	
-	public void wsk(DData Dataset, double mu1,double mu2) throws Exception{
+	public void wsk(SVMDataSet Dataset, double mu1,double mu2) throws Exception{
 
 		startTime = System.nanoTime();
 		
@@ -65,8 +65,8 @@ public class Dwsk {
 			DVector wprime = w.clone();
 			wprime.multiplyByScaler(-1);
 
-			DVector vp = Dwrch.findExtremePoint(Dataset.getPositiveClass() , mu1, wprime);
-			DVector vn = Dwrch.findExtremePoint(Dataset.getNegativeClass() , mu2, w);
+			DVector vp = findExtremePoint(Dataset.getPositiveClass() , mu1, wprime);
+			DVector vn = findExtremePoint(Dataset.getNegativeClass() , mu2, w);
 			
 			DVector dvp = vp.subtractVectors(n);
 			DVector dpv = p.subtractVectors(vn);
@@ -133,81 +133,81 @@ public class Dwsk {
 	//TODO NOTE WSK is n dimension whole WRCH is 2 dimension
 	
 	
-//	public static DVector findExtremePoint(ArrayList<DVector> list, double mu, final DVector n){
-//		
-//		if (mu == 0){ //TODO fp comparison
-//			//return findCentroid(P);
+	public static DVector findExtremePoint(ArrayList<DVector> list, double mu, final DVector n){
+		
+		if (mu == 0){ //TODO fp comparison
+			//return findCentroid(P);
+		}
+		
+		//TODO if weight = 0 ??
+		Collections.sort(list,Collections.reverseOrder( new Comparator<DVector>() {
+			@Override
+			public int compare(DVector o1, DVector o2) {
+				//TODO fp comparisons
+				try {
+					double p1 = o1.getDotProduct(n);
+					double p2 = o2.getDotProduct(n);
+					if (p1 < p2){
+						return -1;
+					}else if (p2 > p1){
+						return 1;
+					}else{
+						return 0;
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+					return 0;
+				}
+			}
+		}));
+		
+		
+		double [] A = new double[list.size()];
+		double s = 0;
+		int k = 0;
+		
+		int count = 0;
+		
+		while (s < 1.0){ //TODO fp comparison
+			if (k >= A.length){
+				//System.out.println("k fixed");
+				k = 0;
+				//return findCentroid(P); //TODO if all A are used then return centroid
+			}
+				if (A[k] == 0){
+					count++;
+				}
+			A[k] = A[k] + Math.min(list.get(k).getWeight() * mu, 1 - s);
+			s += A[k];
+			k++;
+		}
+		
+		DVector v = new DVector(n.getDimensions());
+		int i = 0;
+		for (i = 0; i < count; i++){
+			if (i >=  list.size()){
+				System.out.println("index out of bounds");
+			}
+			DVector c = list.get(i).clone();
+			c.multiplyByScaler(A[i]);
+			try {
+				v.add(c);
+			} catch (Exception e) {
+				// TODO
+				e.printStackTrace();
+			}
+		}
+		
+
+//		//copy support points
+//		numSupportPoints = count;
+//		Z = new SVMDataItem[X.size()];
+//		for (int j = 0; j < X.size(); j++){
+//			Z[j] = X.get(j); 
 //		}
-//		
-//		//TODO if weight = 0 ??
-//		Collections.sort(list,Collections.reverseOrder( new Comparator<DVector>() {
-//			@Override
-//			public int compare(DVector o1, DVector o2) {
-//				//TODO fp comparisons
-//				try {
-//					double p1 = o1.getDotProduct(n);
-//					double p2 = o2.getDotProduct(n);
-//					if (p1 < p2){
-//						return -1;
-//					}else if (p2 > p1){
-//						return 1;
-//					}else{
-//						return 0;
-//					}
-//				} catch (Exception e) {
-//					e.printStackTrace();
-//					return 0;
-//				}
-//			}
-//		}));
-//		
-//		
-//		double [] A = new double[list.size()];
-//		double s = 0;
-//		int k = 0;
-//		
-//		int count = 0;
-//		
-//		while (s < 1.0){ //TODO fp comparison
-//			if (k >= A.length){
-//				//System.out.println("k fixed");
-//				k = 0;
-//				//return findCentroid(P); //TODO if all A are used then return centroid
-//			}
-//				if (A[k] == 0){
-//					count++;
-//				}
-//			A[k] = A[k] + Math.min(list.get(k).getWeight() * mu, 1 - s);
-//			s += A[k];
-//			k++;
-//		}
-//		
-//		DVector v = new DVector(n.getDimensions());
-//		int i = 0;
-//		for (i = 0; i < count; i++){
-//			if (i >=  list.size()){
-//				System.out.println("index out of bounds");
-//			}
-//			DVector c = list.get(i).clone();
-//			c.multiplyByScaler(A[i]);
-//			try {
-//				v.add(c);
-//			} catch (Exception e) {
-//				// TODO
-//				e.printStackTrace();
-//			}
-//		}
-//		
-//
-////		//copy support points
-////		numSupportPoints = count;
-////		Z = new SVMDataItem[X.size()];
-////		for (int j = 0; j < X.size(); j++){
-////			Z[j] = X.get(j); 
-////		}
-//		
-//		return v;
-//	}
+		
+		return v;
+	}
 	
 	
 	private static double clamp(double c, double cmin, double cmax){

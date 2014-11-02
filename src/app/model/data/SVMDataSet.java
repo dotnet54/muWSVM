@@ -11,25 +11,45 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 import java.util.StringTokenizer;
 
 import org.jfree.data.general.Dataset;
+import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
 import app.model.data.DData.DataChangeEvent;
 import app.model.data.DData.DataChangeType;
 
-public class SVMDataSet extends XYSeriesCollection implements IObserver{
+public class SVMDataSet extends XYSeriesCollection {
 
+	
+	
+	private int dimensions;
+	private String[] dimensionLabels;
+
+	private int positiveSeriesID = 0;
+	private int negativeSeriesID = 1;
+	private int xDimension = 0;
+	private int yDimension = 1;
+	
+	static Random rand = new Random();
+	
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -5941570772540357547L;
 
-	DData datasource = null;
-
-	public SVMDataSet(){	
+	public SVMDataSet(int numDimensions){	
 		super();
+		
+		dimensions = numDimensions;
+		dimensionLabels = new String[dimensions];
+		
+		for (int i = 0; i< dimensions;i++){
+			dimensionLabels[i] = "Dimension: " + i;
+		}
 	}
 	
 	@Override
@@ -37,20 +57,40 @@ public class SVMDataSet extends XYSeriesCollection implements IObserver{
 		return (SVMDataSeries) super.getSeries(series);
 	}
 	
-	public void addItem(int seriesIndex, SVMDataItem item){
+	public void addSeries(SVMDataSeries series) throws Exception {
+		if (series.getDimensions() == dimensions){
+			super.addSeries(series);
+		}else{
+			throw new Exception("SVMDataSeries::add: Cannot add item, dimensions do not match");
+		}
+	}
+	
+	public void addItem(int seriesIndex, SVMDataItem item) throws Exception{
+		//TODO check if dimensions match, add to right class
 		getSeries(seriesIndex).add(item);
 	}
 	
 	public void removeItem(int seriesIndex, int itemIndex){
+		//TODO check if dimensions match, add to right class
 		getSeries(seriesIndex).remove(itemIndex);
 	}
 	
-	public void clear(){
-		getSeries(0).clear();	//TODO 0 and 1 must exist
-		getSeries(1).clear();
+	public void clearData(){
+		for (int i = 0; i < getSeriesCount(); i++){
+			getSeries(i).clear();
+		}
 	}
+	
+	public ArrayList<SVMDataItem> getPositiveClass(){
+		return getSeries(getPositiveSeriesID()).toArrayList();
+	}
+	
+	public ArrayList<SVMDataItem> getNegativeClass(){
+		return getSeries(getNegativeSeriesID()).toArrayList();
+	}
+	
 
-	public void loadFromFile(File fin) throws IOException{
+	public void loadFromFile(File fin) throws Exception{
 		
 		FileInputStream fis = new FileInputStream(fin);
 		 
@@ -60,7 +100,7 @@ public class SVMDataSet extends XYSeriesCollection implements IObserver{
 		String line = null;
 		SVMDataItem item = null;
 		
-		clear();
+		clearData();
 		
 		while ((line = br.readLine()) != null) {
 			
@@ -111,41 +151,69 @@ public class SVMDataSet extends XYSeriesCollection implements IObserver{
 	           e.printStackTrace();
 	        }
 	}
+
 	
-	public void attach(DData datasource){
-		this.datasource = datasource;
-		datasource.register(this);
+	
+	
+	
+	
+	/*
+	 * Getters and Setters
+	 */
+	
+	public int getPositiveSeriesID() {
+		return positiveSeriesID;
 	}
 
-	@Override
-	public void update() {
-		// TODO 
-		try {
-			DataChangeEvent event = datasource.getLastChange();
-			DVector item = event.item;
-			if (event.type == DataChangeType.DataAdded){
-				SVMDataItem newItem = new SVMDataItem(item.getXValue(), item.getYValue(), 
-						item.getWeight(), item.getClassID());
-				
-				if (item.getClassID() == +1){ //TODO if positive class changed??
-					addItem(0,  newItem);
-				}else if(item.getClassID() == -1){
-					addItem(1,  newItem);
-				}
-			}else if (event.type == DataChangeType.DataRemoved){
-				if (item.getClassID() == +1){ //TODO if positive class changed??
-					removeItem(0,  event.index); //TODO index missmatch
-				}else if(item.getClassID() == -1){
-					removeItem(1,  event.index);
-				}
-			}else if (event.type == DataChangeType.DatasetCleared){
-				clear();
-			}
-			
-		} catch (Exception e) {
-			// TODO
-			e.printStackTrace();
+	public void setPositiveSeriesID(int positiveSeriesID) {
+		this.positiveSeriesID = positiveSeriesID;
+	}
+
+	public int getNegativeSeriesID() {
+		return negativeSeriesID;
+	}
+
+	public void setNegativeSeriesID(int negativeSeriesID) {
+		this.negativeSeriesID = negativeSeriesID;
+	}
+
+	public int getXDimension() {
+		return xDimension;
+	}
+
+	public void setXDimension(int xDimension) {
+		this.xDimension = xDimension;
+		for (int i = 0; i < getSeriesCount(); i++){
+			getSeries(i).setYDimension(yDimension);
 		}
+		
+		fireDatasetChanged();
+	}
+
+	public int getYDimension() {
+		return yDimension;
+	}
+
+	public void setYDimension(int yDimension) {
+		this.yDimension = yDimension;
+		for (int i = 0; i < getSeriesCount(); i++){
+			getSeries(i).setYDimension(yDimension);
+		}
+		
+		fireDatasetChanged();
+	}
+
+	public int getDimensions() {
+		return dimensions;
+	}
+	
+
+	public String[] getDimensionLabels() {
+		return dimensionLabels;
+	}
+
+	public void setDimensionLabels(String[] dimensionLabels) {
+		this.dimensionLabels = dimensionLabels;
 	}
 	
 }

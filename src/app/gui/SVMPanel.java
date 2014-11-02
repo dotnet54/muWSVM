@@ -441,14 +441,24 @@ public class SVMPanel extends ChartPanel
 		itp.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				addPoint(0);
+				try {
+					addPoint(0);
+				} catch (Exception e1) {
+					// TODO
+					e1.printStackTrace();
+				}
 			}
 		});
 		
 		itn.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				addPoint(1);
+				try {
+					addPoint(1);
+				} catch (Exception e1) {
+					// TODO
+					e1.printStackTrace();
+				}
 			}
 		});
 		
@@ -456,7 +466,12 @@ public class SVMPanel extends ChartPanel
 			
 			@Override
 			public void actionPerformed(ActionEvent ev) {
-				duplicateSelection(1);
+				try {
+					duplicateSelection(1);
+				} catch (Exception e) {
+					// TODO
+					e.printStackTrace();
+				}
 			}
 		});
 		
@@ -575,11 +590,11 @@ public class SVMPanel extends ChartPanel
 		return this.translateJava2DToScreen(p2);
 	}
 	
-	public void addPoint(int series){
+	public void addPoint(int series) throws Exception{
 		chartData.addItem(series, new SVMDataItem(xChart, yChart));
 	}
 	
-	public void duplicateSelection(int numDuplicates){
+	public void duplicateSelection(int numDuplicates) throws Exception{
 		if (hasSelectedItem()){
 			XYItemEntity e = (XYItemEntity) selectedEntity;
             XYDataset dataset = e.getDataset();

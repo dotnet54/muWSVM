@@ -26,27 +26,25 @@ public class SVMModel {
 	private SVMDataSeries negativeSeries = null;
 	
 	
-	private DData trainingData = null;
-	public DData getTrainingData() {
+	private SVMDataSet trainingData = null;
+	public SVMDataSet getTrainingData() {
 		return trainingData;
 	}
 
-	public void setTrainingData(DData trainingData) {
+	public void setTrainingData(SVMDataSet trainingData) {
 		this.trainingData = trainingData;
 	}
 
-	public DData getTestData() {
+	public SVMDataSet getTestData() {
 		return testData;
 	}
 
-	public void setTestData(DData testData) {
+	public void setTestData(SVMDataSet testData) {
 		this.testData = testData;
 	}
 
-	private DData testData = null;
-	private SVMDataSet chartData = null;
+	private SVMDataSet testData = null;
 
-	
 	
 	
 	public int numTruePositives;
@@ -67,12 +65,12 @@ public class SVMModel {
 
 	int numActualPositives;
 	public int getNumActualPositives() {
-		numActualPositives = chartData.getItemCount(0);
+		numActualPositives = trainingData.getItemCount(0);
 		return numActualPositives;
 	}
 
 	public int getNumActualNegatives() {
-		numActualNegatives = chartData.getItemCount(1);
+		numActualNegatives = trainingData.getItemCount(1);
 		return numActualNegatives;
 	}
 
@@ -146,11 +144,11 @@ public class SVMModel {
 	}
 
 	public SVMDataSet getChartDataset() {
-		return chartData;
+		return trainingData;
 	}
 
 	public void setChartDataset(SVMDataSet chartData) {
-		this.chartData = chartData;
+		this.trainingData = chartData;
 	}
 
 	public SVMDataSeries getPositiveSeries() {
@@ -200,8 +198,8 @@ public class SVMModel {
 	}
 
 	public void clearDataSet(int series){
-		chartData.getSeries(0).clear();
-		chartData.getSeries(1).clear();
+		trainingData.clearData();
+		testData.clearData();
 		solutionDataSet.getSeries(0).clear();
 		solutionDataSet.getSeries(1).clear();
 		solutionDataSet.getSeries(2).clear();
@@ -223,23 +221,23 @@ public class SVMModel {
 	//TODO sync problem, run bgtask in debugger, before 1 task finishes 
 	public SVMModel(){
 		
-		trainingData = new DData(2);		
-		testData = new DData(2);
+		int numDimensions = 2;
 		
-		trainingData.setPositiveClass(+1);
-		trainingData.setNegativeClass(-1);
-		trainingData.setXDimension(0);
-		trainingData.setYDimension(1);
+		trainingData = SVMDataGenerator.getDefaultSVMDataset();		
+		testData = SVMDataGenerator.getDefaultSVMDataset();
 		
-		chartData = trainingData.getChartData();
-		
-		solutionDataSet = new SVMDataSet();
-		SVMDataSeries series3 = new SVMDataSeries("Positive WRCH");
-		SVMDataSeries series4 = new SVMDataSeries("Negative WRCH");
-		SVMDataSeries series5 = new SVMDataSeries("Centroids");
-		solutionDataSet.addSeries(series3);
-		solutionDataSet.addSeries(series4);
-		solutionDataSet.addSeries(series5);
+		try {
+			solutionDataSet = new SVMDataSet(numDimensions);
+			SVMDataSeries series3 = new SVMDataSeries("Positive WRCH", numDimensions);
+			SVMDataSeries series4 = new SVMDataSeries("Negative WRCH", numDimensions);
+			SVMDataSeries series5 = new SVMDataSeries("Centroids", numDimensions);
+			solutionDataSet.addSeries(series3);
+			solutionDataSet.addSeries(series4);
+			solutionDataSet.addSeries(series5);
+		} catch (Exception e) {
+			// TODO
+			e.printStackTrace();
+		}
 
 		//initializeData();
 	}
@@ -257,26 +255,32 @@ public class SVMModel {
 	
 	public void generateRandomData(int numPoints, int percentPos, int softnessDelta){
 		SVMDataGenerator dataGen = new SVMDataGenerator(this, 3, 2);
-		dataGen.generateData(chartData, numPoints, percentPos, softnessDelta);
+		dataGen.generateData(trainingData, numPoints, percentPos, softnessDelta);
 	}
 	
 	public void loadPredefinedDataset(String name){
 		SVMDataGenerator dataGen = new SVMDataGenerator(this, 3, 2);
-		dataGen.setPredefinedDataset(chartData, name);
+		dataGen.setPredefinedDataset(trainingData, name);
 	}
 	
 	private void initializeData(){
 
-		trainingData.generateRandomData(10);
+		
+		
+		
+		
+		
+		
+		//trainingData.generateRandomData(10);
 		SVMDataGenerator dataGen = new SVMDataGenerator(this, 3, 2);
-		dataGen.generateData(chartData, 10, 50, 0);
+		dataGen.generateData(trainingData, 10, 50, 0);
 		//dataGen.setPredefinedDataset(rawDataSet, "Triangle 1");
 
 	}
 	
-	public void solveWRCH(int series){
-		dataset1 = chartData.getSeries(0).toArrayList();
-		dataset2 = chartData.getSeries(1).toArrayList();
+	public void solveWRCH(int series) throws Exception{
+		dataset1 = trainingData.getSeries(0).toArrayList();
+		dataset2 = trainingData.getSeries(1).toArrayList();
 		
 //		if (series == 0){
 //			rch1 = WRCH.calcWeightedReducedCHull(dataset1, mu1);
@@ -349,12 +353,12 @@ public class SVMModel {
 			
 			int count = 0;
 			double proj = 0.0;
-			DVector item = null;
+			SVMDataItem item = null;
 			
-			ArrayList<DVector> positiveClass = trainingData.getPositiveClass();
-			numActualPositives = positiveClass.size();
+			SVMDataSeries positiveClass = trainingData.getSeries(trainingData.getPositiveSeriesID());
+			numActualPositives = positiveClass.getItemCount();
 			for (int i = 0; i < numActualPositives; i++){
-				item = positiveClass.get(i);
+				item = positiveClass.getDataItem(i);
 				proj = getW().getDotProduct(item);
 				if (proj > 0){ //TODO fp comparison
 					count++;
@@ -364,10 +368,11 @@ public class SVMModel {
 			
 			count = 0;
 			proj = 0.0;
-			ArrayList<DVector> negativeClass = trainingData.getPositiveClass();
-			numActualNegatives = negativeClass.size();
+			SVMDataSeries negativeClass = 
+				trainingData.getSeries(trainingData.getNegativeSeriesID());
+			numActualNegatives = negativeClass.getItemCount();
 			for (int i = 0; i < numActualNegatives; i++){
-				item = positiveClass.get(i);
+				item = positiveClass.getDataItem(i);
 				proj = getW().getDotProduct(item);
 				if (proj > 0){ //TODO fp comparison
 					count++;

@@ -192,16 +192,24 @@ public class SVMMain implements ActionListener, IObserver{
 			btnFindWeightedReduced.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					//TODO try catch parse integer
-					if (chckbxUseSameParameters.isSelected()){
-						model.setMu(Double.parseDouble(textField_class1.getText()),
-							 	Double.parseDouble(textField_class1.getText()));
-					}else{
-						model.setMu(Double.parseDouble(textField_class1.getText()),
-							 	Double.parseDouble(textField_class_2.getText()));
+					try {
+						if (chckbxUseSameParameters.isSelected()){
+							model.setMu(Double.parseDouble(textField_class1.getText()),
+								 	Double.parseDouble(textField_class1.getText()));
+						}else{
+							model.setMu(Double.parseDouble(textField_class1.getText()),
+								 	Double.parseDouble(textField_class_2.getText()));
+						}
+						
+						model.solveWRCH(2);
+						chartPanel.updateWRCHSolutions();
+					} catch (NumberFormatException e1) {
+						// TODO
+						e1.printStackTrace();
+					} catch (Exception e1) {
+						// TODO
+						e1.printStackTrace();
 					}
-					
-					model.solveWRCH(2);
-					chartPanel.updateWRCHSolutions();
 				}
 			});
 			btnFindWeightedReduced.setBounds(0, 0, 125, 23);
@@ -596,7 +604,7 @@ public class SVMMain implements ActionListener, IObserver{
 				        	model.getChartDataset().loadFromFile(fc.getSelectedFile());
 				        } 
 						
-					} catch (IOException e1) {
+					} catch (Exception e1) {
 						// TODO
 						e1.printStackTrace();
 					}
@@ -828,11 +836,11 @@ public class SVMMain implements ActionListener, IObserver{
 					
 					JComboBox<String> combo = (JComboBox<String>) e.getSource();
 					chart.getXYPlot().getDomainAxis().setLabel(
-							model.getTestData().getAttributeNames()[combo.getSelectedIndex()]);
+							model.getTestData().getDimensionLabels()[combo.getSelectedIndex()]);
 					changeChartData();
 				}
 			});
-			xDimensionName.setModel(new DefaultComboBoxModel<String>(model.getTrainingData().getAttributeNames()));
+			xDimensionName.setModel(new DefaultComboBoxModel<String>(model.getTrainingData().getDimensionLabels()));
 			xDimensionName.setMinimumSize(new Dimension(40, 20));
 			xDimensionName.setSelectedIndex(0);
 			panel.add(xDimensionName);
@@ -845,13 +853,13 @@ public class SVMMain implements ActionListener, IObserver{
 				public void actionPerformed(ActionEvent e) {
 					JComboBox<String> combo = (JComboBox<String>) e.getSource();
 					chart.getXYPlot().getRangeAxis().setLabel(
-							model.getTestData().getAttributeNames()[combo.getSelectedIndex()]);	
+							model.getTestData().getDimensionLabels()[combo.getSelectedIndex()]);	
 					changeChartData();
 					
 					}
 					
 			});
-			yDimensionName.setModel(new DefaultComboBoxModel<String>(model.getTrainingData().getAttributeNames()));
+			yDimensionName.setModel(new DefaultComboBoxModel<String>(model.getTrainingData().getDimensionLabels()));
 			yDimensionName.setMinimumSize(new Dimension(40, 20));
 			yDimensionName.setSelectedIndex(1); //TODO assumption index 1 exist
 			panel.add(yDimensionName);
@@ -1127,7 +1135,7 @@ public class SVMMain implements ActionListener, IObserver{
 			JMenuItem mntmRandom = new JMenuItem("Random");
 			mntmRandom.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					model.getChartDataset().clear();
+					model.getChartDataset().clearData();
 					model.generateRandomData(//TODO make this completely random
 							10,
 							50, 
@@ -1219,10 +1227,15 @@ public class SVMMain implements ActionListener, IObserver{
 	}
 	
 	private void findWRCH(double mu1, double mu2){
-		model.setMu(mu1, mu2);
-		model.solveWRCH(0);
-		model.solveWRCH(1);
-		chartPanel.updateWRCHSolutions();
+		try {
+			model.setMu(mu1, mu2);
+			model.solveWRCH(0);
+			model.solveWRCH(1);
+			chartPanel.updateWRCHSolutions();
+		} catch (Exception e) {
+			// TODO
+			e.printStackTrace();
+		}
 	}
 	
 	private void showScatterPlotMatrix(){
@@ -1287,26 +1300,34 @@ public class SVMMain implements ActionListener, IObserver{
 
 	@Override
 	public void update() {
-		if (chartPanel.getSelectedDataItem() != null){
-			lblSelectedPoint.setText(chartPanel.getSelectedDataItem().toFormatedString(2));
-		}else{
-			lblSelectedPoint.setText("None");
-		}
-		
-		if (rdbtnRemoveTool.isSelected()){
-			chartPanel.removeSelection();
-		}else if (rdbtnDuplicateTool.isSelected()){
-			
-			int duplications = Integer.parseInt(textField_NumDuplications.getText());
-			chartPanel.duplicateSelection(duplications);
-		}else if (rdbtnAddTool.isSelected()){
-			if (cmbNewClass.getSelectedIndex() == 0){ //asumption 0 is positive class
-				chartPanel.addPoint(0);
-			}else if (cmbNewClass.getSelectedIndex() == 1){
-				chartPanel.addPoint(1);
+		try {
+			if (chartPanel.getSelectedDataItem() != null){
+				lblSelectedPoint.setText(chartPanel.getSelectedDataItem().toFormatedString(2));
+			}else{
+				lblSelectedPoint.setText("None");
 			}
-		}else if (rdbtnWeightingTool.isSelected()){
 			
+			if (rdbtnRemoveTool.isSelected()){
+				chartPanel.removeSelection();
+			}else if (rdbtnDuplicateTool.isSelected()){
+				
+				int duplications = Integer.parseInt(textField_NumDuplications.getText());
+				chartPanel.duplicateSelection(duplications);
+			}else if (rdbtnAddTool.isSelected()){
+				if (cmbNewClass.getSelectedIndex() == 0){ //asumption 0 is positive class
+					chartPanel.addPoint(0);
+				}else if (cmbNewClass.getSelectedIndex() == 1){
+					chartPanel.addPoint(1);
+				}
+			}else if (rdbtnWeightingTool.isSelected()){
+				
+			}
+		} catch (NumberFormatException e) {
+			// TODO
+			e.printStackTrace();
+		} catch (Exception e) {
+			// TODO
+			e.printStackTrace();
 		}
 	}
 }

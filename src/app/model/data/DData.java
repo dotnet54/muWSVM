@@ -181,12 +181,13 @@ public class DData implements ISubject{
 	
 	
 	public SVMDataSet getChartData(int xDim, int yDim){
-		SVMDataSet dataset = new SVMDataSet();
-		dataset.addSeries(new SVMDataSeries("Positive Class"));
-		dataset.addSeries(new SVMDataSeries("Negative Class"));
-		DVector vec = null;
-		
+		SVMDataSet dataset = new SVMDataSet(2);
 		try{
+			dataset.addSeries(new SVMDataSeries("Positive Class", dataset.getDimensions()));
+			dataset.addSeries(new SVMDataSeries("Negative Class", dataset.getDimensions()));
+			DVector vec = null;
+		
+		
 			ArrayList<DVector> dataClass = getPositiveClass();
 			for (int i= 0; i < dataClass.size(); i++){
 				vec = dataClass.get(i);
@@ -212,13 +213,11 @@ public class DData implements ISubject{
 	
 	
 	public SVMDataSet getChartData(){
-		SVMDataSet dataset = new SVMDataSet();
-		dataset.addSeries(new SVMDataSeries("Positive Class"));
-		dataset.addSeries(new SVMDataSeries("Negative Class"));
-		
-		
-		
-		try {
+		SVMDataSet dataset = new SVMDataSet(2);
+		try{
+			dataset.addSeries(new SVMDataSeries("Positive Class", dataset.getDimensions()));
+			dataset.addSeries(new SVMDataSeries("Negative Class", dataset.getDimensions()));
+
 			ArrayList<DVector> dataClass = getPositiveClass();
 
 			DVector vec = null;
