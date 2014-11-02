@@ -81,13 +81,32 @@ public class SVMDataSet extends XYSeriesCollection {
 		}
 	}
 	
+	public double getWeight(int series, int index){
+		return getSeries(series).getRawDataItem(index).getWeight();
+	}
+	
+	public void setWeight(int series, int index, double newWeight){
+		getSeries(series).getRawDataItem(index).setWeight(newWeight);
+	}
 
 	public double getXValue(int series, int item) {
-		return getSeries(series).getRawDataItem(item).getXValue();
+		try {
+			return getSeries(series).getRawDataItem(item).getVal(getXDimension());
+		} catch (Exception e) {
+			e.printStackTrace();
+			return Double.NaN;
+		}
+		//return getSeries(series).getRawDataItem(item).getXValue();
 	}
 
 	public double getYValue(int series, int item) {
-		return getSeries(series).getRawDataItem(item).getYValue();
+		try {
+			return getSeries(series).getRawDataItem(item).getVal(getYDimension());
+		} catch (Exception e) {
+			e.printStackTrace();
+			return Double.NaN;
+		}
+		//return getSeries(series).getRawDataItem(item).getYValue();
 	}
 	
 	
@@ -162,7 +181,78 @@ public class SVMDataSet extends XYSeriesCollection {
 	           e.printStackTrace();
 	        }
 	}
-
+	
+	public void resetWeights(){
+		for (int j = 0; j <getSeriesCount(); j++){
+			for (int i = 0; i < getSeries(j).getItemCount(); i++){
+				setWeight(j, i, 1);
+			}			
+		}
+		fireDatasetChanged();
+	}
+	
+	public void reduceWeightofOldData(int percentage){
+		double newWeight = 1;
+		
+		//assume 2 class, 0 = positve,
+		int classID;
+		
+		for (int j = 0; j <getSeriesCount(); j++){
+			
+			classID = j; //TODO
+			
+			for (int i = 0; i < getSeries(classID).getItemCount(); i++){
+				newWeight = getWeight(classID, i);
+				
+				newWeight = newWeight - (percentage / 100.0 * newWeight);
+				
+				if (newWeight < 0.01){
+					newWeight = 0.01;
+				}
+				
+				setWeight(classID, i, newWeight);
+			}			
+		}
+		fireDatasetChanged();
+	}
+	
+	
+	
+	
+	public SVMDataSet getChartData(int xDim, int yDim){
+		SVMDataSet dataset = new SVMDataSet(2);
+		try{
+			dataset.addSeries(new SVMDataSeries("Positive Class", dataset.getDimensions()));
+			dataset.addSeries(new SVMDataSeries("Negative Class", dataset.getDimensions()));
+			DVector vec = null;
+		
+		
+			ArrayList<DVector> dataClass = getPositiveClass();
+			for (int i= 0; i < dataClass.size(); i++){
+				vec = dataClass.get(i);
+				dataset.getSeries(0).add(
+						new DVector(vec.getVal(xDim), vec.getVal(yDim), vec.getWeight()));
+			}
+			dataClass = getNegativeClass();
+			for (int i= 0; i < dataClass.size(); i++){
+				vec = dataClass.get(i);
+				dataset.getSeries(1).add(
+						new DVector(vec.getVal(xDim), vec.getVal(yDim), vec.getWeight()));
+			}
+			
+			
+		} catch (Exception e) {
+			// TODO
+			e.printStackTrace();
+		}
+		
+		return dataset;
+	}
+	
+	
+	
+	
+	
 	
 	
 	
@@ -195,7 +285,7 @@ public class SVMDataSet extends XYSeriesCollection {
 	public void setXDimension(int xDimension) {
 		this.xDimension = xDimension;
 		for (int i = 0; i < getSeriesCount(); i++){
-			getSeries(i).setYDimension(yDimension);
+			getSeries(i).setXDimension(xDimension);
 		}
 		
 		fireDatasetChanged();

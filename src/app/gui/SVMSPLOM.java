@@ -14,6 +14,7 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.XYPlot;
 
 import app.model.data.DData;
+import app.model.data.SVMDataSet;
 import app.model.data.SVMModel;
 
 import java.awt.GridLayout;
@@ -23,7 +24,12 @@ public class SVMSPLOM extends JFrame {
 
 	private JPanel contentPane;
 
-
+	SVMDataSet datasource;
+	int numDimensions;
+	
+	JFreeChart charts[];
+	ChartPanel panels[];
+	
 	/**
 	 * Create the frame.
 	 */
@@ -36,14 +42,13 @@ public class SVMSPLOM extends JFrame {
 		contentPane.setLayout(new BorderLayout(0, 0));
 		
 		
-		int numDimensions = 2;
-		
-		DData datasource = new DData(numDimensions);	
-		datasource.generateRandomData(numDimensions);
+
+		datasource = model.getTrainingData();
+		numDimensions = datasource.getDimensions();
 		
 		int numCharts = numDimensions * numDimensions;
-		JFreeChart charts[] = new JFreeChart[numCharts];
-		ChartPanel panels[] = new ChartPanel[numCharts];	
+		charts = new JFreeChart[numCharts];
+		panels = new ChartPanel[numCharts];	
 		
 		
 		JPanel panel = new JPanel();
@@ -56,7 +61,9 @@ public class SVMSPLOM extends JFrame {
 
 				chartID = i * numDimensions + j;
 				charts[chartID] = ChartFactory.createScatterPlot
-					("Chart " + chartID, "Dimension: " + i, "Dimension: " + j, datasource.getChartData(i, j));
+					("Chart " + chartID, "Dimension: " + i,
+					"Dimension: " + j, datasource.getChartData(i, j));
+				
 				panels[chartID] = new ChartPanel(charts[chartID]);
 				panel.add(panels[chartID]);
 				
@@ -75,6 +82,18 @@ public class SVMSPLOM extends JFrame {
 		}
 
 		getContentPane().add(panel);
+	}
+	
+	public void updateChartData(){
+
+		int chartID;
+		
+		for (int i = 0; i < numDimensions; i++){
+			for (int j = 0; j < numDimensions; j++){
+				chartID = i * numDimensions + j;
+				charts[chartID].getXYPlot().setDataset(datasource.getChartData(i, j));
+			}
+		}
 	}
 
 }

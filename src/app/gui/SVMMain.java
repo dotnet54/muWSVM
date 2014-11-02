@@ -30,7 +30,13 @@ import javax.swing.JTabbedPane;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
+import org.jfree.data.general.Dataset;
+import org.jfree.data.general.DatasetChangeEvent;
+import org.jfree.data.general.DatasetChangeListener;
+
+import app.model.data.DVector;
 import app.model.data.IObserver;
+import app.model.data.SVMDataSet;
 import app.model.data.SVMModel;
 import app.test.PerformanceMatrix;
 
@@ -56,7 +62,7 @@ import java.awt.Dimension;
  * @author shifaz
  *
  */
-public class SVMMain implements ActionListener, IObserver{
+public class SVMMain implements ActionListener, IObserver, DatasetChangeListener{
 
 	//Model globals
 	private SVMModel model = null;
@@ -116,8 +122,10 @@ public class SVMMain implements ActionListener, IObserver{
 
 	private PerformanceMatrix perfMatrix;
 
-	private JComboBox<String> xDimensionName;
-	private JComboBox<String> yDimensionName;
+	private JComboBox<String> cmbXDimensionName;
+	private JComboBox<String> cmbYDimensionName;
+	private JTextField txtMin;
+	private JTextField txtMax;
 	
 	/**
 	 * Entry point - Launch the application.
@@ -153,6 +161,9 @@ public class SVMMain implements ActionListener, IObserver{
 	public SVMMain() {
 		//Initialize Model
 		model = new SVMModel();
+		
+		model.getTrainingData().addChangeListener(this);
+		model.register(this);
 
 		//Initialize GUI
 		initializeGUI();
@@ -435,7 +446,7 @@ public class SVMMain implements ActionListener, IObserver{
 					double m1 = Double.parseDouble(textField_class1.getText());
 					double m2 =  (double) j.getValue();
 					//TODO try catch parse double, format label string
-					
+
 					if (chckbxUsemuScale_1.isSelected()){
 						textField_class_2.setText(format(1 / m2));
 						lblmuInvVal_class2.setText(format(m2));
@@ -676,13 +687,34 @@ public class SVMMain implements ActionListener, IObserver{
 			pContainerTrainingData.add(btnSaveData);
 			
 			numDimensions = new JTextField();
-			numDimensions.setBounds(165, 109, 104, 20);
+			numDimensions.setText("2");
+			numDimensions.setBounds(271, 89, 27, 20);
 			pContainerTrainingData.add(numDimensions);
-			numDimensions.setColumns(10);
+			numDimensions.setColumns(2);
 			
 			JLabel lblNumberOfDimensions = new JLabel("Number of dimensions");
-			lblNumberOfDimensions.setBounds(164, 92, 105, 14);
+			lblNumberOfDimensions.setBounds(150, 92, 105, 14);
 			pContainerTrainingData.add(lblNumberOfDimensions);
+			
+			JLabel lblMin = new JLabel("Min:");
+			lblMin.setBounds(164, 125, 32, 14);
+			pContainerTrainingData.add(lblMin);
+			
+			JLabel lblMax = new JLabel("Max:");
+			lblMax.setBounds(164, 156, 46, 14);
+			pContainerTrainingData.add(lblMax);
+			
+			txtMin = new JTextField();
+			txtMin.setText("0");
+			txtMin.setBounds(212, 122, 86, 20);
+			pContainerTrainingData.add(txtMin);
+			txtMin.setColumns(10);
+			
+			txtMax = new JTextField();
+			txtMax.setText("10");
+			txtMax.setBounds(212, 153, 86, 20);
+			pContainerTrainingData.add(txtMax);
+			txtMax.setColumns(10);
 			
 			JPanel pContainerDataEditing = new JPanel();
 			tabbedPane.addTab("Data Editing", null, pContainerDataEditing, null);
@@ -722,11 +754,11 @@ public class SVMMain implements ActionListener, IObserver{
 			
 			cmbNewClass = new JComboBox<String>();
 			cmbNewClass.setModel(new DefaultComboBoxModel<String>(new String[] {"Positive Class", "Negative Class"}));
-			cmbNewClass.setBounds(198, 241, 90, 20);
+			cmbNewClass.setBounds(198, 146, 90, 20);
 			pContainerDataEditing.add(cmbNewClass);
 			
 			JLabel lblNewClass = new JLabel("New Class:");
-			lblNewClass.setBounds(128, 244, 60, 14);
+			lblNewClass.setBounds(128, 149, 60, 14);
 			pContainerDataEditing.add(lblNewClass);
 			
 			rdbtnSelectTool = new JRadioButton("Select Point");
@@ -735,11 +767,11 @@ public class SVMMain implements ActionListener, IObserver{
 			pContainerDataEditing.add(rdbtnSelectTool);
 			
 			rdbtnAddTool = new JRadioButton("Add Point");
-			rdbtnAddTool.setBounds(10, 233, 77, 23);
+			rdbtnAddTool.setBounds(10, 145, 77, 23);
 			pContainerDataEditing.add(rdbtnAddTool);
 			
 			rdbtnRemoveTool = new JRadioButton("Remove Point");
-			rdbtnRemoveTool.setBounds(10, 145, 109, 23);
+			rdbtnRemoveTool.setBounds(10, 231, 109, 23);
 			pContainerDataEditing.add(rdbtnRemoveTool);
 			
 			rdbtnDuplicateTool = new JRadioButton("Duplicate Point");
@@ -830,8 +862,8 @@ public class SVMMain implements ActionListener, IObserver{
 			JLabel lblXaxisAttribute = new JLabel("X-axis Attribute");
 			panel.add(lblXaxisAttribute);
 			
-			xDimensionName = new JComboBox<String>();
-			xDimensionName.addActionListener(new ActionListener() {
+			cmbXDimensionName = new JComboBox<String>();
+			cmbXDimensionName.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					
 					JComboBox<String> combo = (JComboBox<String>) e.getSource();
@@ -840,16 +872,16 @@ public class SVMMain implements ActionListener, IObserver{
 					changeChartData();
 				}
 			});
-			xDimensionName.setModel(new DefaultComboBoxModel<String>(model.getTrainingData().getDimensionLabels()));
-			xDimensionName.setMinimumSize(new Dimension(40, 20));
-			xDimensionName.setSelectedIndex(0);
-			panel.add(xDimensionName);
+			cmbXDimensionName.setModel(new DefaultComboBoxModel<String>(model.getTrainingData().getDimensionLabels()));
+			cmbXDimensionName.setMinimumSize(new Dimension(40, 20));
+			cmbXDimensionName.setSelectedIndex(0);
+			panel.add(cmbXDimensionName);
 			
 			JLabel lblYaxisAttribute = new JLabel("Y-axis Attribute");
 			panel.add(lblYaxisAttribute);
 			
-			yDimensionName = new JComboBox<String>();
-			yDimensionName.addActionListener(new ActionListener() {
+			cmbYDimensionName = new JComboBox<String>();
+			cmbYDimensionName.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					JComboBox<String> combo = (JComboBox<String>) e.getSource();
 					chart.getXYPlot().getRangeAxis().setLabel(
@@ -859,10 +891,10 @@ public class SVMMain implements ActionListener, IObserver{
 					}
 					
 			});
-			yDimensionName.setModel(new DefaultComboBoxModel<String>(model.getTrainingData().getDimensionLabels()));
-			yDimensionName.setMinimumSize(new Dimension(40, 20));
-			yDimensionName.setSelectedIndex(1); //TODO assumption index 1 exist
-			panel.add(yDimensionName);
+			cmbYDimensionName.setModel(new DefaultComboBoxModel<String>(model.getTrainingData().getDimensionLabels()));
+			cmbYDimensionName.setMinimumSize(new Dimension(40, 20));
+			cmbYDimensionName.setSelectedIndex(1); //TODO assumption index 1 exist
+			panel.add(cmbYDimensionName);
 			frame.getContentPane().add(pSolveButtonsContainer);
 			
 			JButton btnClassify = new JButton("Classify");
@@ -943,18 +975,15 @@ public class SVMMain implements ActionListener, IObserver{
 			tabbedPane.addTab("Weighting", null, pContainerWeighting, null);
 			pContainerWeighting.setLayout(null);
 			
-			JButton btnApplyAutoWeighting = new JButton("Apply Auto Weighting");
-			btnApplyAutoWeighting.setBounds(10, 80, 145, 23);
+			JButton btnApplyAutoWeighting = new JButton("Apply Selected Weighting Schemes");
+			btnApplyAutoWeighting.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					//TODO check checkbox selections
+					model.getTrainingData().reduceWeightofOldData(10);
+				}
+			});
+			btnApplyAutoWeighting.setBounds(10, 154, 200, 29);
 			pContainerWeighting.add(btnApplyAutoWeighting);
-			
-			JComboBox cmbWeightingSchemes = new JComboBox();
-			cmbWeightingSchemes.setModel(new DefaultComboBoxModel(new String[] {"Reduce weight of old data", "Reduce weight of uncertain data"}));
-			cmbWeightingSchemes.setBounds(10, 37, 186, 20);
-			pContainerWeighting.add(cmbWeightingSchemes);
-			
-			JButton btnNewButton = new JButton("Weight based on clusters");
-			btnNewButton.setBounds(10, 114, 168, 23);
-			pContainerWeighting.add(btnNewButton);
 			
 			JCheckBox chckbxEnableAutoWeighting = new JCheckBox("Enable Auto weighting");
 			chckbxEnableAutoWeighting.setBounds(10, 7, 168, 23);
@@ -969,12 +998,46 @@ public class SVMMain implements ActionListener, IObserver{
 			pContainerWeighting.add(btnRandomOversample);
 			
 			JButton btnSystematicUndersample = new JButton("Systematic Undersample");
-			btnSystematicUndersample.setBounds(10, 194, 168, 23);
+			btnSystematicUndersample.setBounds(10, 194, 157, 23);
 			pContainerWeighting.add(btnSystematicUndersample);
 			
 			JButton btnSystematicOversample = new JButton("Systematic Oversample");
-			btnSystematicOversample.setBounds(10, 228, 168, 23);
+			btnSystematicOversample.setBounds(10, 226, 157, 23);
 			pContainerWeighting.add(btnSystematicOversample);
+			
+			JCheckBox chckbxReduceWeightOf = new JCheckBox("Reduce weight of old data");
+			chckbxReduceWeightOf.setBounds(10, 58, 168, 23);
+			pContainerWeighting.add(chckbxReduceWeightOf);
+			
+			JLabel lblAutoWeightingSchemes = new JLabel("Auto Weighting Schemes");
+			lblAutoWeightingSchemes.setBounds(10, 37, 168, 14);
+			pContainerWeighting.add(lblAutoWeightingSchemes);
+			
+			JCheckBox chckbxModifyWeightsBased = new JCheckBox("Modify weights based on distance");
+			chckbxModifyWeightsBased.setBounds(10, 85, 200, 23);
+			pContainerWeighting.add(chckbxModifyWeightsBased);
+			
+			JCheckBox chckbxModifyBasedOn = new JCheckBox("Modify based on accuracy results");
+			chckbxModifyBasedOn.setBounds(10, 111, 191, 23);
+			pContainerWeighting.add(chckbxModifyBasedOn);
+			
+			JButton btnResetWeights = new JButton("Reset Weights");
+			btnResetWeights.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					model.getTrainingData().resetWeights();
+				}
+			});
+			btnResetWeights.setBounds(185, 7, 113, 23);
+			pContainerWeighting.add(btnResetWeights);
+			
+			JComboBox cmbWeightingClass = new JComboBox();
+			cmbWeightingClass.setModel(new DefaultComboBoxModel(new String[] {"Positive", "Negative", "Both"}));
+			cmbWeightingClass.setBounds(230, 59, 68, 20);
+			pContainerWeighting.add(cmbWeightingClass);
+			
+			JLabel lblApplyWeightsTo = new JLabel("Apply weights to: ");
+			lblApplyWeightsTo.setBounds(210, 37, 88, 14);
+			pContainerWeighting.add(lblApplyWeightsTo);
 			
 			JMenuBar menuBar = new JMenuBar();
 			frame.setJMenuBar(menuBar);
@@ -1205,12 +1268,16 @@ public class SVMMain implements ActionListener, IObserver{
 	private void changeChartData(){
 		int xDim = 0;
 		int yDim = 0; 
-		if (xDimensionName != null){
-			xDim = xDimensionName.getSelectedIndex();
+		if (cmbXDimensionName != null){
+			xDim = cmbXDimensionName.getSelectedIndex();
 		}
-		if (yDimensionName != null){
-			xDim = yDimensionName.getSelectedIndex();
+		if (cmbYDimensionName != null){
+			yDim = cmbYDimensionName.getSelectedIndex();
 		}
+		model.getTrainingData().setXDimension(xDim);
+		model.getTrainingData().setYDimension(yDim);
+		
+		//model.getTrainingData().
 		//use model
 		//chart.getXYPlot().setDataset(model.getTrainingData().getChartData(xDim, yDim));
 	}
@@ -1314,20 +1381,53 @@ public class SVMMain implements ActionListener, IObserver{
 				int duplications = Integer.parseInt(textField_NumDuplications.getText());
 				chartPanel.duplicateSelection(duplications);
 			}else if (rdbtnAddTool.isSelected()){
+				
+				DVector newPoint = new DVector(model.getTrainingData().getDimensions());
+				newPoint.setWeight(Double.parseDouble(textField_NewWeight.getText()));
+				
 				if (cmbNewClass.getSelectedIndex() == 0){ //asumption 0 is positive class
-					chartPanel.addPoint(0);
+					chartPanel.addPoint(model.getTrainingData().getPositiveSeriesID(), newPoint);
 				}else if (cmbNewClass.getSelectedIndex() == 1){
-					chartPanel.addPoint(1);
+					chartPanel.addPoint(model.getTrainingData().getNegativeSeriesID(), newPoint);
 				}
 			}else if (rdbtnWeightingTool.isSelected()){
+				double newWeight = Double.parseDouble(textField_NewWeight.getText());
 				
+				chartPanel.changeSelectionWeight(newWeight);
+				//TODO update view-solution
 			}
+			
+			
+			// if model updated //TODO change to better design
+			
 		} catch (NumberFormatException e) {
 			// TODO
 			e.printStackTrace();
 		} catch (Exception e) {
 			// TODO
 			e.printStackTrace();
+		}
+	}
+
+
+
+
+
+	@Override
+	public void datasetChanged(DatasetChangeEvent event) {
+		Dataset data = event.getDataset();
+		
+		if (data !=null && data instanceof SVMDataSet){
+			SVMDataSet svmDataset = (SVMDataSet) data;
+			if (svmDataset == model.getTrainingData()){
+				System.out.println("training data changed");
+				if (chckbxAutoUpdate.isSelected()){
+					findWRCH(model.getMu1(), model.getMu2());
+				}
+				if (chckbxAutoUpdateWsvm.isSelected()){
+					solveSVM(model.getMu1(), model.getMu2());
+				}
+			}
 		}
 	}
 }

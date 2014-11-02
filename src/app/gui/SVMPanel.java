@@ -142,7 +142,7 @@ public class SVMPanel extends ChartPanel
             	SVMDataSeries svmSeries =  svmData.getSeries(series);
             	DVector svmItem = svmSeries.getDataItem(item);
             	//return svmItem.toFormatedString(2);
-            	return svmItem.getLabel();
+            	return  String.format("%.2f", svmItem.getWeight());
             }
             return "";
         }
@@ -595,8 +595,24 @@ public class SVMPanel extends ChartPanel
 		return this.translateJava2DToScreen(p2);
 	}
 	
+	public void addPoint(int series, DVector newPoint) throws Exception{
+		int xDim = model.getTrainingData().getXDimension();
+		int yDim = model.getTrainingData().getYDimension();
+		
+		newPoint.setVal(xDim, xChart);
+		newPoint.setVal(yDim, yChart);
+		chartData.addItem(series, newPoint);
+	}
+	
+	
 	public void addPoint(int series) throws Exception{
-		chartData.addItem(series, new DVector(xChart, yChart));
+		DVector newPoint = new DVector(model.getTrainingData().getDimensions());
+		int xDim = model.getTrainingData().getXDimension();
+		int yDim = model.getTrainingData().getYDimension();
+		
+		newPoint.setVal(xDim, xChart);
+		newPoint.setVal(yDim, yChart);
+		chartData.addItem(series, newPoint);
 	}
 	
 	public void duplicateSelection(int numDuplicates) throws Exception{
@@ -629,7 +645,7 @@ public class SVMPanel extends ChartPanel
 		}
 	}
 	
-	public void changeSelectionWeight(){
+	public void changeSelectionWeight(double newWeight){
 		if (hasSelectedItem()){
 			XYItemEntity e = (XYItemEntity) selectedEntity;
             XYDataset dataset = e.getDataset();
@@ -637,7 +653,7 @@ public class SVMPanel extends ChartPanel
             	SVMDataSet svmData = (SVMDataSet) dataset;
             	SVMDataSeries series =  svmData.getSeries(e.getSeriesIndex());
             	DVector item = series.getDataItem(e.getItem());
-            	//TODO item.setWeight(w)
+            	item.setWeight(newWeight);
             }
             
             clearSelection();

@@ -29,25 +29,33 @@ public class Dwrch {
 	private static long endTime = 0;
 	private static long elapsedTime = 0;
 	
-	public static ArrayList<DVector> calcWeightedReducedCHull2(ArrayList<DVector> dataset, double mu) {
+	public static ArrayList<DVector> calcWeightedReducedCHull2(SVMDataSeries series, double mu) {
 		ArrayList<DVector> r = new ArrayList<DVector>();
 		
 		try{
+			
+			if (series == null || series.getItemCount() == 0){
+				return null;
+			}
+			
 			ArrayList<DVector> P =  new ArrayList<DVector>();
 			DVector t =null;
-			for (int i=0; i< dataset.size(); i++){
+			int xDim = series.getXDimension();
+			int yDim = series.getYDimension();
+			for (int i=0; i< series.getItemCount(); i++){
 				t = new DVector(0,0);
-				t.setX(dataset.get(i).getX());
-				t.setY(dataset.get(i).getY());
-				t.setWeight(dataset.get(i).getWeight());
-				t.setClassID(dataset.get(i).getClassID());
+				t.setX(series.getRawDataItem(i).getVal(xDim));
+				t.setY(series.getRawDataItem(i).getVal(yDim));
+				t.setWeight(series.getRawDataItem(i).getWeight());
+				t.setClassID(series.getRawDataItem(i).getClassID());
 				P.add(t);
 			}
+			
 		
 			DVector[] res = rhull(P, mu);
 			
 			DVector p;
-			for (int i=0; i< res.length; i++){ //TODO assume res != null
+			for (int i=0;res!=null && i< res.length; i++){ //TODO assume res != null
 				p = new DVector(0,0);
 				p.setX(res[i].getXValue());
 				p.setY(res[i].getYValue());

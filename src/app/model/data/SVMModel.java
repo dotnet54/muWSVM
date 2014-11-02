@@ -1,9 +1,15 @@
 package app.model.data;
 
 import java.util.ArrayList;
+import java.util.List;
+
+import org.jfree.data.general.Dataset;
+import org.jfree.data.general.DatasetChangeEvent;
+import org.jfree.data.general.DatasetChangeListener;
+
 import app.model.algorithms.WRCH;
 
-public class SVMModel {
+public class SVMModel implements DatasetChangeListener,ISubject {
 	
 	private ArrayList<DVector> dataset1 = new ArrayList<DVector>();
 	private ArrayList<DVector> dataset2 = new ArrayList<DVector>();	
@@ -218,15 +224,23 @@ public class SVMModel {
 		}
 	}
 
+	//observer pattern 
+    private List<IObserver> observers;
+    private boolean changed;
+    private final Object MUTEX= new Object();
+	
+	
 	//TODO sync problem, run bgtask in debugger, before 1 task finishes 
 	public SVMModel(){
-		
-		int numDimensions = 2;
-		
-		trainingData = SVMDataGenerator.getDefaultSVMDataset();		
-		testData = SVMDataGenerator.getDefaultSVMDataset();
-		
 		try {
+			
+			this.observers = new ArrayList<IObserver>();
+		
+			int numDimensions = 2;
+			
+			trainingData = SVMDataGenerator.getDefaultSVMDataset();		
+			testData = SVMDataGenerator.getDefaultSVMDataset();
+
 			solutionDataSet = new SVMDataSet(numDimensions);
 			SVMDataSeries series3 = new SVMDataSeries("Positive WRCH", numDimensions);
 			SVMDataSeries series4 = new SVMDataSeries("Negative WRCH", numDimensions);
@@ -234,6 +248,12 @@ public class SVMModel {
 			solutionDataSet.addSeries(series3);
 			solutionDataSet.addSeries(series4);
 			solutionDataSet.addSeries(series5);
+			
+			//add change listeners
+			trainingData.addChangeListener(this);
+			testData.addChangeListener(this);
+			solutionDataSet.addChangeListener(this);
+			
 		} catch (Exception e) {
 			// TODO
 			e.printStackTrace();
@@ -282,6 +302,13 @@ public class SVMModel {
 		dataset1 = trainingData.getSeries(0).toArrayList();
 		dataset2 = trainingData.getSeries(1).toArrayList();
 		
+		if (dataset1 == null || dataset1.size() == 0){
+			return;
+		}
+		if (dataset2 == null || dataset2.size() == 0){
+			return;
+		}
+		
 //		if (series == 0){
 //			rch1 = WRCH.calcWeightedReducedCHull(dataset1, mu1);
 //		}else if (series == 1){
@@ -293,12 +320,12 @@ public class SVMModel {
 		
 		
 		if (series == 0){
-			rch1 = Dwrch.calcWeightedReducedCHull2(dataset1, mu1);
+			rch1 = Dwrch.calcWeightedReducedCHull2(trainingData.getSeries(0), mu1);
 		}else if (series == 1){
-			rch2 = Dwrch.calcWeightedReducedCHull2(dataset2, mu2);
+			rch2 = Dwrch.calcWeightedReducedCHull2(trainingData.getSeries(1), mu2);
 		}else{
-			rch1 = Dwrch.calcWeightedReducedCHull2(dataset1, mu1);
-			rch2 = Dwrch.calcWeightedReducedCHull2(dataset2, mu2);
+			rch1 = Dwrch.calcWeightedReducedCHull2(trainingData.getSeries(0), mu1);
+			rch2 = Dwrch.calcWeightedReducedCHull2(trainingData.getSeries(1), mu2);
 		}
 		
 		
@@ -328,6 +355,8 @@ public class SVMModel {
 		
 		
 		SVMDataSeries s3 = getSolutionDataSet().getSeries(0);
+		
+		
 		s3.clear();
 		for (int i = 0; i < rch1.size(); i++){//TODO null exception 23/10 handle stackoverflow
 			s3.add(rch1.get(i));
@@ -372,9 +401,9 @@ public class SVMModel {
 				trainingData.getSeries(trainingData.getNegativeSeriesID());
 			numActualNegatives = negativeClass.getItemCount();
 			for (int i = 0; i < numActualNegatives; i++){
-				item = positiveClass.getDataItem(i);
+				item = negativeClass.getDataItem(i);
 				proj = getW().getDotProduct(item);
-				if (proj > 0){ //TODO fp comparison
+				if (proj < 0){ //TODO fp comparison
 					count++;
 				}
 			}
@@ -383,8 +412,8 @@ public class SVMModel {
 			
 			numTruePositives = numActualPositives;
 			numTrueNegatives = numActualNegatives;
-			numFalsePositives = numPredictedPositives;
-			numFalseNegatives = numPredictedNegatives;
+			numFalsePositives = numActualPositives - numPredictedPositives ;
+			numFalseNegatives = numActualNegatives - numPredictedNegatives;
 		} catch (Exception e) {
 			// TODO
 			e.printStackTrace();
@@ -411,4 +440,110 @@ public class SVMModel {
 		return nearestNegativePoint;
 	}
 
+	
+	private boolean autoUpdateModel = true;
+	
+	public boolean isAutoUpdateModel() {
+		return autoUpdateModel;
+	}
+
+	public void setAutoUpdateModel(boolean autoUpdateModel) {
+		this.autoUpdateModel = autoUpdateModel;
+	}
+
+	public void updateModel(){
+		try {
+			if (isAutoUpdateModel()){
+				//solveWRCH(2);
+				//solveSVM();
+				
+				changed = true;
+				notifyObservers();
+			}
+
+		} catch (Exception e) {
+			// TODO
+			e.printStackTrace();
+		}
+	}
+	
+	public void fireModelChangedEvent(){
+		
+	}
+	
+	
+	@Override
+	public void datasetChanged(DatasetChangeEvent event) {
+		Dataset data = event.getDataset();
+		
+		if (data !=null && data instanceof SVMDataSet){
+			SVMDataSet svmDataset = (SVMDataSet) data;
+			
+			//TODO note not using equals function, only testing for reference equality
+			if (svmDataset == trainingData){
+				System.out.println("training data changed");
+				//updateModel();
+			}else if(svmDataset == testData){
+				System.out.println("test data changed");
+				
+			}else if (svmDataset == solutionDataSet){
+				System.out.println("solution data changed");
+			}
+		}
+
+		
+		//fireModelChangedEvent();
+	}
+
+	
+	
+	
+	
+	
+	
+    /**
+     * based on 
+     * http://www.journaldev.com/1739/observer-design-pattern-in-java-example-tutorial
+     * @param obj
+     */
+    @Override
+    public void register(IObserver obj) {
+        if(obj == null) throw new NullPointerException("Null Observer");
+        synchronized (MUTEX) {
+        if(!observers.contains(obj)) observers.add(obj);
+        }
+    }
+ 
+    /**
+     * http://www.journaldev.com/1739/observer-design-pattern-in-java-example-tutorial
+     * @param obj
+     */
+    @Override
+    public void unregister(IObserver obj) {
+        synchronized (MUTEX) {
+        observers.remove(obj);
+        }
+    }
+ 
+    /**
+     * http://www.journaldev.com/1739/observer-design-pattern-in-java-example-tutorial
+     */
+    @Override
+    public void notifyObservers() {
+        List<IObserver> observersLocal = null;
+        //synchronization is used to make sure any observer registered after message is received is not notified
+        synchronized (MUTEX) {
+            if (!changed)
+                return;
+            observersLocal = new ArrayList<IObserver>(this.observers);
+            this.changed=false;
+        }
+        for (IObserver obj : observersLocal) {
+            obj.update();
+        }
+ 
+    }
+	
+	
+	
 }
