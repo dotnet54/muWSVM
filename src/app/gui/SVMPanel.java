@@ -336,7 +336,7 @@ public class SVMPanel extends ChartPanel
 		thisPlot.setRenderer(2, new XYLineAndShapeRenderer(false, true));
 		
 		thisPlot.getRenderer(2).setSeriesShape(0, ShapeUtilities.createUpTriangle(2));
-		thisPlot.getRenderer(2).setSeriesPaint(0, Color.GREEN.brighter());
+		thisPlot.getRenderer(2).setSeriesPaint(0, Color.GREEN.darker());
 		
         //Renderer settings
 //		XYDotRenderer rawDataRenderer = new XYDotRenderer();

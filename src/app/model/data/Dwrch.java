@@ -198,6 +198,61 @@ public class Dwrch {
 	}
 	
 	
+	public static DVector alg10(ArrayList<DVector> list, double mu, final DVector n){
+		DVector v = new DVector(n.getDimensions());
+		try {
+				
+			double A[] = new double[list.size()];
+			double total = 0;
+			
+			int order[] = new int[list.size()];
+			double projections[] = new double[list.size()];
+			for (int i = 0; i < list.size(); i++){
+				projections[i] = list.get(i).getDotProduct(n);
+			}
+			
+			double temp;
+			int m, min;
+			for (int i = 0; i < projections.length -1; i++){
+				min = i;
+				for (m = i+1; m < projections.length; m++){
+					if (projections[m] < projections[min]){
+						min = m;
+						order[i] = m;
+					}
+				}
+				if (min != i){
+					temp = projections[i];
+					projections[i] = projections[min];
+					projections[min] = temp;
+				}
+			}
+			
+			int i = 0;
+			for (int j = 0; j < list.size() && total < 1; j++){
+				A[i] = Math.min(list.get(i).getWeight() * mu, 1 - total);
+				total += A[i];
+				
+				if (j == list.size() && total < 1){
+					j = 0;
+				}
+			}
+			
+			
+		
+			DVector c = null;
+			int k = 0;
+			for (i = 0; i < A.length; i++) {
+				c = list.get(i).clone();
+				c.multiplyByScaler(A[i]);
+				v.add(c);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return v;
+	}
 	
 	public static DVector findExtremePoint(ArrayList<DVector> list, double mu, final DVector n){
 		

@@ -13,7 +13,7 @@ public class Dwsk {
 
 	
 	private double epsilon = 0.001;
-	private int maxIterations = 50;
+	private int maxIterations = 5000;
 	
 	private DVector w;
 	private double b;
@@ -47,6 +47,7 @@ public class Dwsk {
 	public void wsk(SVMDataSet Dataset, double mu1,double mu2) throws Exception{
 
 		startTime = System.nanoTime();
+		double breakCondition = Double.NaN;
 		
 		DVector p = null;
 		DVector n = null;
@@ -78,6 +79,7 @@ public class Dwsk {
 			double temp;
 			if ( w1 < w2){
 				if ((1-(w1/ws)) < epsilon){
+					breakCondition = (1-(w1/ws));
 					break;
 				}
 				DVector dnp = p.subtractVectors(n);
@@ -94,6 +96,7 @@ public class Dwsk {
 				p = newP;
 			}else{
 				if ((1-(w2/ws)) < epsilon){
+					breakCondition = (1-(w1/ws));
 					break;
 				}
 				DVector dpn = n.subtractVectors(p);
@@ -123,7 +126,7 @@ public class Dwsk {
 		
 		//System.out.println("w = " + finalW.getXValue() + ", "+finalW.getYValue());
 		//System.out.println("b = " + finalB);
-		System.out.println("it = " + iterations);
+		System.out.println("it = " + iterations + ", break: " + breakCondition);
 		System.out.println("Elapsed Time for WSK: " + elapsedTime / 1e6 +" ms");
 		//System.out.println("p = " + p + ", n = " + n);
 		
