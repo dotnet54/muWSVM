@@ -1,4 +1,4 @@
-package app.model.algorithms;
+package app.test;
 
 
 import java.util.ArrayList;
@@ -8,7 +8,7 @@ import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import app.model.data.SVMDataItem;
+import app.model.DoubleMath;
 
 //
 
@@ -17,17 +17,17 @@ import app.model.data.SVMDataItem;
  * RECURSION TOO DEEP IF P IS IN STACK, USE CLASS STATIC
  * 
  */
-public class WRCH {
+public class WRCH_old {
 	
 	
-	private static SVMDataItem [] Z;
+	private static SVMDataItemOLD2 [] Z;
 	private static int numSupportPoints;	//varies depending on weight
 	private static double weights[];
 	
 	
-	public static ArrayList<SVMDataItem> calcWeightedReducedCHull(ArrayList<SVMDataItem> dataset, double mu) {
+	public static ArrayList<SVMDataItemOLD2> calcWeightedReducedCHull(ArrayList<SVMDataItemOLD2> dataset, double mu) {
 		
-		ArrayList<SVMDataItem> r = new ArrayList<SVMDataItem>();
+		ArrayList<SVMDataItemOLD2> r = new ArrayList<SVMDataItemOLD2>();
 		
 		double m = 1.0/mu;
 //		if (m >= dataset.size()){//TODO double comparison error if m=4.000001 ??check
@@ -37,12 +37,12 @@ public class WRCH {
 //		}
 //		
 		
-		SVMDataItem[] P =  new SVMDataItem[dataset.size()];
-		SVMDataItem t =null;
+		SVMDataItemOLD2[] P =  new SVMDataItemOLD2[dataset.size()];
+		SVMDataItemOLD2 t =null;
 		//PP = new ArrayList<SVMDataItem>();
 		weights = new double[dataset.size()];
 		for (int i=0; i< dataset.size(); i++){
-			t = new SVMDataItem(0,0);
+			t = new SVMDataItemOLD2(0,0);
 			t.setX(dataset.get(i).getX());
 			t.setY(dataset.get(i).getY());
 			t.setWeight(dataset.get(i).getWeight());
@@ -54,14 +54,14 @@ public class WRCH {
 		//weights[0]=2;
 		
 		try{
-			SVMDataItem[] res = rhull(P, mu);
+			SVMDataItemOLD2[] res = rhull(P, mu);
 
 		
 		
 		
-		SVMDataItem p;
+		SVMDataItemOLD2 p;
 		for (int i=0; i< res.length; i++){
-			p = new SVMDataItem(0,0);
+			p = new SVMDataItemOLD2(0,0);
 			p.setX(res[i].getXValue());
 			p.setY(res[i].getYValue());
 			p.setLabel("");
@@ -78,7 +78,7 @@ public class WRCH {
 	}
 	
 	
-	private static SVMDataItem[] rhull(SVMDataItem[] P, double mu) throws StackOverflowError{
+	private static SVMDataItemOLD2[] rhull(SVMDataItemOLD2[] P, double mu) throws StackOverflowError{
 		
 //		int m = (int) Math.ceil(1.0/mu);
 //		if (m > P.length){
@@ -88,30 +88,30 @@ public class WRCH {
 //			return res;
 //		}
 		
-		SVMDataItem n = new SVMDataItem(-1,0);
+		SVMDataItemOLD2 n = new SVMDataItemOLD2(-1,0);
 		//DP l = theorem32(P, n, mu);
-		SVMDataItem l =  alg9(P, weights, mu, n);
+		SVMDataItemOLD2 l =  alg9(P, weights, mu, n);
 		n.setX(1);
 		//DP r = theorem32(P, n, mu);
-		SVMDataItem r =  alg9(P, weights, mu,  n);
+		SVMDataItemOLD2 r =  alg9(P, weights, mu,  n);
 		
-		SVMDataItem [] A = rhull_aux(P, l ,r, mu);
-		SVMDataItem [] B = rhull_aux(P, r, l, mu);
+		SVMDataItemOLD2 [] A = rhull_aux(P, l ,r, mu);
+		SVMDataItemOLD2 [] B = rhull_aux(P, r, l, mu);
 		
-		Set<SVMDataItem> set = new LinkedHashSet<SVMDataItem>();
+		Set<SVMDataItemOLD2> set = new LinkedHashSet<SVMDataItemOLD2>();
 		set.addAll(Arrays.asList(A));
 		set.addAll(Arrays.asList(B));
 
-		SVMDataItem[] Ret = new SVMDataItem[set.size()];
+		SVMDataItemOLD2[] Ret = new SVMDataItemOLD2[set.size()];
 		Ret = set.toArray(Ret);
 		
 		return Ret;
 	}
 	
-	private static SVMDataItem[] rhull_aux(SVMDataItem[] P, 
-			SVMDataItem l, SVMDataItem r, double mu) throws StackOverflowError{
-		SVMDataItem n = new SVMDataItem(0,0);
-		SVMDataItem h = new SVMDataItem(0,0);
+	private static SVMDataItemOLD2[] rhull_aux(SVMDataItemOLD2[] P, 
+			SVMDataItemOLD2 l, SVMDataItemOLD2 r, double mu) throws StackOverflowError{
+		SVMDataItemOLD2 n = new SVMDataItemOLD2(0,0);
+		SVMDataItemOLD2 h = new SVMDataItemOLD2(0,0);
 		
 		n = normal(r, l);
 		//h = theorem32(P, n, mu);
@@ -121,18 +121,18 @@ public class WRCH {
 		
 		
 		if (h.equals(l) || h.equals(r)){//TODO double op
-			SVMDataItem[] res = new SVMDataItem[2];
+			SVMDataItemOLD2[] res = new SVMDataItemOLD2[2];
 			res[0]= l;
 			res[1]= r;
 			return res;
 		}
 		
-		SVMDataItem nl = new SVMDataItem(0,0);
-		SVMDataItem nr = new SVMDataItem(0,0);
+		SVMDataItemOLD2 nl = new SVMDataItemOLD2(0,0);
+		SVMDataItemOLD2 nr = new SVMDataItemOLD2(0,0);
 		nl = normal(h, l);		//left partition normal
 		nr = normal(r, h);		//right partition normal
 		
-		SVMDataItem[] supportPoints = new SVMDataItem[numSupportPoints];
+		SVMDataItemOLD2[] supportPoints = new SVMDataItemOLD2[numSupportPoints];
 		for (int i = 0; i < numSupportPoints ; i++){
 			supportPoints[i] = Z[i];
 		}
@@ -143,7 +143,7 @@ public class WRCH {
 			scalerProjections[i] = nl.getDotProduct(supportPoints[i]);//TODO double op
 		}
 
-		SVMDataItem[] TMP = new SVMDataItem[P.length];	//too big
+		SVMDataItemOLD2[] TMP = new SVMDataItemOLD2[P.length];	//too big
 		for (int i = 0, k = 0; i < P.length; i++){
 			tmp = nl.getDotProduct(P[i]);
 			for (int j = 0; j < scalerProjections.length; j++){
@@ -161,7 +161,7 @@ public class WRCH {
 				c++;
 			}
 		}
-		SVMDataItem[] L = new SVMDataItem [c];
+		SVMDataItemOLD2[] L = new SVMDataItemOLD2 [c];
 		for (int i = 0; i < TMP.length; i++){
 			if (TMP[i] != null){
 				L[i] = TMP[i];
@@ -171,7 +171,7 @@ public class WRCH {
 		for (int i = 0; i < numSupportPoints; i++){
 			scalerProjections[i] = nr.getDotProduct(supportPoints[i]);
 		}
-		TMP = new SVMDataItem[P.length];
+		TMP = new SVMDataItemOLD2[P.length];
 		for (int i = 0, k = 0; i < P.length; i++){
 			tmp = nr.getDotProduct(P[i]);
 			for (int j = 0; j < scalerProjections.length; j++){
@@ -189,7 +189,7 @@ public class WRCH {
 				c++;
 			}
 		}
-		SVMDataItem[] R = new SVMDataItem [c];
+		SVMDataItemOLD2[] R = new SVMDataItemOLD2 [c];
 		for (int i = 0; i < TMP.length; i++){
 			if (TMP[i] != null){
 				R[i] = TMP[i];
@@ -198,21 +198,21 @@ public class WRCH {
 
 
 		
-		SVMDataItem [] A = rhull_aux(L, l ,h, mu);
-		SVMDataItem [] B = rhull_aux(R, h, r, mu);
+		SVMDataItemOLD2 [] A = rhull_aux(L, l ,h, mu);
+		SVMDataItemOLD2 [] B = rhull_aux(R, h, r, mu);
 		
-		Set<SVMDataItem> set = new LinkedHashSet<SVMDataItem>();
+		Set<SVMDataItemOLD2> set = new LinkedHashSet<SVMDataItemOLD2>();
 		set.addAll(Arrays.asList(A));
 		set.addAll(Arrays.asList(B));
 
-		SVMDataItem[] Ret = new SVMDataItem[set.size()];
+		SVMDataItemOLD2[] Ret = new SVMDataItemOLD2[set.size()];
 		Ret = set.toArray(Ret);
 		
 
 		return Ret;
 	}
 	
-	public static SVMDataItem alg9(SVMDataItem[] P, double[] S, double mu, SVMDataItem n){
+	public static SVMDataItemOLD2 alg9(SVMDataItemOLD2[] P, double[] S, double mu, SVMDataItemOLD2 n){
 		//TODO S not used
 		
 		//TODO if mu is zero return centroid of P
@@ -221,7 +221,7 @@ public class WRCH {
 		}
 		
 		//TODO if weight = 0 ??
-		ArrayList<SVMDataItem> X = new ArrayList<SVMDataItem>(Arrays.asList(P));
+		ArrayList<SVMDataItemOLD2> X = new ArrayList<SVMDataItemOLD2>(Arrays.asList(P));
 		
 		//TODO debug code ->connect n with comparator in a dirty way
 		double [] dots = new double[X.size()];
@@ -229,9 +229,9 @@ public class WRCH {
 			dots[i] = X.get(i).project(n);
 		}
 		
-		Collections.sort(X,Collections.reverseOrder( new Comparator<SVMDataItem>() {
+		Collections.sort(X,Collections.reverseOrder( new Comparator<SVMDataItemOLD2>() {
 			@Override
-			public int compare(SVMDataItem o1, SVMDataItem o2) {
+			public int compare(SVMDataItemOLD2 o1, SVMDataItemOLD2 o2) {
 				//USE normal to compare between two objects
 				return (o1.custCompareTo(o2));
 			}
@@ -266,7 +266,7 @@ public class WRCH {
 			k++;
 		}
 		
-		SVMDataItem v = new SVMDataItem(0,0);
+		SVMDataItemOLD2 v = new SVMDataItemOLD2(0,0);
 		int i = 0;
 		for (i = 0; i < count; i++){
 			if (i >=  X.size()){
@@ -282,7 +282,7 @@ public class WRCH {
 		numSupportPoints = count;
 		
 		//TODO redundant
-		Z = new SVMDataItem[X.size()];
+		Z = new SVMDataItemOLD2[X.size()];
 		for (int j = 0; j < X.size(); j++){
 			Z[j] = X.get(j); //copy support points
 		}
@@ -293,8 +293,8 @@ public class WRCH {
 	
 	
 	
-	public static SVMDataItem findCentroid(ArrayList<SVMDataItem> P){
-		SVMDataItem cent = new SVMDataItem(0, 0);
+	public static SVMDataItemOLD2 findCentroid(ArrayList<SVMDataItemOLD2> P){
+		SVMDataItemOLD2 cent = new SVMDataItemOLD2(0, 0);
 		
 		for (int i = 0; i < P.size(); i++){
 			cent.setX(cent.getX() + P.get(i).getXValue() * P.get(i).getWeight());
@@ -313,14 +313,14 @@ public class WRCH {
 		return cent;
 	}
 	
-	private static SVMDataItem normal(SVMDataItem p1, SVMDataItem p2){
+	private static SVMDataItemOLD2 normal(SVMDataItemOLD2 p1, SVMDataItemOLD2 p2){
 			double dx, dy;
 	//		dx = p1.getXValue() - p2.getXValue(); //TODO double op
 	//		dy = p1.getYValue() - p2.getYValue(); //TODO double op
 			dx = DoubleMath.dMinus(p1.getXValue(), p2.getXValue());
 			dy = DoubleMath.dMinus(p1.getYValue(), p2.getYValue());
 			
-			SVMDataItem n = new SVMDataItem(0,0);
+			SVMDataItemOLD2 n = new SVMDataItemOLD2(0,0);
 			n.setX(-dy);
 			n.setY(dx);
 	
@@ -330,8 +330,8 @@ public class WRCH {
 
 	//TODO FIND GEOMETRIC centroid using weights
 	// use double op functions
-	private static SVMDataItem findCentroid(SVMDataItem P[]){
-		SVMDataItem cent = new SVMDataItem(0, 0);
+	private static SVMDataItemOLD2 findCentroid(SVMDataItemOLD2 P[]){
+		SVMDataItemOLD2 cent = new SVMDataItemOLD2(0, 0);
 		
 		for (int i = 0; i < P.length; i++){
 			cent.setX(cent.getX() + P[i].getXValue() * P[i].getWeight());
@@ -395,8 +395,8 @@ public class WRCH {
 	 */
 
 
-	private static SVMDataItem alg8(SVMDataItem[] Pl, double [] S,
-				double mu, SVMDataItem n){
+	private static SVMDataItemOLD2 alg8(SVMDataItemOLD2[] Pl, double [] S,
+				double mu, SVMDataItemOLD2 n){
 			
 	//		int m = (int) Math.ceil(1.0/mu);
 	//		if (m > Pl.length){
@@ -405,13 +405,13 @@ public class WRCH {
 	//		}
 			
 			
-			ArrayList<SVMDataItem> P = new ArrayList<SVMDataItem>(Arrays.asList(Pl));
+			ArrayList<SVMDataItemOLD2> P = new ArrayList<SVMDataItemOLD2>(Arrays.asList(Pl));
 			//TODO NULL
-			SVMDataItem v = new SVMDataItem(0,0);
+			SVMDataItemOLD2 v = new SVMDataItemOLD2(0,0);
 			double [] A = new double[P.size()];
 			double [] dots = new double[P.size()];
 			int [] sortedInd = new int[P.size()];
-			Z = new SVMDataItem[P.size()];
+			Z = new SVMDataItemOLD2[P.size()];
 			double s = 0.0;
 			int i = 0;
 			
@@ -492,9 +492,9 @@ public class WRCH {
 	}
 
 
-	private static SVMDataItem theorem32(SVMDataItem[] P, SVMDataItem n, double mu){
-		SVMDataItem v = new SVMDataItem(0,0);
-		Z = new SVMDataItem[P.length];
+	private static SVMDataItemOLD2 theorem32(SVMDataItemOLD2[] P, SVMDataItemOLD2 n, double mu){
+		SVMDataItemOLD2 v = new SVMDataItemOLD2(0,0);
+		Z = new SVMDataItemOLD2[P.length];
 		double[] s = new double[P.length];	//scaler projection
 		int[] ind = new int[P.length];
 		double max;

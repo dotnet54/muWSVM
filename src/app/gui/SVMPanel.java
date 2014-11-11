@@ -34,26 +34,23 @@ import org.jfree.chart.labels.StandardXYToolTipGenerator;
 import org.jfree.chart.labels.XYItemLabelGenerator;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
-import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.TextAnchor;
 import org.jfree.util.ShapeUtilities;
 
-import app.model.data.DVector;
-import app.model.data.IObserver;
-import app.model.data.ISubject;
+import app.model.IObserver;
+import app.model.ISubject;
+import app.model.SVMModel;
 import app.model.data.SVMDataItem;
 import app.model.data.SVMDataSeries;
 import app.model.data.SVMDataSet;
-import app.model.data.SVMModel;
+import app.test.SVMDataItemOLD2;
 
 public class SVMPanel extends ChartPanel 
 						implements ChartMouseListener, ISubject{
-//TODO BUG point is not added to click location but upper corner of popup menu
-	
-	
+
 	/**
 	 * 
 	 */
@@ -86,7 +83,18 @@ public class SVMPanel extends ChartPanel
 	private double yChart=0;
 	
 	private XYItemEntity selectedEntity = null;
-	private DVector selectedDataItem = null;
+	private SVMDataItem selectedDataItem = null;
+
+	private boolean solutionExits = true;
+	
+	public boolean isSolutionExits() {
+		return solutionExits;
+	}
+
+	public void setSolutionExits(boolean solutionExits) {
+		changed = true;
+		this.solutionExits = solutionExits;
+	}
 
 	private XYLineAndShapeRenderer trainingDatasetRenderer;
 	private XYLineAndShapeRenderer solutionRenderer;
@@ -286,7 +294,7 @@ public class SVMPanel extends ChartPanel
             if (dataset instanceof SVMDataSet){
             	SVMDataSet svmData = (SVMDataSet) dataset;
             	SVMDataSeries svmSeries =  svmData.getSeries(series);
-            	DVector svmItem = svmSeries.getDataItem(item);
+            	SVMDataItem svmItem = svmSeries.getDataItem(item);
             	//return svmItem.toFormatedString(2);
             	return  String.format("%.2f", svmItem.getWeight());
             }
@@ -311,6 +319,8 @@ public class SVMPanel extends ChartPanel
 		//setMouseZoomable(false);
 		//setDomainZoomable(false);
 		//setRangeZoomable(false);
+
+		
 			
 		//popup menu
 		initPopUpMenu();
@@ -322,6 +332,9 @@ public class SVMPanel extends ChartPanel
 		thisPlot.setRangePannable(true);
 		thisPlot.getRangeAxis().setAutoRange(false);
 		thisPlot.getDomainAxis().setAutoRange(false);
+		
+		thisPlot.getDomainAxis().setAutoRangeMinimumSize(1, true);
+		thisPlot.getRangeAxis().setAutoRangeMinimumSize(1, true);
 		thisPlot.getRangeAxis().setRange(0, 10);
 		thisPlot.getDomainAxis().setRange(0, 10);
         
@@ -340,6 +353,7 @@ public class SVMPanel extends ChartPanel
 		thisPlot.getRenderer(2).setSeriesPaint(0, Color.GREEN.darker());
 		
         //Renderer settings
+		//currently not using dot render -> but can set this up if necessary
 //		XYDotRenderer rawDataRenderer = new XYDotRenderer();
 //		rawDataRenderer.setDotWidth(4);
 //		rawDataRenderer.setDotHeight(4);
@@ -422,7 +436,7 @@ public class SVMPanel extends ChartPanel
 					popup.add(itn);
 					popup.add(itu);
 					popup.addSeparator();
-					popup.add(itd);// TODO duplicate point
+					popup.add(itd);
 					popup.add(itr);
 					popup.add(itw);
 					popup.pack();
@@ -434,11 +448,8 @@ public class SVMPanel extends ChartPanel
 		}
 		
 		
-		//TODO 
 		thisPlot.getRangeAxis().setAutoRange(false);
 		thisPlot.getDomainAxis().setAutoRange(false);
-       // plot.getRangeAxis().setRange(0, 10);
-        //plot.getDomainAxis().setRange(0, 20);
 	}
 	
 	@Override
@@ -478,8 +489,8 @@ public class SVMPanel extends ChartPanel
 		final Shape[] shapes = new Shape[3];
 		thisPlot.clearAnnotations();
 	
-		ArrayList<DVector> rch1 = model.getRCH1();
-		ArrayList<DVector> rch2 = model.getRCH2();
+		ArrayList<SVMDataItem> rch1 = model.getRCH1();
+		ArrayList<SVMDataItem> rch2 = model.getRCH2();
 		
 		if (rch1 != null && !rch1.isEmpty() && displayPositiveWRCH) {
 			path = new Path2D.Double();
@@ -520,10 +531,19 @@ public class SVMPanel extends ChartPanel
 
 	public void updateWSVMSolutions(){
 		try {
-			DVector w = model.getW();
+			SVMDataItem w = model.getW();
 			double b = model.getB();
-			DVector p =  model.getNearestPositivePoint();
-			DVector n = model.getNearestNegativePoint();			
+			SVMDataItem p =  model.getNearestPositivePoint();
+			SVMDataItem n = model.getNearestNegativePoint();			
+			
+			if (!w.isZeroOrValid()){
+				setSolutionExits(false);
+				notifyObservers();
+				return;
+			}else{
+				setSolutionExits(true);
+				notifyObservers();
+			}
 			
 			double y1 = -10000;
 			double y2 = 10000;
@@ -567,11 +587,10 @@ public class SVMPanel extends ChartPanel
 				thisPlot.addAnnotation(marginNeg);
 			}
 			if (displayNearestPointLine){
-				//TODO hot fix
+				//uncomment for debugging
 			   // thisPlot.addAnnotation(nearestPointLine);
 			}
 		} catch (Exception e) {
-			// TODO
 			e.printStackTrace();
 		}
 
@@ -580,7 +599,7 @@ public class SVMPanel extends ChartPanel
 
 
 
-	public void drawLine(DVector vector){
+	public void drawLine(SVMDataItem vector){
 		try {
 			thisPlot.clearAnnotations();
 			
@@ -602,7 +621,6 @@ public class SVMPanel extends ChartPanel
 					dashed, Color.blue);
 			thisPlot.addAnnotation(line2);
 		} catch (Exception e) {
-			// TODO
 			e.printStackTrace();
 		}
 	}
@@ -614,7 +632,6 @@ public class SVMPanel extends ChartPanel
 				try {
 					addPoint(0);
 				} catch (Exception e1) {
-					// TODO
 					e1.printStackTrace();
 				}
 			}
@@ -626,7 +643,6 @@ public class SVMPanel extends ChartPanel
 				try {
 					addPoint(1);
 				} catch (Exception e1) {
-					// TODO
 					e1.printStackTrace();
 				}
 			}
@@ -637,7 +653,7 @@ public class SVMPanel extends ChartPanel
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
-					DVector newPoint = new DVector(model.getTestData().getDimensions());
+					SVMDataItem newPoint = new SVMDataItem(model.getTestData().getDimensions());
 					int xDim = model.getTestData().getXDimension();
 					int yDim = model.getTestData().getYDimension();
 					
@@ -645,7 +661,6 @@ public class SVMPanel extends ChartPanel
 					newPoint.setVal(yDim, yChart);
 					model.getTestData().addItem(0, newPoint);
 				} catch (Exception e1) {
-					// TODO
 					e1.printStackTrace();
 				}
 				
@@ -659,7 +674,6 @@ public class SVMPanel extends ChartPanel
 				try {
 					duplicateSelection(1);
 				} catch (Exception e) {
-					// TODO
 					e.printStackTrace();
 				}
 			}
@@ -681,17 +695,15 @@ public class SVMPanel extends ChartPanel
 	            if (dataset instanceof SVMDataSet){
 	            	SVMDataSet svmData = (SVMDataSet) dataset;
 	            	SVMDataSeries series =  svmData.getSeries(e.getSeriesIndex());
-	            	DVector item = series.getDataItem(e.getItem());
+	            	SVMDataItem item = series.getDataItem(e.getItem());
 		            double weight = item.getWeight();
 					String input = JOptionPane.showInputDialog("Enter weight of the point"  ,weight);
 					if (input != null){
-						weight = Double.parseDouble(input); // try catch TODO parse error handle
+						weight = Double.parseDouble(input); 
 						item.setWeight(weight);
 						item.setLabel(weight + "");
-						//TODO hot fix
 						model.getTrainingData().setWeight(e.getSeriesIndex(), e.getItem(), weight);
-						//thisChart.fireChartChanged();
-						System.out.println( item);
+						//thisChart.fireChartChanged(); //implementation moved to setWeight function
 					}
 	            }
 			}
@@ -699,7 +711,7 @@ public class SVMPanel extends ChartPanel
 		
 	}
 
-	public DVector getSelectedDataItem(){
+	public SVMDataItem getSelectedDataItem(){
 		return selectedDataItem;
 	}
 	
@@ -708,9 +720,7 @@ public class SVMPanel extends ChartPanel
 		List list = event.getEntities();
 		selectedEntity = null;
 		selectedDataItem = null;
-		
-		//TODO selectable layer?? cant select and delete centroid
-		
+
 		if (list != null){
 			for (int j = 0; j < list.size(); j++){
 				ce = (ChartEntity) list.get(j);
@@ -729,7 +739,7 @@ public class SVMPanel extends ChartPanel
 			            XYSeriesCollection dd = (XYSeriesCollection) e.getDataset();
 			            XYSeries ss =  dd.getSeries(s);
 			            
-			            DVector item  = (DVector) ss.getItems().get(i);
+			            SVMDataItem item  = (SVMDataItem) ss.getItems().get(i);
 			            
 			            if (d.equals(model.getChartDataset())
 			            	&&	s == 0 
@@ -753,7 +763,6 @@ public class SVMPanel extends ChartPanel
 	}
 	
 	private double toChartX(int x){
-		//TODO translate function not used *ScaleFactor not done
 		Rectangle2D plotArea = this.getScreenDataArea();
 		XYPlot plot = (XYPlot) getChart().getPlot(); // your plot
 		return  plot.getDomainAxis().java2DToValue(x,
@@ -782,7 +791,7 @@ public class SVMPanel extends ChartPanel
 		return this.translateJava2DToScreen(p2);
 	}
 	
-	public void addPoint(int series, DVector newPoint) throws Exception{
+	public void addPoint(int series, SVMDataItem newPoint) throws Exception{
 		int xDim = model.getTrainingData().getXDimension();
 		int yDim = model.getTrainingData().getYDimension();
 		
@@ -793,7 +802,7 @@ public class SVMPanel extends ChartPanel
 	
 	
 	public void addPoint(int series) throws Exception{
-		DVector newPoint = new DVector(model.getTrainingData().getDimensions());
+		SVMDataItem newPoint = new SVMDataItem(model.getTrainingData().getDimensions());
 		int xDim = model.getTrainingData().getXDimension();
 		int yDim = model.getTrainingData().getYDimension();
 		
@@ -809,7 +818,7 @@ public class SVMPanel extends ChartPanel
             if (dataset instanceof SVMDataSet){
             	SVMDataSet svmData = (SVMDataSet) dataset;
             	SVMDataSeries series =  svmData.getSeries(e.getSeriesIndex());
-            	DVector item = series.getDataItem(e.getItem());
+            	SVMDataItem item = series.getDataItem(e.getItem());
             	
                 for (int k = 0; k < numDuplicates; k++){
                 	series.add(item);
@@ -837,11 +846,7 @@ public class SVMPanel extends ChartPanel
 			XYItemEntity e = (XYItemEntity) selectedEntity;
             XYDataset dataset = e.getDataset();
             if (dataset instanceof SVMDataSet){
-            	SVMDataSet svmData = (SVMDataSet) dataset;
-            	SVMDataSeries series =  svmData.getSeries(e.getSeriesIndex());
-            	DVector item = series.getDataItem(e.getItem());
-            	//item.setWeight(newWeight);
-            	//hot fix
+            	//use set weight function in dataset to notify observers
             	model.getTrainingData().setWeight(e.getSeriesIndex(), e.getItem(), newWeight);
             }
             

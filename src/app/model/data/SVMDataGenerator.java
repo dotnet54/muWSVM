@@ -2,7 +2,9 @@ package app.model.data;
 
 import java.util.Random;
 
+import app.gui.SVMMain;
 import app.gui.SVMPanel;
+import app.model.SVMModel;
 
 public class SVMDataGenerator {
 	
@@ -48,68 +50,68 @@ public class SVMDataGenerator {
 		
 		try {
 			if (name == "Two points 1"){
-				data.addItem(0, new DVector(1, 1, 1, 1));
-				data.addItem(0, new DVector(3, 1, 1, 1));
+				data.addItem(0, new SVMDataItem(1, 1, 1, 1));
+				data.addItem(0, new SVMDataItem(3, 1, 1, 1));
 				
-				data.addItem(1, new DVector(1, 4, 1, -1));
-				data.addItem(1, new DVector(3, 4, 1, -1));
+				data.addItem(1, new SVMDataItem(1, 4, 1, -1));
+				data.addItem(1, new SVMDataItem(3, 4, 1, -1));
 			}else if (name == "Collinear Points 1"){
-				data.addItem(0, new DVector(1, 1, 1, 1));
-				data.addItem(0, new DVector(3, 1, 1, 1));
-				data.addItem(0, new DVector(6, 1, 1, 1));
-				data.addItem(0, new DVector(4, 1, 1, 1));
+				data.addItem(0, new SVMDataItem(1, 1, 1, 1));
+				data.addItem(0, new SVMDataItem(3, 1, 1, 1));
+				data.addItem(0, new SVMDataItem(6, 1, 1, 1));
+				data.addItem(0, new SVMDataItem(4, 1, 1, 1));
 				
-				data.addItem(1, new DVector(1, 1, 1, -1));
-				data.addItem(1, new DVector(2, 2, 1, -1));
-				data.addItem(1, new DVector(3, 3, 1, -1));
-				data.addItem(1, new DVector(4, 4, 1, -1));
+				data.addItem(1, new SVMDataItem(1, 1, 1, -1));
+				data.addItem(1, new SVMDataItem(2, 2, 1, -1));
+				data.addItem(1, new SVMDataItem(3, 3, 1, -1));
+				data.addItem(1, new SVMDataItem(4, 4, 1, -1));
 			}else if (name == "Collinear Points 2"){
-				data.addItem(0, new DVector(1, 1, 1, 1));
-				data.addItem(0, new DVector(3, 1.001, 1, 1));
-				data.addItem(0, new DVector(6, 1, 1, 1));
+				data.addItem(0, new SVMDataItem(1, 1, 1, 1));
+				data.addItem(0, new SVMDataItem(3, 1.001, 1, 1));
+				data.addItem(0, new SVMDataItem(6, 1, 1, 1));
 				
-				data.addItem(1, new DVector(1, 4, 1, -1));
-				data.addItem(1, new DVector(3, 4, 1, -1));
+				data.addItem(1, new SVMDataItem(1, 4, 1, -1));
+				data.addItem(1, new SVMDataItem(3, 4, 1, -1));
 			}else if (name == "Triangle 1"){
-				data.addItem(0, new DVector(1, 1, 1, 1));
-				data.addItem(0, new DVector(1, 3, 1, 1));
-				data.addItem(0, new DVector(3, 1, 1, 1));
+				data.addItem(0, new SVMDataItem(1, 1, 1, 1));
+				data.addItem(0, new SVMDataItem(1, 3, 1, 1));
+				data.addItem(0, new SVMDataItem(3, 1, 1, 1));
 				
-				data.addItem(1, new DVector(4, 1, 1, -1));
+				data.addItem(1, new SVMDataItem(4, 1, 1, -1));
 			}else if (name == "Triangle 2"){
-				data.addItem(0, new DVector(1, 1, 1, 1));
-				data.addItem(0, new DVector(4, 4, 1, 1));
-				data.addItem(0, new DVector(4, 1, 1, 1));
+				data.addItem(0, new SVMDataItem(1, 1, 1, 1));
+				data.addItem(0, new SVMDataItem(4, 4, 1, 1));
+				data.addItem(0, new SVMDataItem(4, 1, 1, 1));
 				
-				data.addItem(1, new DVector(6, 4, 1, -1));
-				data.addItem(1, new DVector(6, 1, 1, -1));
-				data.addItem(1, new DVector(9, 1, 1, -1));
+				data.addItem(1, new SVMDataItem(6, 4, 1, -1));
+				data.addItem(1, new SVMDataItem(6, 1, 1, -1));
+				data.addItem(1, new SVMDataItem(9, 1, 1, -1));
 			}else if (name == "Parallelogram"){
-				data.addItem(0, new DVector(1, 1, 1, 1));
-				data.addItem(0, new DVector(4, 1, 1, 1));
-				data.addItem(0, new DVector(2, 4, 1, 1));
-				data.addItem(0, new DVector(5, 4, 1, 1));
+				data.addItem(0, new SVMDataItem(1, 1, 1, 1));
+				data.addItem(0, new SVMDataItem(4, 1, 1, 1));
+				data.addItem(0, new SVMDataItem(2, 4, 1, 1));
+				data.addItem(0, new SVMDataItem(5, 4, 1, 1));
 				
-				data.addItem(1, new DVector(1, 4, 1, -1));
-				data.addItem(1, new DVector(1, 4, 1, -1));
-				data.addItem(1, new DVector(1, 4, 1, -1));
-				data.addItem(1, new DVector(1, 4, 1, -1));
+				data.addItem(1, new SVMDataItem(1, 4, 1, -1));
+				data.addItem(1, new SVMDataItem(1, 4, 1, -1));
+				data.addItem(1, new SVMDataItem(1, 4, 1, -1));
+				data.addItem(1, new SVMDataItem(1, 4, 1, -1));
 			}else if (name == "Trapezium"){
-				data.addItem(0, new DVector(1, 1, 1, 1));
-				data.addItem(0, new DVector(5, 1, 1, 1));
-				data.addItem(0, new DVector(2, 3, 1, 1));
-				data.addItem(0, new DVector(4, 3, 1, 1));
+				data.addItem(0, new SVMDataItem(1, 1, 1, 1));
+				data.addItem(0, new SVMDataItem(5, 1, 1, 1));
+				data.addItem(0, new SVMDataItem(2, 3, 1, 1));
+				data.addItem(0, new SVMDataItem(4, 3, 1, 1));
 				
-				data.addItem(1, new DVector(1, 4, 1, -1));
+				data.addItem(1, new SVMDataItem(1, 4, 1, -1));
 			}else if (name == "T points"){
-				data.addItem(0, new DVector(1, 1, 1, 1));
-				data.addItem(0, new DVector(1, 4, 2, 1));
-				data.addItem(0, new DVector(1, 5, 1, 1));
-				data.addItem(0, new DVector(1, 3, 1, 1));
-				data.addItem(0, new DVector(3, 3, 1, 1));
-				data.addItem(0, new DVector(5, 3, 1, 1));
+				data.addItem(0, new SVMDataItem(1, 1, 1, 1));
+				data.addItem(0, new SVMDataItem(1, 4, 2, 1));
+				data.addItem(0, new SVMDataItem(1, 5, 1, 1));
+				data.addItem(0, new SVMDataItem(1, 3, 1, 1));
+				data.addItem(0, new SVMDataItem(3, 3, 1, 1));
+				data.addItem(0, new SVMDataItem(5, 3, 1, 1));
 				
-				data.addItem(1, new DVector(1, 4, 1, -1));
+				data.addItem(1, new SVMDataItem(1, 4, 1, -1));
 			}else {
 				
 			}
@@ -123,91 +125,52 @@ public class SVMDataGenerator {
 	
 	
 	public void generateDataSeries(SVMDataSet data, int seriesIndex, int numDataPoints, 
-			int percentPos, int softnessDelta, double minVal, double maxVal){
-
-	try {
-
-		
-		DVector normal = new DVector(
-				(randGen.nextDouble() * 1.0) - 1, 
-				(randGen.nextDouble() * 1.0) - 1);
-		normal.multiplyByScaler(maxVal);
-		
-//		if (SVMMain.chartPanel != null){
-//			SVMMain.chartPanel.drawLine(normal); //TODO temporary
-//		}
-		
-		//System.out.println(normal);
-		int numPos = (int) ((percentPos / 100.0) *  numDataPoints);
-		int numNeg = numDataPoints - numPos;
-		
-		int softPos = (int) ((softnessDelta / 100.0) *  numPos);
-		int softNeg = (int) ((softnessDelta / 100.0) *  numNeg);
-		
-		numPos -= softPos;
-		numNeg -= softNeg;
-		//TODO 100000 point scaling problem
-		for (int k = 0; k < softPos; k++){
-			data.addItem(0, new DVector(
-					randGen.nextDouble()* maxVal, 
-					randGen.nextDouble()* maxVal, 1, +1));
-		}
-		for (int k = 0; k < softNeg; k++){
-			data.addItem(1, new DVector(
-					randGen.nextDouble()* maxVal, 
-					randGen.nextDouble()* maxVal, 1, -1));
-		}
-		
-		int i = 0, j = 0;
-		double x,y, proj;
-		while(i < numPos ||  j < numNeg){
-			
-			x = (randGen.nextDouble() * 2.0) - 1;
-			y = (randGen.nextDouble() * 2.0) - 1;
-			double weight = 1;
-			
-			DVector point = new DVector(x, y, weight);
-			
-			proj = normal.getDotProduct(point);
-			point.setX(point.getXValue() * maxVal);
-			point.setY(point.getYValue() * maxVal);
-			if ( proj> 0 && i < numPos){
-				point.setClassID(1);
-				data.getSeries(seriesIndex).add(point);
-				i++;
-			}else if (proj < 0 && j < numNeg){
-				point.setClassID(-1);
-				data.getSeries(seriesIndex).add(point);
-				j++;
-			}else{
-				//TODO possible infinite loop - use separation delta SERIOUS try do for loop
+			int percentPos, int softnessDelta, 
+			double minVal, double maxVal, double minWeight, double maxWeight){
+		try {
+			if (minWeight < 0){
+				minWeight = 0;
+			}		
+			SVMDataItem newVec = null;
+			double values[] = new double[numDimensions];
+			int i = 0;
+			for (i = 0;  i < numDataPoints; i++){
+				for (int d = 0; d < numDimensions; d++){
+					values[d] = getRandom(minVal, maxVal);
+				}
+				newVec = new SVMDataItem(values, getRandom(minWeight, maxWeight), seriesIndex); 
+				data.getSeries(seriesIndex).add(newVec, false);
 			}
+			
+			data.notifyDataChange();
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-	} catch (Exception e) {
-		// TODO
-		e.printStackTrace();
-	}
 }
 	
 	
 	
 	
 	public void generateData(SVMDataSet data, int numDataPoints, 
-				int percentPos, int softnessDelta, double minVal, double maxVal){
+				int percentPos, int softnessDelta, 
+				double minVal, double maxVal, double minWeight, double maxWeight){
 
 		try {
-
 			
-			DVector normal = new DVector(
-					(randGen.nextDouble() * 1.0) - 1, 
-					(randGen.nextDouble() * 1.0) - 1);
+			if (minWeight < 0){
+				minWeight = 0;
+			}
+			
+			SVMDataItem newVec = null;
+			double values[] = new double[numDimensions];
+			for (int d = 0; d < numDimensions; d++){
+				values[d] = getRandom(minVal, maxVal);
+			}
+			
+			SVMDataItem normal = new SVMDataItem(values, 1, 1);
 			normal.multiplyByScaler(maxVal);
 			
-//			if (SVMMain.chartPanel != null){
-//				SVMMain.chartPanel.drawLine(normal); //TODO temporary
-//			}
 			
-			//System.out.println(normal);
 			int numPos = (int) ((percentPos / 100.0) *  numDataPoints);
 			int numNeg = numDataPoints - numPos;
 			
@@ -216,47 +179,56 @@ public class SVMDataGenerator {
 			
 			numPos -= softPos;
 			numNeg -= softNeg;
-			//TODO 100000 point scaling problem
+			
+
+			
 			for (int k = 0; k < softPos; k++){
-				data.addItem(0, new DVector(
-						randGen.nextDouble()* maxVal, 
-						randGen.nextDouble()* maxVal, 1, +1));
+				for (int d = 0; d < numDimensions; d++){
+					values[d] = getRandom(minVal, maxVal);
+				}
+				newVec = new SVMDataItem(values, getRandom(minWeight, maxWeight), +1); 
+				data.getSeries(data.getPositiveSeriesID()).add(newVec, false);
 			}
 			for (int k = 0; k < softNeg; k++){
-				data.addItem(1, new DVector(
-						randGen.nextDouble()* maxVal, 
-						randGen.nextDouble()* maxVal, 1, -1));
+				for (int d = 0; d < numDimensions; d++){
+					values[d] = getRandom(minVal, maxVal);
+				}
+				newVec = new SVMDataItem(values, getRandom(minWeight, maxWeight), +1); 
+				data.getSeries(data.getNegativeSeriesID()).add(newVec, false);
 			}
 			
 			int i = 0, j = 0;
-			double x,y, proj;
-			while(i < numPos ||  j < numNeg){
+			double proj;
+			int total = numPos + numNeg;
+			
+			for (i = 0;  i < total; i++){
+				for (int d = 0; d < numDimensions; d++){
+					values[d] = getRandom(minVal, maxVal);
+				}
+				newVec = new SVMDataItem(values, getRandom(minWeight, maxWeight), +1); 
+				proj = normal.getDotProduct(newVec);
 				
-				x = (randGen.nextDouble() * 2.0) - 1;
-				y = (randGen.nextDouble() * 2.0) - 1;
-				double weight = 1;
-				
-				DVector point = new DVector(x, y, weight);
-				
-				proj = normal.getDotProduct(point);
-				point.setX(point.getXValue() * maxVal);
-				point.setY(point.getYValue() * maxVal);
-				if ( proj> 0 && i < numPos){
-					point.setClassID(1);
-					data.getSeries(0).add(point);
-					i++;
-				}else if (proj < 0 && j < numNeg){
-					point.setClassID(-1);
-					data.getSeries(1).add(point);
+				if (j < numPos && proj > 0){
+					newVec.setClassID(1);
+					data.getSeries(data.getPositiveSeriesID()).add(newVec, false);
 					j++;
 				}else{
-					//TODO possible infinite loop - use separation delta SERIOUS try do for loop
+					newVec.setClassID(-1);
+					data.getSeries(data.getNegativeSeriesID()).add(newVec, false);
 				}
 			}
+			
+			data.notifyDataChange();
 		} catch (Exception e) {
-			// TODO
 			e.printStackTrace();
 		}
+	}
+	
+	public double getRandom(double min, double max){
+		return min + (randGen.nextDouble() * (max - min));
+	}
+	public int getRandom(int min, int max){
+		return randGen.nextInt((max - min) + 1) + min;
 	}
 	
 	

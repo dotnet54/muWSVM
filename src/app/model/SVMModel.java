@@ -1,4 +1,4 @@
-package app.model.data;
+package app.model;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -7,25 +7,29 @@ import org.jfree.data.general.Dataset;
 import org.jfree.data.general.DatasetChangeEvent;
 import org.jfree.data.general.DatasetChangeListener;
 
-import app.model.algorithms.WRCH;
+import app.model.data.SVMDataItem;
+import app.model.data.SVMDataGenerator;
+import app.model.data.SVMDataSeries;
+import app.model.data.SVMDataSet;
+import app.test.WRCH_old;
 
 public class SVMModel implements DatasetChangeListener,ISubject {
 	
-	private ArrayList<DVector> dataset1 = new ArrayList<DVector>();
-	private ArrayList<DVector> dataset2 = new ArrayList<DVector>();	
+	private ArrayList<SVMDataItem> dataset1 = new ArrayList<SVMDataItem>();
+	private ArrayList<SVMDataItem> dataset2 = new ArrayList<SVMDataItem>();	
 
-	private ArrayList<DVector> rch1 = new ArrayList<DVector>();
-	private ArrayList<DVector> rch2 = new ArrayList<DVector>();
+	private ArrayList<SVMDataItem> rch1 = new ArrayList<SVMDataItem>();
+	private ArrayList<SVMDataItem> rch2 = new ArrayList<SVMDataItem>();
 	
 	private double mu1 = 1;
 	private double mu2 = 1;
-	private DVector w = new DVector(2);
+	private SVMDataItem w = new SVMDataItem(2);
 	private double b = 0;
-	private DVector nearestPositivePoint = null;
-	private DVector nearestNegativePoint = null;	
+	private SVMDataItem nearestPositivePoint = null;
+	private SVMDataItem nearestNegativePoint = null;	
 		
-	private DVector centroid1;
-	private DVector centroid2;
+	private SVMDataItem centroid1;
+	private SVMDataItem centroid2;
 
 	private SVMDataSet solutionDataSet = null;
 	private SVMDataSeries positiveSeries = null;
@@ -61,11 +65,11 @@ public class SVMModel implements DatasetChangeListener,ISubject {
 	
 	
 	
-	public DVector getCentroid1() {
+	public SVMDataItem getCentroid1() {
 		return centroid1;
 	}
 
-	public DVector getCentroid2() {
+	public SVMDataItem getCentroid2() {
 		return centroid2;
 	}
 
@@ -195,7 +199,7 @@ public class SVMModel implements DatasetChangeListener,ISubject {
 		return mu2;
 	}
 
-	public DVector getW(){
+	public SVMDataItem getW(){
 		return w;	//reference or value TODO
 	}
 
@@ -284,15 +288,18 @@ public class SVMModel implements DatasetChangeListener,ISubject {
 	}
 	
 	public void generateRandomTrainingData(int numDims,
-			int numPoints, int percentPos, int softnessDelta, double min, double max){
+			int numPoints, int percentPos, int softnessDelta, 
+			double min, double max, double minW, double maxW){
 		SVMDataGenerator dataGen = new SVMDataGenerator(this, 3, 2, 2);
-		dataGen.generateData(trainingData, numPoints, percentPos, softnessDelta, min, max);
+		dataGen.generateData(trainingData, numPoints, percentPos, softnessDelta, min, max, minW, maxW);
 	}
 	
 	public void generateRandomTestData(int numDims,
-			int numPoints, int percentPos, int softnessDelta, double min, double max){
+			int numPoints, int percentPos, int softnessDelta, 
+			double min, double max, double minW, double maxW){
 		SVMDataGenerator dataGen = new SVMDataGenerator(this, 3, 2, 2);
-		dataGen.generateDataSeries(testData, 0, numPoints, percentPos, softnessDelta, min, max);
+		dataGen.generateDataSeries(testData, 0, numPoints, percentPos, 
+				softnessDelta, min, max, minW, maxW);
 	}
 	
 	public void loadPredefinedDataset(String name){
@@ -322,12 +329,12 @@ public class SVMModel implements DatasetChangeListener,ISubject {
 		
 		
 		if (series == 0){
-			rch1 = Dwrch.calcWeightedReducedCHull2(trainingData.getSeries(0), mu1);
+			rch1 = WRCHSolver.calcWeightedReducedCHull2(trainingData.getSeries(0), mu1);
 		}else if (series == 1){
-			rch2 = Dwrch.calcWeightedReducedCHull2(trainingData.getSeries(1), mu2);
+			rch2 = WRCHSolver.calcWeightedReducedCHull2(trainingData.getSeries(1), mu2);
 		}else{
-			rch1 = Dwrch.calcWeightedReducedCHull2(trainingData.getSeries(0), mu1);
-			rch2 = Dwrch.calcWeightedReducedCHull2(trainingData.getSeries(1), mu2);
+			rch1 = WRCHSolver.calcWeightedReducedCHull2(trainingData.getSeries(0), mu1);
+			rch2 = WRCHSolver.calcWeightedReducedCHull2(trainingData.getSeries(1), mu2);
 		}
 		
 		
@@ -346,9 +353,9 @@ public class SVMModel implements DatasetChangeListener,ISubject {
 //			rch2 = wrchSolver.getWRCH();
 //		}
 
-		centroid1 = Dwrch.findCentroid(dataset1);
+		centroid1 = WRCHSolver.findCentroid(dataset1);
 		centroid1.setLabel("+");
-		centroid2 = Dwrch.findCentroid(dataset2);
+		centroid2 = WRCHSolver.findCentroid(dataset2);
 		centroid2.setLabel("-");
 		SVMDataSeries s5= getSolutionDataSet().getSeries(2);
 		s5.clear();
@@ -373,7 +380,7 @@ public class SVMModel implements DatasetChangeListener,ISubject {
 	
 	public void solveSVM(){
 		try {
-			Dwsk wskSolver = new Dwsk();
+			WSKSolver wskSolver = new WSKSolver();
 			wskSolver.wsk(trainingData, getMu1(), getMu2());
 			
 			b = wskSolver.getB();
@@ -384,7 +391,7 @@ public class SVMModel implements DatasetChangeListener,ISubject {
 			
 			int count = 0;
 			double proj = 0.0;
-			DVector item = null;
+			SVMDataItem item = null;
 			
 			SVMDataSeries positiveClass = trainingData.getSeries(trainingData.getPositiveSeriesID());
 			numActualPositives = positiveClass.getItemCount();
@@ -448,7 +455,7 @@ public class SVMModel implements DatasetChangeListener,ISubject {
 		}
 	}
 	
-	public int testPoint(DVector point){
+	public int testPoint(SVMDataItem point){
 		try {
 			double proj = point.getDotProduct(getW()) - getB();
 			if (proj > 0){
@@ -463,23 +470,23 @@ public class SVMModel implements DatasetChangeListener,ISubject {
 		}
 	}
 	
-	public DVector getHyperplane() throws Exception{
+	public SVMDataItem getHyperplane() throws Exception{
 		return getW().get2DAntiClockwiseNormal(); //TODO sure?
 	}
 	
-	public ArrayList<DVector> getRCH1(){
+	public ArrayList<SVMDataItem> getRCH1(){
 		return rch1;
 	}
 	
-	public ArrayList<DVector> getRCH2(){
+	public ArrayList<SVMDataItem> getRCH2(){
 		return rch2;
 	}
 
-	public DVector getNearestPositivePoint() {
+	public SVMDataItem getNearestPositivePoint() {
 		return nearestPositivePoint;
 	}
 
-	public DVector getNearestNegativePoint() {
+	public SVMDataItem getNearestNegativePoint() {
 		return nearestNegativePoint;
 	}
 

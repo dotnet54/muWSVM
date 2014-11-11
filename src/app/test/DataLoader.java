@@ -1,4 +1,4 @@
-package app.gui;
+package app.test;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;

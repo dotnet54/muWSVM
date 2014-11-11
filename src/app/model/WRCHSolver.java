@@ -1,4 +1,4 @@
-package app.model.data;
+package app.model;
 
 
 import java.util.ArrayList;
@@ -7,20 +7,20 @@ import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import app.model.algorithms.DoubleMath;
 import app.model.data.SVMDataItem;
+import app.model.data.SVMDataSeries;
+import app.test.SVMDataItemOLD2;
 
-//
 
 /*
  * 
- * RECURSION TOO DEEP IF P IS IN STACK, USE CLASS STATIC
+ * 
  * 
  */
-public class Dwrch {
+public class WRCHSolver {
 	
 	
-	private static DVector [] Z;
+	private static SVMDataItem [] Z;
 	private static int numSupportPoints;
 	
 	private static double epsilon = 0.001;
@@ -29,8 +29,8 @@ public class Dwrch {
 	private static long endTime = 0;
 	private static long elapsedTime = 0;
 	
-	public static ArrayList<DVector> calcWeightedReducedCHull2(SVMDataSeries series, double mu) {
-		ArrayList<DVector> r = new ArrayList<DVector>();
+	public static ArrayList<SVMDataItem> calcWeightedReducedCHull2(SVMDataSeries series, double mu) {
+		ArrayList<SVMDataItem> r = new ArrayList<SVMDataItem>();
 		
 		try{
 			
@@ -38,12 +38,12 @@ public class Dwrch {
 				return null;
 			}
 			
-			ArrayList<DVector> P =  new ArrayList<DVector>();
-			DVector t =null;
+			ArrayList<SVMDataItem> P =  new ArrayList<SVMDataItem>();
+			SVMDataItem t =null;
 			int xDim = series.getXDimension();
 			int yDim = series.getYDimension();
 			for (int i=0; i< series.getItemCount(); i++){
-				t = new DVector(0,0);
+				t = new SVMDataItem(0,0);
 				t.setX(series.getRawDataItem(i).getVal(xDim));
 				t.setY(series.getRawDataItem(i).getVal(yDim));
 				t.setWeight(series.getRawDataItem(i).getWeight());
@@ -57,11 +57,11 @@ public class Dwrch {
 //				return (r);
 //			}
 			
-			DVector[] res = rhull(P, mu);
+			SVMDataItem[] res = rhull(P, mu);
 			
-			DVector p;
-			for (int i=0;res!=null && i< res.length; i++){ //TODO assume res != null
-				p = new DVector(0,0);
+			SVMDataItem p;
+			for (int i=0;res!=null && i< res.length; i++){
+				p = new SVMDataItem(0,0);
 				p.setX(res[i].getXValue());
 				p.setY(res[i].getYValue());
 				p.setLabel("");
@@ -78,22 +78,22 @@ public class Dwrch {
 	}
 	
 	
-	private static DVector[] rhull(ArrayList<DVector> P, double mu) throws StackOverflowError{
+	private static SVMDataItem[] rhull(ArrayList<SVMDataItem> P, double mu) throws StackOverflowError{
 
 		startTime = System.nanoTime();
 		
-		DVector[] Ret = null;
+		SVMDataItem[] Ret = null;
 		try {
-			DVector n = new DVector(-1,0);
-			DVector l =  findExtremePoint(P, mu, n);
+			SVMDataItem n = new SVMDataItem(-1,0);
+			SVMDataItem l =  findExtremePoint(P, mu, n);
 			n.setXValue(1);
-			DVector r =  findExtremePoint(P, mu,  n);
+			SVMDataItem r =  findExtremePoint(P, mu,  n);
 			
-			Set<DVector> result = rhull_aux(P, l ,r, mu);
-			Set<DVector> B = rhull_aux(P, r, l, mu);
+			Set<SVMDataItem> result = rhull_aux(P, l ,r, mu);
+			Set<SVMDataItem> B = rhull_aux(P, r, l, mu);
 			result.addAll(B);
 
-			Ret = new DVector[result.size()];
+			Ret = new SVMDataItem[result.size()];
 			Ret = result.toArray(Ret);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -106,16 +106,16 @@ public class Dwrch {
 		return Ret;
 	}
 	
-	private static Set<DVector> rhull_aux(ArrayList<DVector> P, 
-			DVector l, DVector r, double mu) throws StackOverflowError{
+	private static Set<SVMDataItem> rhull_aux(ArrayList<SVMDataItem> P, 
+			SVMDataItem l, SVMDataItem r, double mu) throws StackOverflowError{
 		
-		Set<DVector> result = new LinkedHashSet<DVector>();
+		Set<SVMDataItem> result = new LinkedHashSet<SVMDataItem>();
 		
 		try {
-			DVector n = new DVector(0,0);
-			DVector h = new DVector(0,0);
+			SVMDataItem n = new SVMDataItem(0,0);
+			SVMDataItem h = new SVMDataItem(0,0);
 			
-			DVector diff = r.subtractVectors(l);
+			SVMDataItem diff = r.subtractVectors(l);
 			diff.setXValue(DoubleMath.dMinus(r.getXValue(), l.getXValue()));
 			diff.setYValue(DoubleMath.dMinus(r.getYValue(), l.getYValue()));
 			n.setXValue(-diff.getYValue());
@@ -124,7 +124,7 @@ public class Dwrch {
 			h =  findExtremePoint(P, mu,  n);
 			//System.out.format("h:%s,l:%s,r%s \n", h,l,r);
 
-			DVector facetNormal = l.subtractVectors(r);
+			SVMDataItem facetNormal = l.subtractVectors(r);
 			facetNormal.setXValue(DoubleMath.dMinus(l.getXValue(), r.getXValue()));
 			facetNormal.setYValue(DoubleMath.dMinus(l.getYValue(), r.getYValue()));
 			facetNormal =  facetNormal.get2DAntiClockwiseNormal();
@@ -139,8 +139,8 @@ public class Dwrch {
 			
 			
 			
-			DVector nl = new DVector(0,0);
-			DVector nr = new DVector(0,0);
+			SVMDataItem nl = new SVMDataItem(0,0);
+			SVMDataItem nr = new SVMDataItem(0,0);
 			
 			diff = h.subtractVectors(l);
 			diff.setXValue(DoubleMath.dMinus(h.getXValue(), l.getXValue()));
@@ -154,14 +154,14 @@ public class Dwrch {
 			nr.setXValue(-diff.getYValue());
 			nr.setYValue(diff.getXValue());
 			
-			DVector[] supportPoints = new DVector[numSupportPoints];
+			SVMDataItem[] supportPoints = new SVMDataItem[numSupportPoints];
 			for (int i = 0; i < numSupportPoints ; i++){
 				supportPoints[i] = Z[i];
 			}
 			double scalerProjections[] = new double [numSupportPoints];
 			double minOffset;
-			ArrayList<DVector> L = new ArrayList<DVector>();
-			ArrayList<DVector> R = new ArrayList<DVector>();
+			ArrayList<SVMDataItem> L = new ArrayList<SVMDataItem>();
+			ArrayList<SVMDataItem> R = new ArrayList<SVMDataItem>();
 			
 			
 			for (int i = 0; i < numSupportPoints; i++){
@@ -192,11 +192,10 @@ public class Dwrch {
 			
 			
 			result = rhull_aux(L, l ,h, mu);
-			Set<DVector> B = rhull_aux(R, h, r, mu);
+			Set<SVMDataItem> B = rhull_aux(R, h, r, mu);
 			result.addAll(B);
 			
 		} catch (Exception e) {
-			// TODO
 			e.printStackTrace();
 		}
 		return result;
@@ -259,7 +258,7 @@ public class Dwrch {
 //		return v;
 //	}
 //	
-	public static DVector findExtremePoint(ArrayList<DVector> list, double mu, final DVector n){
+	public static SVMDataItem findExtremePoint(ArrayList<SVMDataItem> list, double mu, final SVMDataItem n){
 		
 		if (mu == 0){ //TODO fp comparison
 			return findCentroid(list);
@@ -271,9 +270,9 @@ public class Dwrch {
 		}
 		
 		//TODO if weight = 0 ??
-		Collections.sort(list,Collections.reverseOrder( new Comparator<DVector>() {
+		Collections.sort(list,Collections.reverseOrder( new Comparator<SVMDataItem>() {
 			@Override
-			public int compare(DVector o1, DVector o2) {
+			public int compare(SVMDataItem o1, SVMDataItem o2) {
 				//TODO fp comparisons
 				try {
 					double p1 = o1.getDotProduct(n);
@@ -335,13 +334,13 @@ public class Dwrch {
 			k++;
 		}
 		
-		DVector v = new DVector(n.getDimensions());
+		SVMDataItem v = new SVMDataItem(n.getDimensions());
 		int i = 0;
 		for (i = 0; i < count; i++){
 			if (i >=  list.size()){
 				System.out.println("index out of bounds");
 			}
-			DVector c = list.get(i).clone();
+			SVMDataItem c = list.get(i).clone();
 			c.multiplyByScaler(A[i]);
 			try {
 				v.add(c);
@@ -354,7 +353,7 @@ public class Dwrch {
 
 //		//copy support points
 		numSupportPoints = count;
-		Z = new DVector[list.size()];
+		Z = new SVMDataItem[list.size()];
 		for (int j = 0; j < list.size(); j++){
 			Z[j] = list.get(j); 
 		}
@@ -375,18 +374,18 @@ public class Dwrch {
 		return min;
 	}
 	
-	private static DVector normal(DVector p1, DVector p2){
+	private static SVMDataItem normal(SVMDataItem p1, SVMDataItem p2){
 			double dx, dy;
 			dx = DoubleMath.dMinus(p1.getXValue(), p2.getXValue());
 			dy = DoubleMath.dMinus(p1.getYValue(), p2.getYValue());
-			DVector n = new DVector(0,0);
+			SVMDataItem n = new SVMDataItem(0,0);
 			n.setX(-dy);
 			n.setY(dx);
 			return n;
 		}
 
-	public static DVector findCentroid(DVector P[]){
-		DVector cent = new DVector(0, 0);
+	public static SVMDataItem findCentroid(SVMDataItem P[]){
+		SVMDataItem cent = new SVMDataItem(0, 0);
 		
 		for (int i = 0; i < P.length; i++){
 			cent.setX(cent.getXValue() + P[i].getXValue() * P[i].getWeight());
@@ -405,8 +404,8 @@ public class Dwrch {
 		return cent;
 	}
 	
-	public static DVector findCentroid(ArrayList<DVector> dataset){
-		DVector cent = new DVector(0, 0);
+	public static SVMDataItem findCentroid(ArrayList<SVMDataItem> dataset){
+		SVMDataItem cent = new SVMDataItem(0, 0);
 		
 		for (int i = 0; i < dataset.size(); i++){
 			cent.setX(cent.getXValue() + dataset.get(i).getXValue() * dataset.get(i).getWeight());

@@ -17,28 +17,28 @@ public class SVMDataSeries extends XYSeries {
 	private int yDimension = 1;
 	
 	public SVMDataSeries(Comparable key, int numDimensins) {
-		super(key);	
+		super(key, false, true);	
 		this.dimensions = numDimensins;
 	}
 	
 	
 	//override these methods
 	
-	public void add(DVector item) throws Exception{
+	public void add(SVMDataItem item, boolean notify) throws Exception{
 		if (item.getDimensions() == dimensions){
-			super.add(item);
+			super.add(item, notify);
 		}else{
 			throw new Exception("SVMDataSeries::add: Cannot add item, dimensions do not match");
 		}
 	}
 	
-	public DVector remove(int index){
-		return (DVector) super.remove(index);
+	public SVMDataItem remove(int index){
+		return (SVMDataItem) super.remove(index);
 	}
 	
 	//TODO returns internal data NOTE -> notification issue
-	public DVector getRawDataItem(int index) {
-		return (DVector) this.data.get(index);
+	public SVMDataItem getRawDataItem(int index) {
+		return (SVMDataItem) this.data.get(index);
 	}
 	
 //	public double getVal(int dim, int index){
@@ -75,19 +75,19 @@ public class SVMDataSeries extends XYSeries {
 	
 	
 	
-	public ArrayList<DVector> toArrayList(){
-		ArrayList<DVector> list = new ArrayList<DVector>();
+	public ArrayList<SVMDataItem> toArrayList(){
+		ArrayList<SVMDataItem> list = new ArrayList<SVMDataItem>();
 		
-		DVector item =  null;
+		SVMDataItem item =  null;
 		for (int i = 0; i < getItemCount(); i++){
-			item = (DVector) getItems().get(i);
+			item = (SVMDataItem) getItems().get(i);
 			list.add(item);
 		}
 		return list;
 	}
 	
 	//TODO note jfreechart modified to make this public 
-    public DVector getDataItem(int index) {
-        return (DVector) this.data.get(index);
+    public SVMDataItem getDataItem(int index) {
+        return (SVMDataItem) this.data.get(index);
     }
 }

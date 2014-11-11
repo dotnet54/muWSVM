@@ -5,18 +5,17 @@ import java.util.Collections;
 import java.util.Comparator;
 
 import app.model.data.SVMDataGenerator;
-import app.model.data.SVMDataItem;
 import app.model.data.SVMDataSet;
 
 public class TestSVMDataItem {
 
 	public static void main(String[] args) {
 		
-		SVMDataItem o1 = new SVMDataItem(0.0027, 0);
-		SVMDataItem o2 = new SVMDataItem(0.002199999, 0);
-		SVMDataItem o3 = new SVMDataItem(0.0022, 0);
+		SVMDataItemOLD2 o1 = new SVMDataItemOLD2(0.0027, 0);
+		SVMDataItemOLD2 o2 = new SVMDataItemOLD2(0.002199999, 0);
+		SVMDataItemOLD2 o3 = new SVMDataItemOLD2(0.0022, 0);
 		
-		SVMDataItem normal = new SVMDataItem(1, 0);
+		SVMDataItemOLD2 normal = new SVMDataItemOLD2(1, 0);
 		
 		o1.project(normal);
 		o2.project(normal);
@@ -24,23 +23,23 @@ public class TestSVMDataItem {
 		
 		System.out.format("%f : % f \n", o1.getScProj(), o2.getScProj());
 		System.out.format("o1.sc < o2.sc = %b\n", 
-				SVMDataItem.isLessThan(o1.getScProj(), o2.getScProj()));
+				SVMDataItemOLD2.isLessThan(o1.getScProj(), o2.getScProj()));
 		System.out.format("o1.sc == o2.sc = %b\n", 
-				SVMDataItem.isEqual(o1.getScProj(), o2.getScProj()));
+				SVMDataItemOLD2.isEqual(o1.getScProj(), o2.getScProj()));
 		System.out.format("o1.sc > o2.sc = %b\n", 
-				SVMDataItem.isGreaterThan(o1.getScProj(), o2.getScProj()));
+				SVMDataItemOLD2.isGreaterThan(o1.getScProj(), o2.getScProj()));
 		
 		
-		ArrayList<SVMDataItem> X = new ArrayList<SVMDataItem>();
+		ArrayList<SVMDataItemOLD2> X = new ArrayList<SVMDataItemOLD2>();
 		X.add(o1);
 		X.add(o2);
 		X.add(o3);
 		
 		
-		Collections.sort(X,Collections.reverseOrder( new Comparator<SVMDataItem>() {
+		Collections.sort(X,Collections.reverseOrder( new Comparator<SVMDataItemOLD2>() {
 
 			@Override
-			public int compare(SVMDataItem o1, SVMDataItem o2) {
+			public int compare(SVMDataItemOLD2 o1, SVMDataItemOLD2 o2) {
 				if (o1.getScProj() < o2.getScProj()){
 					return -1;
 				}else if (o1.getScProj() == o2.getScProj()){

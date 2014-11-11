@@ -1,4 +1,4 @@
-package app.model.algorithms;
+package app.test;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -7,32 +7,29 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 
-import app.model.data.DData;
-import app.model.data.DVector;
-import app.model.data.Dwrch;
-import app.model.data.Dwsk;
+import app.model.WRCHSolver;
 import app.model.data.SVMDataItem;
 
 public class BBY {
 
-	ArrayList<DVector> vertexList = null;
+	ArrayList<SVMDataItem> vertexList = null;
 	ArrayList<Facet> facetList = null;
 	List<List<Integer>> adjacencyList = null;
 	
 	private class Facet{
-		public DVector left = null;
-		public DVector right = null;
+		public SVMDataItem left = null;
+		public SVMDataItem right = null;
 		public boolean isVisible = false;
 		public boolean isFinal = false;
 		
-		public Facet(DVector v1, DVector v2){
+		public Facet(SVMDataItem v1, SVMDataItem v2){
 			this.left = v1;
 			this.right = v2;
 		}
 		
 		//normal away from hull, follow same convention always
-		public DVector getNormal() throws Exception{
-			DVector w = right.subtractVectors(left);
+		public SVMDataItem getNormal() throws Exception{
+			SVMDataItem w = right.subtractVectors(left);
 			return w.get2DAntiClockwiseNormal();
 		}
 		
@@ -46,7 +43,7 @@ public class BBY {
 			return false;
 		}
 		
-		public boolean contains(DVector v){
+		public boolean contains(SVMDataItem v){
 			
 			if (left.equals(v)){
 				return true;
@@ -61,27 +58,27 @@ public class BBY {
 	}
 	
 	public BBY(){
-		vertexList = new ArrayList<DVector>();
+		vertexList = new ArrayList<SVMDataItem>();
 		facetList = new ArrayList<Facet>();
 		adjacencyList = new ArrayList<List<Integer>>();
 	}
 	
-	public ArrayList<SVMDataItem> calcWRCH(ArrayList<SVMDataItem> points, double mu){
-		ArrayList<DVector> list = new ArrayList<DVector>();
-		ArrayList<SVMDataItem> res = new ArrayList<SVMDataItem>();
+	public ArrayList<SVMDataItemOLD2> calcWRCH(ArrayList<SVMDataItemOLD2> points, double mu){
+		ArrayList<SVMDataItem> list = new ArrayList<SVMDataItem>();
+		ArrayList<SVMDataItemOLD2> res = new ArrayList<SVMDataItemOLD2>();
 		
 		try {
 			for (int i =  0; i < points.size(); i++){
-				list.add(new DVector(
+				list.add(new SVMDataItem(
 						points.get(i).getXValue(), 
 						points.get(i).getYValue(),
 						points.get(i).getWeight()));
 			}
 			System.out.println("----------------");
-			ArrayList<DVector> ans = findWRCH(list ,mu);
+			ArrayList<SVMDataItem> ans = findWRCH(list ,mu);
 			
 			for (int i =  0; i < ans.size(); i++){
-				res.add(new SVMDataItem(
+				res.add(new SVMDataItemOLD2(
 						ans.get(i).getXValue(),
 						ans.get(i).getYValue(), 
 						ans.get(i).getWeight()));
@@ -96,18 +93,18 @@ public class BBY {
 	
 	
 	
-	public ArrayList<DVector> findWRCH(ArrayList<DVector> points, double mu){
+	public ArrayList<SVMDataItem> findWRCH(ArrayList<SVMDataItem> points, double mu){
 		try {
-			DVector leftEdge = null;
-			DVector rightEdge = null;
+			SVMDataItem leftEdge = null;
+			SVMDataItem rightEdge = null;
 			
-			DVector startDirection = new DVector(2);
+			SVMDataItem startDirection = new SVMDataItem(2);
 			startDirection.setXValue(-1);
-			DVector oppositeDirection = new DVector(2);
+			SVMDataItem oppositeDirection = new SVMDataItem(2);
 			oppositeDirection.setXValue(+1);
 
-			DVector leftMostVertex = Dwrch.findExtremePoint(points , mu, startDirection);
-			DVector rightMostVertex = Dwrch.findExtremePoint(points , mu, oppositeDirection);
+			SVMDataItem leftMostVertex = WRCHSolver.findExtremePoint(points , mu, startDirection);
+			SVMDataItem rightMostVertex = WRCHSolver.findExtremePoint(points , mu, oppositeDirection);
 			
 			vertexList.add(leftMostVertex);
 			vertexList.add(rightMostVertex);
@@ -118,8 +115,8 @@ public class BBY {
 			Facet facet = getNonFinal();
 			while (facet != null){
 				
-				DVector n = facet.getNormal();
-				DVector h = Dwrch.findExtremePoint(points, mu, n);
+				SVMDataItem n = facet.getNormal();
+				SVMDataItem h = WRCHSolver.findExtremePoint(points, mu, n);
 				System.out.println(h + " : " + facetList.size()
 						+" : " + vertexList.size());
 
@@ -132,7 +129,7 @@ public class BBY {
 					updateVisibleFacets(h);
 					for (int i =  0; i < facetList.size(); i++){
 						if (facetList.get(i).isVisible){
-							DVector v = facetList.get(i).left;
+							SVMDataItem v = facetList.get(i).left;
 							for (int j = 0; j < facetList.size(); j++){
 								Facet f = facetList.get(j);
 								if (f.contains(v) && f.isVisible == false){
@@ -175,9 +172,9 @@ public class BBY {
 	}
 	
 	
-	public ArrayList<SVMDataItem> getWRCH(){
-		ArrayList<DVector> ans =  new ArrayList<DVector>();
-		ArrayList<SVMDataItem> res = new ArrayList<SVMDataItem>();
+	public ArrayList<SVMDataItemOLD2> getWRCH(){
+		ArrayList<SVMDataItem> ans =  new ArrayList<SVMDataItem>();
+		ArrayList<SVMDataItemOLD2> res = new ArrayList<SVMDataItemOLD2>();
 
 		
 		try {
@@ -245,7 +242,7 @@ public class BBY {
 //			}
 
 			for (int j =  0; j < ans.size(); j++){
-				res.add(new SVMDataItem(
+				res.add(new SVMDataItemOLD2(
 						ans.get(j).getXValue(),
 						ans.get(j).getYValue(), 
 						ans.get(j).getWeight()));
@@ -260,7 +257,7 @@ public class BBY {
 	}
 	
 	
-	private void updateVisibleFacets(DVector h){
+	private void updateVisibleFacets(SVMDataItem h){
 		try {
 			int size = facetList.size();
 			double pointoffset = 0.0;
@@ -332,11 +329,11 @@ public class BBY {
 	}
 	
 
-	private ArrayList<DVector> getBoundaryVertices(){
+	private ArrayList<SVMDataItem> getBoundaryVertices(){
 		int size = facetList.size();
 		Facet facet = null;
-		LinkedHashSet<DVector> listVisible = new LinkedHashSet<DVector>();
-		ArrayList<DVector> boundary = new ArrayList<DVector>();
+		LinkedHashSet<SVMDataItem> listVisible = new LinkedHashSet<SVMDataItem>();
+		ArrayList<SVMDataItem> boundary = new ArrayList<SVMDataItem>();
 		
 		boolean foundVisibleFacet = false;
 		boolean foundInVisibleFacet = false;
@@ -349,8 +346,8 @@ public class BBY {
 				listVisible.add(facet.right);
 			}
 		}
-		DVector vert = null;
-		Iterator<DVector> it = listVisible.iterator();
+		SVMDataItem vert = null;
+		Iterator<SVMDataItem> it = listVisible.iterator();
 		int j = 0;
 		while(it.hasNext()){
 			vert = it.next();
@@ -406,7 +403,7 @@ public class BBY {
 		try {
 			int sizeV = vertexList.size();
 			int sizeF = facetList.size();
-			DVector vert = null;
+			SVMDataItem vert = null;
 			Facet facet = null;
 			boolean isV1Boundary = false;
 			boolean isV2Boundary = false;
@@ -426,15 +423,15 @@ public class BBY {
 		}
 	}
 	
-	private ArrayList<DVector> getBoundaryEdges(ArrayList<Facet> facets){
-		ArrayList<DVector> edges = new ArrayList<DVector>();
+	private ArrayList<SVMDataItem> getBoundaryEdges(ArrayList<Facet> facets){
+		ArrayList<SVMDataItem> edges = new ArrayList<SVMDataItem>();
 		
 		
 		return edges;
 	}
 	
 	
-	private ArrayList<Facet> getVisibleFacets(DVector h){
+	private ArrayList<Facet> getVisibleFacets(SVMDataItem h){
 		ArrayList<Facet> X = new ArrayList<BBY.Facet>();
 		
 		try {

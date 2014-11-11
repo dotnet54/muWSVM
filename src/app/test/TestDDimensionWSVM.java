@@ -13,9 +13,8 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
 import app.gui.SVMPanel;
-import app.model.data.DData;
-import app.model.data.DVector;
-import app.model.data.Dwsk;
+import app.model.WSKSolver;
+import app.model.data.SVMDataItem;
 
 public class TestDDimensionWSVM extends JFrame{
 	
@@ -56,13 +55,13 @@ public class TestDDimensionWSVM extends JFrame{
 			("Multidimensional WSVM", "X", "Y", dataset);
 			ChartPanel panel = new ChartPanel(chart);
 			
-			Dwsk solver = new Dwsk();
+			WSKSolver solver = new WSKSolver();
 			solver.wsk(datasource, 1, 1);
 			
-			DVector w = solver.getW();
+			SVMDataItem w = solver.getW();
 			double b = solver.getB();
-			DVector p =  solver.getNearestPositivePoint();
-			DVector n = solver.getNearestNegativePoint();			
+			SVMDataItem p =  solver.getNearestPositivePoint();
+			SVMDataItem n = solver.getNearestNegativePoint();			
 			double offset = b / w.getMagnitude();
 		
 			System.out.format("p:%s\nn:%s\n", 
@@ -76,8 +75,8 @@ public class TestDDimensionWSVM extends JFrame{
 			double y2 = 10.0;			
 			double scale = 20.0;
 			
-			DVector neww = w.clone();
-			DVector h = w.clone();
+			SVMDataItem neww = w.clone();
+			SVMDataItem h = w.clone();
 
 			h.setXValue(-w.getYValue());
 			h.setYValue(w.getXValue());

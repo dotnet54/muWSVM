@@ -1,4 +1,5 @@
-package app.model.data;
+package app.model;
+
 
 /**
  * 

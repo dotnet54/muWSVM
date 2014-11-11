@@ -1,4 +1,4 @@
-package app.model.algorithms;
+package app.model;
 
 public class DoubleMath {
 	

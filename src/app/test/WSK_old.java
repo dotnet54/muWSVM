@@ -1,45 +1,45 @@
-package app.model.algorithms;
+package app.test;
 
 import java.awt.Point;
 import java.awt.geom.Line2D;
-import app.model.data.SVMDataItem;
-import app.model.data.SVMModel;
 
-public class WSK {
+import app.model.SVMModel;
+
+public class WSK_old {
 	
 	
 	//TODO CHANGE from static class to instance class, smae for RCH
 	
-	private static SVMDataItem finalW;
+	private static SVMDataItemOLD2 finalW;
 	private static double finalB;
 
 	
-	public static SVMDataItem getFinalW() {
+	public static SVMDataItemOLD2 getFinalW() {
 		return finalW;
 	}
 	public static double getFinalB() {
 		return finalB;
 	}
 	
-	private static SVMDataItem nearestPositivePoint = null;
-	private static SVMDataItem nearestNegativePoint = null;
-	public static SVMDataItem getNearestPositivePoint() {
+	private static SVMDataItemOLD2 nearestPositivePoint = null;
+	private static SVMDataItemOLD2 nearestNegativePoint = null;
+	public static SVMDataItemOLD2 getNearestPositivePoint() {
 		return nearestPositivePoint;
 	}
 
 
-	public static SVMDataItem getNearestNegativePoint() {
+	public static SVMDataItemOLD2 getNearestNegativePoint() {
 		return nearestNegativePoint;
 	}
 
 
 	
-	public static void wsk(SVMDataItem[] Ppos, SVMDataItem[] Pneg, double[] pweights, double[] nweights
+	public static void wsk(SVMDataItemOLD2[] Ppos, SVMDataItemOLD2[] Pneg, double[] pweights, double[] nweights
 			,double mu1,double mu2){
 
-		SVMDataItem p = null;
-		SVMDataItem n = null;
-		SVMDataItem w = null;
+		SVMDataItemOLD2 p = null;
+		SVMDataItemOLD2 n = null;
+		SVMDataItemOLD2 w = null;
 		
 		double eps = 0.005;
 		int MAXIT = 500;
@@ -48,30 +48,30 @@ public class WSK {
 		
 //		p = RCH.theorem32(Ppos, new SVMDataItem(-1, 0), mu);
 //		n = RCH.theorem32(Pneg, new SVMDataItem(1, 0), mu);
-		p = WRCH.alg9(Ppos,pweights , mu1,new SVMDataItem(-1, 0));
-		n = WRCH.alg9(Pneg,nweights , mu2,new SVMDataItem(1, 0));
+		p = WRCH_old.alg9(Ppos,pweights , mu1,new SVMDataItemOLD2(-1, 0));
+		n = WRCH_old.alg9(Pneg,nweights , mu2,new SVMDataItemOLD2(1, 0));
 		
 		while(it < MAXIT){
-			w = new SVMDataItem(
+			w = new SVMDataItemOLD2(
 					p.getXValue() - n.getXValue(),
 					p.getYValue() - n.getYValue());
 			
-			SVMDataItem wprime = new SVMDataItem(w.getXValue(), w.getYValue());
+			SVMDataItemOLD2 wprime = new SVMDataItemOLD2(w.getXValue(), w.getYValue());
 			
 			wprime.setX(w.getXValue() *-1);
 			wprime.setY(w.getYValue() *-1);
 //			SVMDataItem vp = RCH.theorem32(Ppos, w, mu);
-			SVMDataItem vp = WRCH.alg9(Ppos,pweights , mu1, wprime);
+			SVMDataItemOLD2 vp = WRCH_old.alg9(Ppos,pweights , mu1, wprime);
 			
-			wprime = new SVMDataItem(w.getXValue(), w.getYValue());
+			wprime = new SVMDataItemOLD2(w.getXValue(), w.getYValue());
 			wprime.setX(w.getXValue());
 			wprime.setY(w.getYValue());
 //			SVMDataItem vn = RCH.theorem32(Pneg, w, mu);
-			SVMDataItem vn = WRCH.alg9(Pneg,nweights , mu2, w);
+			SVMDataItemOLD2 vn = WRCH_old.alg9(Pneg,nweights , mu2, w);
 			
-			SVMDataItem dvp = new SVMDataItem(vp.getXValue() - n.getXValue(), 
+			SVMDataItemOLD2 dvp = new SVMDataItemOLD2(vp.getXValue() - n.getXValue(), 
 					vp.getYValue() - n.getYValue());
-			SVMDataItem dpv = new SVMDataItem(p.getXValue() - vn.getXValue(), 
+			SVMDataItemOLD2 dpv = new SVMDataItemOLD2(p.getXValue() - vn.getXValue(), 
 					p.getYValue() - vn.getYValue());
 			
 			double w1 =(w.getDotProduct(dvp));
@@ -99,11 +99,11 @@ public class WSK {
 //				double bottom = (x2 * x2) + (y2 * y2);
 				
 				
-				SVMDataItem dnp = new SVMDataItem(
+				SVMDataItemOLD2 dnp = new SVMDataItemOLD2(
 						p.getXValue() - n.getXValue(),
 						p.getYValue() - n.getYValue());
 				
-				SVMDataItem dpvp = new SVMDataItem(
+				SVMDataItemOLD2 dpvp = new SVMDataItemOLD2(
 						p.getXValue() - vp.getXValue(),
 						p.getYValue() - vp.getYValue());
 				
@@ -138,11 +138,11 @@ public class WSK {
 //				double bottom = (x2 * x2) + (y2 * y2);
 				
 				
-				SVMDataItem dpn = new SVMDataItem(
+				SVMDataItemOLD2 dpn = new SVMDataItemOLD2(
 						n.getXValue() - p.getXValue(),
 						n.getYValue() - p.getYValue());
 				
-				SVMDataItem dpvn = new SVMDataItem(
+				SVMDataItemOLD2 dpvn = new SVMDataItemOLD2(
 						n.getXValue() - vn.getXValue(),
 						n.getYValue() - vn.getYValue());
 				

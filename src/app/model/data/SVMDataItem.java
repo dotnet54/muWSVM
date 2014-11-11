@@ -1,48 +1,73 @@
 package app.model.data;
 
-import java.awt.Point;
-import java.util.Vector;
-
 import org.jfree.data.xy.XYDataItem;
 
-import app.model.algorithms.DoubleMath;
-
+import app.model.DoubleMath;
 
 public class SVMDataItem extends XYDataItem{
-
+	
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 1L;
-	private int classID = 1;
-	private double weight = 1;//defaults
-	private double scProjection = 0;
+	private static final long serialVersionUID = 4348757494167079122L;
+	private double values[];
+	private double weight;
+	private int classID;
 	private String label = "";
 	
-	private DVector vector = null; //TODO THINK ABOUT THIS
+	public SVMDataItem(double x, double y) {
+		super(x, y);
+		//by default dimensions = 2, weight = 1, class = +1
+		initialiseVector(2, 1.0, +1);
+		values[0] = x;
+		values[1] = y;
+	}
 	
-	private int dimensions;
-	
-	
-	public int getDimensions() {
-		return dimensions;
+	public SVMDataItem(double x, double y, double weight) {
+		super(x, y);
+		initialiseVector(2, weight, +1);
+		values[0] = x;
+		values[1] = y;
 	}
 
-	public DVector getVector() {
-		return vector;
+	public SVMDataItem(double x, double y, double weight, int classID) {
+		super(x, y);
+		initialiseVector(2, weight, classID);
+		values[0] = x;
+		values[1] = y;
 	}
-
-	public void setVector(DVector vec) {
-		try {
-			setX(vec.getXValue());
-			setY(vec.getYValue());
-			setWeight(vec.getWeight());
-			setClassID(vec.getClassID());
-			this.vector = vec;
-		} catch (Exception e) {
-			// TODO
-			e.printStackTrace();
+	
+	public SVMDataItem(int dimensions) {
+		super(0, 0);
+		initialiseVector(dimensions, 1.0, +1);
+	}
+	
+	public SVMDataItem(double[] values, double weight, int classID) {
+		super(0, 0);
+		initialiseVector(values.length, weight, classID);
+		//deep copy
+		for (int i = 0; i < values.length; i++){
+			this.values[i] = values[i];
 		}
+	}
+	
+	public double getWeight() {
+		return weight;
+	}
+
+	public void setWeight(double weight) {
+		if (weight < 0){
+			weight  =0;
+		}
+		this.weight = weight;
+	}
+
+	public int getClassID() {
+		return classID;
+	}
+
+	public void setClassID(int classID) {
+		this.classID = classID;
 	}
 
 	public String getLabel() {
@@ -52,138 +77,295 @@ public class SVMDataItem extends XYDataItem{
 	public void setLabel(String label) {
 		this.label = label;
 	}
+
+	public int getDimensions() {
+		return  values.length;
+	}
+
+	private void initialiseVector(int dimensions, double weight, int classID){
+		values = new double[dimensions];
+		this.weight = weight;
+		this.classID = classID;
+	}
 	
-	public SVMDataItem(DVector vec){
-		super(0, 0);
+	
+	public double getVal(int index) throws Exception{
+		if (index > values.length - 1){
+			throw new Exception("DVector::getVal: Index greater than dimensions in vector");
+		}
+		return values[index];
+	}
+	
+	public void setVal(int index, double newValue) throws Exception{
+		if (index > values.length - 1){
+			throw new Exception("DVector::setVal: Index greater than dimensions in vector");
+		}
+		values[index] = newValue;
+	}
+	
+	
+	public Double getX(){
+		return getXValue();
+	}
+	
+	public Double getY(){
+		return getYValue();
+	}
+	
+	public void setX(Number x){
+		setX(x.doubleValue());
+	}
+	public void setY(Number y){
+		setY(y.doubleValue());
+	}
+	
+	public void setX(double x){
 		try {
-			setX(vec.getXValue());
-			setY(vec.getYValue());
-			setWeight(vec.getWeight());
-			setClassID(vec.getClassID());
-			vector = vec;
-			this.dimensions = vec.getDimensions();
+			setXValue(x);
 		} catch (Exception e) {
-			// TODO
+			System.out.println("Error: set value x, dimension 0 do not exist in vector");
 			e.printStackTrace();
 		}
 	}
 	
-	public SVMDataItem(double x, double y) {
-		super(x, y);
-		initialise(x,y, 1, 1);
-	}
-	
-	public SVMDataItem(double x, double y, double weight) {
-		super(x, y);
-		initialise(x,y, weight, 1);
-	}
-	
-	public SVMDataItem(double x, double y, double weight, int classID) {
-		super(x, y);
-		initialise(x,y, weight, classID);
-	}
-	
-	
-	private void initialise(double x, double y, double weight, int classID){
-		setX(x);
-		setY(y);
-		setWeight(weight);
-		setClassID(classID);
-		setLabel(getWeight() + "");
-		this.dimensions = 2;
-		vector = null;
-	}
-	
-	public Double getX(){
-		return super.getXValue();
-	}
-	public void setX(double x){
-		 super.setX(DoubleMath.round(x, DoubleMath.DP));
-	}
-	public Double getY(){
-		return super.getYValue();
-	}
 	public void setY(double y){
-		super.setY(DoubleMath.round(y, DoubleMath.DP));
+		try {
+			setYValue(y);
+		} catch (Exception e) {
+			System.out.println("Error: set value y, dimension 1 do not exist in vector");
+			e.printStackTrace();
+		}
 	}
 	
 	
-	public double getDotProduct(SVMDataItem p2){
-
-		double dot1 = DoubleMath.dMult(getXValue(), p2.getXValue()); 
-		double dot2 = DoubleMath.dMult(getYValue(), p2.getYValue());
-		double dot = DoubleMath.dAdd(dot1, dot2); 
-		return  dot;
+	public double getXValue(){
+		try {
+			return getVal(0);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return Double.NaN;
+	}
+	
+	public double getYValue(){
+		try {
+			return getVal(1);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return Double.NaN;
+	}
+	
+	public void setXValue(double x) throws Exception{
+		setVal(0, x);
+	}
+	
+	public void setYValue(double y) throws Exception{
+		setVal(1, y);
+	}
+	
+	public boolean equals(Object obj){
+		if (obj instanceof SVMDataItem){
+			SVMDataItem vec = (SVMDataItem) obj;
+			
+			if (vec.getDimensions() != getDimensions() ||
+				vec.getClassID() != getClassID()
+			){
+				return false;
+			}
+			
+			if (vec.getWeight() != getWeight()){ //fp compariosn
+				return false;
+			}
+			
+			for (int i = 0; i < values.length; i++){
+				try {
+					if (values[i] != vec.getVal(i)){  //fp compariosn
+						return false;
+					}
+				} catch (Exception e) {
+					System.out.println("DVector::equals: Assertion failed during comparison, vector dimensions do not match");
+					e.printStackTrace();
+				}
+			}
+		}
+		
+		return true;
+	}
+	
+	public String toString(){
+//		return new String(String.format("[%.4f,%.4f]:w=%.2f :c=%d :d=%d", 
+//				values[0], values[1], getWeight(), getClassID(), getDimensions()));
+		return new String(String.format("[%.4f,%.4f]", values[0], values[1]));
+	}
+	
+	public SVMDataItem clone(){
+		SVMDataItem vec = new SVMDataItem(values, weight, classID);
+		vec.setLabel(getLabel());
+		return vec;
+	}
+	
+	public boolean isZeroOrValid(){
+		boolean valid = false;
+		try {
+			double val;
+			
+			for (int i = 0; i < getDimensions(); i++){
+				val = getVal(i);
+				
+				if (Double.isNaN(val) || Double.isInfinite(val)){
+					return false;
+				}
+				
+				if (!DoubleMath.isEqual(val, 0)){
+					valid = true;
+				}
+			}
+			
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return valid;
+	}
+	
+	
+	/*
+	 * 
+	 * Utility methods
+	 * 
+	 * 
+	 */
+	
+	
+	public void subtract(SVMDataItem op2) throws Exception{
+		int dim = op2.getDimensions();
+		if (dim != getDimensions()){
+			throw new Exception("DVector::subtractBy: Dimensions do not match, cannot subtract");
+		}
+		
+		for (int i  = 0; i < dim; i++){
+			values[i] -= op2.getVal(i);
+		}
+	}
+	
+	public SVMDataItem subtractVectors(SVMDataItem op2) throws Exception{
+		int dim = op2.getDimensions();
+		SVMDataItem newVec = clone();
+		if (dim != getDimensions()){
+			throw new Exception("DVector::subtract: Dimensions do not match, cannot subtract");
+		}
+		
+		for (int i  = 0; i < dim; i++){
+			newVec.setVal(i, getVal(i) - op2.getVal(i));
+		}
+		
+		return newVec;
+	}
+	
+	public void add(SVMDataItem op2) throws Exception{
+		int dim = op2.getDimensions();
+		if (dim != getDimensions()){
+			throw new Exception("DVector::addTo: Dimensions do not match, cannot add");
+		}
+		
+		for (int i  = 0; i < dim; i++){
+			values[i] += op2.getVal(i);
+		}
+	}
+	
+	public SVMDataItem addVectors(SVMDataItem op2) throws Exception{
+		int dim = op2.getDimensions();
+		SVMDataItem newVec = clone();
+		if (dim != getDimensions()){
+			throw new Exception("DVector::add: Dimensions do not match, cannot add");
+		}
+		
+		for (int i  = 0; i < dim; i++){
+			newVec.setVal(i, getVal(i) + op2.getVal(i));
+		}
+		
+		return newVec;
+	}
+	
+	public void multiplyByScaler(double scaler){
+		int dim = getDimensions();
+		
+		for (int i  = 0; i < dim; i++){
+			values[i] *= scaler;
+		}
+	}
+	
+	public void divideByScaler(double scaler) throws Exception{
+		
+		if (scaler == 0){
+			throw new Exception("DVector::divideByScaler: scaler value cannot be 0");
+		}
+		int dim = getDimensions();
+		
+		for (int i  = 0; i < dim; i++){
+			values[i] /= scaler;
+		}
+	}
+	
+	public double getDotProduct(SVMDataItem op2) throws Exception{
+		int dim = op2.getDimensions();
+		if (dim != getDimensions()){
+			throw new Exception("DVector::addTo: Dimensions do not match, cannot find dot product");
+		}
+		
+		double product = 0.0;
+		
+		for (int i = 0; i < getDimensions(); i++){
+			product = DoubleMath.dAdd(product, DoubleMath.dMult(values[i], op2.getVal(i)));
+			//product += (values[i] * op2.getVal(i));
+		}
+		
+		return product;
 	}
 	
 	public double getMagnitude(){
-		return Math.sqrt(Math.pow(getX(), 2) + Math.pow(getY(), 2)) ;
-	}
-	
-	public SVMDataItem getAntiClockWiseNormal(){
-		return new SVMDataItem(-getYValue(), getXValue());
-	}
-	
-	public void scale(double scaleFactor){
-		this.setX(getXValue() * scaleFactor);
-		this.setY(getYValue() * scaleFactor);
-	}
-
-	public double getWeight(){
-		return weight;
-	}
-	
-	public void setWeight(double w){
-		weight = w;
-	}
-	
-	public int getClassID(){
-		return classID;
-	}
-	
-	public void setClassID(int classID){
-		this.classID = classID;
-	}
-	
-	public Point toPoint(){
-		return new Point((int)getXValue(), (int)getYValue());
-	}
-	
-	public static SVMDataItem toDataItem(Point p){
-		return new SVMDataItem(p.getX(), p.getY());
-	}
-	
-	//TODO check weight, classs
-	public boolean equals(Object obj){
-		
-		if (obj instanceof SVMDataItem){
-			SVMDataItem d= (SVMDataItem) obj;
-			if (DoubleMath.isEqual(this.getXValue(), d.getXValue())
-			&& DoubleMath.isEqual(this.getYValue(), d.getYValue()) 
-			&& DoubleMath.isEqual(this.getWeight(), d.getWeight())
-			&& getClassID() == d.getClassID()){ 	
-				return true;
+		double magnitude = 0;
+		int dim = getDimensions();
+		for (int i = 0; i < dim; i++){
+			try {
+				magnitude += Math.pow(getVal(i), 2);
+			} catch (Exception e) {
+				System.out.println("DVector::getMagnitude: Vector dimension assertion failed");
+				e.printStackTrace();
 			}
 		}
 		
-		return false;
+		return Math.sqrt(magnitude);
 	}
 	
-	public int custCompareTo(SVMDataItem o2){
-		if ((scProjection < o2.getScProj())){
-			return -1;
-		}else if ((scProjection > o2.getScProj())){
-			return +1;
-		}else{
-			if (getWeight() < o2.getWeight()){
-				return -1;
-			}else if(getWeight() > o2.getWeight()){
-				return +1;
-			}else{
-				return 0;
+	public SVMDataItem getUnitVector() throws Exception{
+		SVMDataItem newVec = clone();
+		newVec.divideByScaler(getMagnitude());
+		return newVec;
+	}
+	
+	public SVMDataItem getOppositeVector(){
+		SVMDataItem newVec = clone();
+		try {
+			for (int i = 0; i < getDimensions(); i++) {
+				newVec.setVal(i, -1 * newVec.getVal(i));
 			}
-			
+		} catch (Exception e) {
+			System.out
+					.println("DVector::getOppositeVector: Vector dimension assertion failed");
+			e.printStackTrace();
 		}
+		return newVec;
+	}
+	
+	//TODO verify clockwise or anticlockwise
+	public SVMDataItem get2DAntiClockwiseNormal() throws Exception{
+//		if (getDimensions() != 2){
+//			throw new Exception("DVector::get2DAntiClockwiseNormal: not a 2 dimensional dataset");
+//		}
+		
+		return new SVMDataItem( -1 * getYValue(), getXValue());
 	}
 	
 	public String toFormatedString(int dp){
@@ -194,30 +376,7 @@ public class SVMDataItem extends XYDataItem{
 		String str2 = String.format("%." + sdp +"f", getYValue());
 		String str3 = String.format("%." + sdp +"f", getWeight());
 		return "[" + str1+ "," 
-		+ str2 + "]"+ ": " + str3 ;//  : " + getDataClass() ;
+		+ str2 + "]"+ ":w =" + str3 ;//  : " + getDataClass() ;
 	}
-	
-	public String toString(){
-		return "[" + getXValue() + "," 
-		+ getYValue() + "]"+ ": " + getWeight();//  : " + getDataClass() ;
-	}
-//	toString
-	
-	
-	public double project(SVMDataItem normal){
-		scProjection = this.getDotProduct(normal);
-		return scProjection;
-	}
-	
-	//TODO bad idea but used for sorting
-	public double getScProj(){
-		return scProjection;
-	}
-	
-//    @Override
-//    public int compareTo(Object o1) {
-//		return DataClass;
-//    }
-
 	
 }

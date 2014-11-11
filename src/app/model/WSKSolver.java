@@ -1,4 +1,4 @@
-package app.model.data;
+package app.model;
 
 import java.awt.Point;
 import java.awt.geom.Line2D;
@@ -7,19 +7,22 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 
+import app.model.data.SVMDataItem;
+import app.model.data.SVMDataSet;
 
 
-public class Dwsk {
+
+public class WSKSolver {
 
 	
 	private double epsilon = 0.001;
 	private int maxIterations = 5000;
 	
-	private DVector w;
+	private SVMDataItem w;
 	private double b;
 	
-	private DVector nearestPositivePoint = null;
-	private DVector nearestNegativePoint = null;	
+	private SVMDataItem nearestPositivePoint = null;
+	private SVMDataItem nearestNegativePoint = null;	
 	
 	private int iterations = 0;
 	
@@ -27,18 +30,18 @@ public class Dwsk {
 	private long endTime = 0;
 	private long elapsedTime = 0;
 	
-	public DVector getW() {
+	public SVMDataItem getW() {
 		return w;
 	}
 	public double getB() {
 		return b;
 	}
 
-	public DVector getNearestPositivePoint() {
+	public SVMDataItem getNearestPositivePoint() {
 		return nearestPositivePoint;
 	}
 
-	public DVector getNearestNegativePoint() {
+	public SVMDataItem getNearestNegativePoint() {
 		return nearestNegativePoint;
 	}
 
@@ -49,16 +52,16 @@ public class Dwsk {
 		startTime = System.nanoTime();
 		double breakCondition = Double.NaN;
 		
-		DVector p = null;
-		DVector n = null;
-		DVector w = null;
+		SVMDataItem p = null;
+		SVMDataItem n = null;
+		SVMDataItem w = null;
 		
-		ArrayList<DVector> positiveClass = Dataset.getPositiveClass();
-		ArrayList<DVector> negativeClass = Dataset.getNegativeClass();
+		ArrayList<SVMDataItem> positiveClass = Dataset.getPositiveClass();
+		ArrayList<SVMDataItem> negativeClass = Dataset.getNegativeClass();
 		
-		DVector startDirection = new DVector(Dataset.getDimensions());
+		SVMDataItem startDirection = new SVMDataItem(Dataset.getDimensions());
 		startDirection.setXValue(+1);
-		DVector oppositeDirection = new DVector(Dataset.getDimensions());
+		SVMDataItem oppositeDirection = new SVMDataItem(Dataset.getDimensions());
 		oppositeDirection.setXValue(-1);
 
 		p = findExtremePoint(positiveClass , mu1, startDirection);
@@ -68,19 +71,19 @@ public class Dwsk {
 			w = p.subtractVectors(n);
 			
 			//TODO hot fix centroid
-			if (w.equals(new DVector(w.getDimensions()))){
+			if (w.equals(new SVMDataItem(w.getDimensions()))){
 				//centroids on top of each other-> no solution
 			
 			}
 			
-			DVector wprime = w.clone();
+			SVMDataItem wprime = w.clone();
 			wprime.multiplyByScaler(-1);
 
-			DVector vp = findExtremePoint(positiveClass , mu1, wprime);
-			DVector vn = findExtremePoint(negativeClass , mu2, w);
+			SVMDataItem vp = findExtremePoint(positiveClass , mu1, wprime);
+			SVMDataItem vn = findExtremePoint(negativeClass , mu2, w);
 			
-			DVector dvp = vp.subtractVectors(n);
-			DVector dpv = p.subtractVectors(vn);
+			SVMDataItem dvp = vp.subtractVectors(n);
+			SVMDataItem dpv = p.subtractVectors(vn);
 			
 			double w1 =(w.getDotProduct(dvp));
 			double w2 = (w.getDotProduct(dpv));
@@ -92,15 +95,15 @@ public class Dwsk {
 					breakCondition = (1-(w1/ws));
 					break;
 				}
-				DVector dnp = p.subtractVectors(n);
-				DVector dpvp = p.subtractVectors(vp);
+				SVMDataItem dnp = p.subtractVectors(n);
+				SVMDataItem dpvp = p.subtractVectors(vp);
 				double top = dnp.getDotProduct(dpvp);
 				double bottom = dpvp.getDotProduct(dpvp);
 				temp = top / bottom;
 				double delta = clamp(temp,0,1);
-				DVector newP = p.clone();
+				SVMDataItem newP = p.clone();
 				newP.multiplyByScaler((1-delta));
-				DVector newVP = vp.clone();
+				SVMDataItem newVP = vp.clone();
 				newVP.multiplyByScaler(delta);
 				newP.add(newVP);
 				p = newP;
@@ -109,15 +112,15 @@ public class Dwsk {
 					breakCondition = (1-(w1/ws));
 					break;
 				}
-				DVector dpn = n.subtractVectors(p);
-				DVector dpvn = n.subtractVectors(vn);
+				SVMDataItem dpn = n.subtractVectors(p);
+				SVMDataItem dpvn = n.subtractVectors(vn);
 				double top = dpn.getDotProduct(dpvn);
 				double bottom = dpvn.getDotProduct(dpvn);
 				temp = top / bottom;
 				double delta = clamp(temp,0,1);
-				DVector newN = n.clone();
+				SVMDataItem newN = n.clone();
 				newN.multiplyByScaler((1-delta));
-				DVector newVN = vn.clone();
+				SVMDataItem newVN = vn.clone();
 				newVN.multiplyByScaler(delta);
 				newN.add(newVN);
 				n = newN;
@@ -146,10 +149,10 @@ public class Dwsk {
 	//TODO NOTE WSK is n dimension whole WRCH is 2 dimension
 	
 	
-	public static DVector findExtremePoint(ArrayList<DVector> list, double mu, final DVector n){
+	public static SVMDataItem findExtremePoint(ArrayList<SVMDataItem> list, double mu, final SVMDataItem n){
 		
 		if (mu == 0){ //TODO fp comparison
-			return Dwrch.findCentroid(list);	//TODO hot fix
+			return WRCHSolver.findCentroid(list);	//TODO hot fix
 		}
 		
 //		if (1/mu > list.size()){
@@ -193,7 +196,7 @@ public class Dwsk {
 			if (k >= A.length){
 				System.out.println("k fixed");
 				k = 0;//
-				return Dwrch.findCentroid(list); // TODO if all A are used then return centroid
+				return WRCHSolver.findCentroid(list); // TODO if all A are used then return centroid
 			}
 				if (A[k] == 0){
 					count++;
@@ -203,13 +206,13 @@ public class Dwsk {
 			k++;
 		}
 		
-		DVector v = new DVector(n.getDimensions());
+		SVMDataItem v = new SVMDataItem(n.getDimensions());
 		int i = 0;
 		for (i = 0; i < count; i++){
 			if (i >=  list.size()){
 				System.out.println("index out of bounds");
 			}
-			DVector c = list.get(i).clone();
+			SVMDataItem c = list.get(i).clone();
 			c.multiplyByScaler(A[i]);
 			try {
 				v.add(c);
@@ -230,10 +233,10 @@ public class Dwsk {
 		return v;
 	}
 	
-	private static void testSorting(ArrayList<DVector> list,final DVector normal){
-		Collections.sort(list,Collections.reverseOrder( new Comparator<DVector>() {
+	private static void testSorting(ArrayList<SVMDataItem> list,final SVMDataItem normal){
+		Collections.sort(list,Collections.reverseOrder( new Comparator<SVMDataItem>() {
 			@Override
-			public int compare(DVector o1, DVector o2) {
+			public int compare(SVMDataItem o1, SVMDataItem o2) {
 				
 				//TODO fp comparisons
 				try {

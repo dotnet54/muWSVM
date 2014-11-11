@@ -1,4 +1,4 @@
-package app.model.data;
+package app.test;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,9 +8,15 @@ import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
+import app.model.IObserver;
+import app.model.ISubject;
+import app.model.data.SVMDataItem;
+import app.model.data.SVMDataSeries;
+import app.model.data.SVMDataSet;
+
 public class DData implements ISubject{
 
-	private ArrayList<DVector> data = new ArrayList<DVector>();
+	private ArrayList<SVMDataItem> data = new ArrayList<SVMDataItem>();
 	private int dimensions;
 	private String[] attribNames;
 	
@@ -33,10 +39,10 @@ public class DData implements ISubject{
     public class DataChangeEvent{
     	
     	DataChangeType type;
-    	DVector item;
+    	SVMDataItem item;
     	int index;
     	
-    	public DataChangeEvent(DataChangeType type, DVector item, int index){
+    	public DataChangeEvent(DataChangeType type, SVMDataItem item, int index){
     		this.type = type;
     		this.item = item;
     		this.index = index;
@@ -83,7 +89,7 @@ public class DData implements ISubject{
 		this.observers = new ArrayList<IObserver>();
 	}
 	
-	public void add(DVector vec) throws Exception{
+	public void add(SVMDataItem vec) throws Exception{
 		if (vec.getDimensions() != dimensions){
 			throw new Exception("DData::add: Dimensionality of given the vector does not match dimensions of dataset");
 		}
@@ -102,7 +108,7 @@ public class DData implements ISubject{
 		notifyObservers();
 	}
 	
-	public DVector get(int index){
+	public SVMDataItem get(int index){
 		return data.get(index);
 	}
 	
@@ -143,9 +149,9 @@ public class DData implements ISubject{
 		negativeClassID = classID;
 	}
 	
-	public ArrayList<DVector> getPositiveClass(){
+	public ArrayList<SVMDataItem> getPositiveClass(){
 		int size = data.size();
-		ArrayList<DVector> list = new ArrayList<DVector>();
+		ArrayList<SVMDataItem> list = new ArrayList<SVMDataItem>();
 
 		for (int i = 0; i < size; i++){
 			if (data.get(i).getClassID() == positiveClassID){
@@ -155,9 +161,9 @@ public class DData implements ISubject{
 		return list;
 	}
 	
-	public ArrayList<DVector> getNegativeClass(){
+	public ArrayList<SVMDataItem> getNegativeClass(){
 		int size = data.size();
-		ArrayList<DVector> list = new ArrayList<DVector>();
+		ArrayList<SVMDataItem> list = new ArrayList<SVMDataItem>();
 
 		for (int i = 0; i < size; i++){
 			if (data.get(i).getClassID() == negativeClassID){
@@ -167,9 +173,9 @@ public class DData implements ISubject{
 		return list;
 	}
 	
-	public ArrayList<DVector> getClassAsList(int classID){
+	public ArrayList<SVMDataItem> getClassAsList(int classID){
 		int size = data.size();
-		ArrayList<DVector> list = new ArrayList<DVector>();
+		ArrayList<SVMDataItem> list = new ArrayList<SVMDataItem>();
 
 		for (int i = 0; i < size; i++){
 			if (data.get(i).getClassID() == classID){
@@ -185,20 +191,20 @@ public class DData implements ISubject{
 		try{
 			dataset.addSeries(new SVMDataSeries("Positive Class", dataset.getDimensions()));
 			dataset.addSeries(new SVMDataSeries("Negative Class", dataset.getDimensions()));
-			DVector vec = null;
+			SVMDataItem vec = null;
 		
 		
-			ArrayList<DVector> dataClass = getPositiveClass();
+			ArrayList<SVMDataItem> dataClass = getPositiveClass();
 			for (int i= 0; i < dataClass.size(); i++){
 				vec = dataClass.get(i);
 				dataset.getSeries(0).add(
-						new DVector(vec.getVal(xDim), vec.getVal(yDim), vec.getWeight()));
+						new SVMDataItem(vec.getVal(xDim), vec.getVal(yDim), vec.getWeight()));
 			}
 			dataClass = getNegativeClass();
 			for (int i= 0; i < dataClass.size(); i++){
 				vec = dataClass.get(i);
 				dataset.getSeries(1).add(
-						new DVector(vec.getVal(xDim), vec.getVal(yDim), vec.getWeight()));
+						new SVMDataItem(vec.getVal(xDim), vec.getVal(yDim), vec.getWeight()));
 			}
 			
 			
@@ -218,19 +224,19 @@ public class DData implements ISubject{
 			dataset.addSeries(new SVMDataSeries("Positive Class", dataset.getDimensions()));
 			dataset.addSeries(new SVMDataSeries("Negative Class", dataset.getDimensions()));
 
-			ArrayList<DVector> dataClass = getPositiveClass();
+			ArrayList<SVMDataItem> dataClass = getPositiveClass();
 
-			DVector vec = null;
+			SVMDataItem vec = null;
 			for (int i= 0; i < dataClass.size(); i++){
 				vec = dataClass.get(i);
-				dataset.getSeries(0).add(new DVector(vec.getXValue(), vec.getYValue(), vec.getWeight()));
+				dataset.getSeries(0).add(new SVMDataItem(vec.getXValue(), vec.getYValue(), vec.getWeight()));
 			}
 			
 			dataClass = getNegativeClass();
 			
 			for (int i= 0; i < dataClass.size(); i++){
 				vec = dataClass.get(i);
-				dataset.getSeries(1).add(new DVector(vec.getXValue(), vec.getYValue(), vec.getWeight()));
+				dataset.getSeries(1).add(new SVMDataItem(vec.getXValue(), vec.getYValue(), vec.getWeight()));
 			}
 			
 		} catch (Exception e) {
@@ -257,7 +263,7 @@ public class DData implements ISubject{
 					values[j] = randDouble(0, 0.5);
 				}
 				
-				add(new DVector(values, 1, +1));
+				add(new SVMDataItem(values, 1, +1));
 			}
 			
 			for (int i = 0; i < (numItems - count); i++){
@@ -265,7 +271,7 @@ public class DData implements ISubject{
 					values[j] = randDouble(0.5, 1);
 				}
 				
-				add(new DVector(values, 1, -1));
+				add(new SVMDataItem(values, 1, -1));
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

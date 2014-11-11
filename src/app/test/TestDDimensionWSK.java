@@ -1,8 +1,7 @@
 package app.test;
 
-import app.model.data.DData;
-import app.model.data.DVector;
-import app.model.data.Dwsk;
+import app.model.WSKSolver;
+import app.model.data.SVMDataItem;
 
 public class TestDDimensionWSK {
 
@@ -13,17 +12,17 @@ public class TestDDimensionWSK {
 			
 			
 			//create two right angle triangles
-			datasource.add(new DVector(1, 1, 1, +1));
-			datasource.add(new DVector(3, 1, 1, +1));
-			datasource.add(new DVector(3, 3, 1, +1));
+			datasource.add(new SVMDataItem(1, 1, 1, +1));
+			datasource.add(new SVMDataItem(3, 1, 1, +1));
+			datasource.add(new SVMDataItem(3, 3, 1, +1));
 			
-			datasource.add(new DVector(5, 1, 1, -1));
-			datasource.add(new DVector(6, 3, 1, -1));
-			datasource.add(new DVector(7, 1, 1, -1));
+			datasource.add(new SVMDataItem(5, 1, 1, -1));
+			datasource.add(new SVMDataItem(6, 3, 1, -1));
+			datasource.add(new SVMDataItem(7, 1, 1, -1));
 			
 			//datasource.generateRandomData(20);
 			
-			Dwsk solver = new Dwsk();
+			WSKSolver solver = new WSKSolver();
 
 			solver.wsk(datasource, 1, 1);
 			

@@ -15,9 +15,9 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 
-import app.model.data.DData;
+import app.model.SVMModel;
 import app.model.data.SVMDataSet;
-import app.model.data.SVMModel;
+import app.test.DData;
 
 import java.awt.GridLayout;
 import java.awt.FlowLayout;
@@ -86,6 +86,11 @@ public class SVMSPLOM extends JFrame {
 				plot.setRenderer(renderer);
 				plot.setDomainPannable(true);
 				plot.setRangePannable(true);
+				
+				plot.getDomainAxis().setAutoRangeMinimumSize(1, true);
+				plot.getRangeAxis().setAutoRangeMinimumSize(1, true);
+				plot.getDomainAxis().setAutoRange(true);
+				plot.getRangeAxis().setAutoRange(true);
 			}
 		}
 		

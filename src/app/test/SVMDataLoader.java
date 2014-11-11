@@ -1,4 +1,4 @@
-package app.model.data;
+package app.test;
 
 public class SVMDataLoader {
 

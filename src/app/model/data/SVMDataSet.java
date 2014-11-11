@@ -22,8 +22,8 @@ import org.jfree.data.general.Dataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
-import app.model.data.DData.DataChangeEvent;
-import app.model.data.DData.DataChangeType;
+import app.test.DData.DataChangeEvent;
+import app.test.DData.DataChangeType;
 
 public class SVMDataSet extends XYSeriesCollection {
 
@@ -68,7 +68,7 @@ public class SVMDataSet extends XYSeriesCollection {
 		}
 	}
 	
-	public void addItem(int seriesIndex, DVector item) throws Exception{
+	public void addItem(int seriesIndex, SVMDataItem item) throws Exception{
 		//TODO check if dimensions match, add to right class
 		getSeries(seriesIndex).add(item);
 	}
@@ -115,11 +115,11 @@ public class SVMDataSet extends XYSeriesCollection {
 	
 	
 	
-	public ArrayList<DVector> getPositiveClass(){
+	public ArrayList<SVMDataItem> getPositiveClass(){
 		return getSeries(getPositiveSeriesID()).toArrayList();
 	}
 	
-	public ArrayList<DVector> getNegativeClass(){
+	public ArrayList<SVMDataItem> getNegativeClass(){
 		return getSeries(getNegativeSeriesID()).toArrayList();
 	}
 	
@@ -146,7 +146,7 @@ public class SVMDataSet extends XYSeriesCollection {
 			BufferedReader br = new BufferedReader(new InputStreamReader(fis));
  
 			String line = null;
-			DVector item = null;
+			SVMDataItem item = null;
 			
 			clearData();
 			
@@ -161,7 +161,7 @@ public class SVMDataSet extends XYSeriesCollection {
 				st.nextToken();// skip attrib id
 				double y = Double.parseDouble(st.nextToken());
 					
-				item = new DVector(x, y, 1,className);
+				item = new SVMDataItem(x, y, 1,className);
 				//System.out.println(item);
 				if (className > 0){	//TODO add class 0 for positive
 					addItem(0, item);
@@ -211,12 +211,16 @@ public class SVMDataSet extends XYSeriesCollection {
 		
 	}
 	
+	public void notifyDataChange(){
+		fireDatasetChanged();
+	}
+	
 	public void saveToLIBSVMFile(File fout){
 	       String text = "";
 	        try {
 	          BufferedWriter output = new BufferedWriter(new FileWriter(fout));
 	          
-	          DVector item = null;
+	          SVMDataItem item = null;
 	          //TODO hard coded dataclass, series index
 	          for (int i = 0; i < getItemCount(0); i++){
 	        	  item = getSeries(0).getDataItem(i);
@@ -279,20 +283,20 @@ public class SVMDataSet extends XYSeriesCollection {
 		try{
 			dataset.addSeries(new SVMDataSeries("Positive Class", dataset.getDimensions()));
 			dataset.addSeries(new SVMDataSeries("Negative Class", dataset.getDimensions()));
-			DVector vec = null;
+			SVMDataItem vec = null;
 		
 		
-			ArrayList<DVector> dataClass = getPositiveClass();
+			ArrayList<SVMDataItem> dataClass = getPositiveClass();
 			for (int i= 0; i < dataClass.size(); i++){
 				vec = dataClass.get(i);
 				dataset.getSeries(0).add(
-						new DVector(vec.getVal(xDim), vec.getVal(yDim), vec.getWeight()));
+						new SVMDataItem(vec.getVal(xDim), vec.getVal(yDim), vec.getWeight()));
 			}
 			dataClass = getNegativeClass();
 			for (int i= 0; i < dataClass.size(); i++){
 				vec = dataClass.get(i);
 				dataset.getSeries(1).add(
-						new DVector(vec.getVal(xDim), vec.getVal(yDim), vec.getWeight()));
+						new SVMDataItem(vec.getVal(xDim), vec.getVal(yDim), vec.getWeight()));
 			}
 			
 			

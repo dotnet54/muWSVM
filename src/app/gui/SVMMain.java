@@ -35,11 +35,13 @@ import org.jfree.data.general.Dataset;
 import org.jfree.data.general.DatasetChangeEvent;
 import org.jfree.data.general.DatasetChangeListener;
 
-import app.model.data.DVector;
-import app.model.data.IObserver;
+import app.model.IObserver;
+import app.model.SVMModel;
+import app.model.data.SVMDataItem;
 import app.model.data.SVMDataSet;
-import app.model.data.SVMModel;
 import app.test.PerformanceMatrix;
+import app.test.SVMAddItemDialog;
+import app.test.SVMHelpDialog;
 
 import java.awt.event.InputMethodListener;
 import java.awt.event.InputMethodEvent;
@@ -57,15 +59,13 @@ import java.awt.FlowLayout;
 import java.awt.Dimension;
 import javax.swing.JRadioButtonMenuItem;
 
-import jogamp.graph.font.typecast.ot.table.CvtTable;
-
 /**
  * Main GUI window for the application
  * 
  * @author shifaz
  *
  */
-public class SVMMain implements ActionListener, IObserver, DatasetChangeListener{
+public class SVMMain implements IObserver, DatasetChangeListener{
 
 	//Model globals
 	private SVMModel model = null;
@@ -74,7 +74,7 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 	private JFrame frame;
 	private SVMSPLOM frameSPLOM;
 	private JFreeChart chart;
-	public static SVMPanel chartPanel;	//TODO change static public, only for debug
+	private SVMPanel chartPanel;
 	
 	//components
 	private JTextField textField_class1;
@@ -92,8 +92,6 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 	private JTextField textField_FPPrecision;
 	private JTextField textField_NumDP;
 	private JTextField textField_SeparationDelta;
-	private JTextField textField_11;
-	private JTextField textField_12;
 	
 	private JLabel lblSelectedPoint;
 	
@@ -103,26 +101,17 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 	private JCheckBox chckbxAutoUpdateWsvm;
 	private JCheckBox chckbxUseSameParameters;
 	
-	private final SVMAddItemDialog addItemDialog = new SVMAddItemDialog();
 	private final SVMAboutDialog aboutDialog = new SVMAboutDialog();
-	private final SVMHelpDialog helpDialog = new SVMHelpDialog();
-	private final JFileChooser fc = new JFileChooser(".");
+	private final JFileChooser fc;
 	private JTextField txtNumDimensions;
 
 	private JRadioButton rdbtnAddTool;
-
 	private JRadioButton rdbtnSelectTool;
-
 	private JRadioButton rdbtnRemoveTool;
-
 	private JRadioButton rdbtnDuplicateTool;
-
 	private JRadioButton rdbtnWeightingTool;
-
 	private JComboBox<String> cmbNewClass;
-
 	private JPanel panelPerformance;
-
 	private PerformanceMatrix perfMatrix;
 
 	private JComboBox<String> cmbXDimensionName;
@@ -133,6 +122,10 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 	private FileNameExtensionFilter csvFilter;
 
 	private FileNameExtensionFilter libsvmFilter;
+	private JTextField txtMinweight;
+	private JTextField txtMaxweight;
+
+	private JLabel lblStatus;
 	
 	/**
 	 * Entry point - Launch the application.
@@ -173,7 +166,7 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 		model.register(this);
 
 		//Initialize GUI
-		
+		fc = new JFileChooser(".");
 		csvFilter = new FileNameExtensionFilter(
 		        "Comma Separated Values File (CSV)", "csv", "gif");
 		libsvmFilter = new FileNameExtensionFilter(
@@ -197,7 +190,7 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 		private void initializeGUI() {
 			frame = new JFrame();
 			frame.setResizable(false);
-			frame.setBounds(100, 100, 845, 518);
+			frame.setBounds(100, 100, 845, 538);
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
 			JPanel pChartContainer = new JPanel();
@@ -219,7 +212,6 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 			JButton btnFindWeightedReduced = new JButton("Find Weighted RCH");
 			btnFindWeightedReduced.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					//TODO try catch parse integer
 					try {
 						if (chckbxUseSameParameters.isSelected()){
 							model.setMu(Double.parseDouble(textField_class1.getText()),
@@ -232,10 +224,8 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 						model.solveWRCH(2);
 						chartPanel.updateWRCHSolutions();
 					} catch (NumberFormatException e1) {
-						// TODO
 						e1.printStackTrace();
 					} catch (Exception e1) {
-						// TODO
 						e1.printStackTrace();
 					}
 				}
@@ -275,7 +265,6 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 					JSlider j = (JSlider) arg0.getSource();
 					double m1 = (double) j.getValue();
 					double m2 = Double.parseDouble(textField_class_2.getText());
-					//TODO try catch parse double, format label string
 					
 					if (chckbxUsemuScale.isSelected()){
 						textField_class1.setText(format(1 / m1));
@@ -385,39 +374,7 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 					}
 				}
 			});
-			
-			
-			
-			textField_class1.getDocument().addDocumentListener(new DocumentListener() {
-				  	  public void changedUpdate(DocumentEvent e) {
-				  		//Plain text components do not fire these events
-					  }
-					  public void removeUpdate(DocumentEvent e) {
-					    //warn();
-					  }
-					  public void insertUpdate(DocumentEvent e) {
-					   // warn();
-					  }
-	
-					  public void warn() {
-						System.out.println(textField_class1.getText());  
-						
-						
-			            try{
-		            		Integer.parseInt(textField_class1.getText());
-			            }catch (NumberFormatException nf) {
-			            	//JOptionPane.showMessageDialog(null, "sdf", 
-			            	//		"InfoBox: " , JOptionPane.INFORMATION_MESSAGE);
-			            }
-						
-						
-	//				     if (Integer.parseInt(textField.getText())<=0){
-	//				       JOptionPane.showMessageDialog(null,
-	//				          "Error: Please enter number bigger than 0", "Error Massage",
-	//				          JOptionPane.ERROR_MESSAGE);
-	//				     }
-					  }
-					});
+
 			textField_class1.setText("1");
 			textField_class1.setColumns(10);
 			
@@ -441,7 +398,6 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 			chckbxUsemuScale = new JCheckBox("Use 1/mu scale");
 			chckbxUsemuScale.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					//TODO bug fix, when #points change, scale is not updated, implement observer
 					if (chckbxUsemuScale.isSelected()){
 						setupSlider(slider_class1, false, model.getChartDataset().getSeries(0).getItemCount());
 					}else{
@@ -464,7 +420,6 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 					JSlider j = (JSlider) arg0.getSource();
 					double m1 = Double.parseDouble(textField_class1.getText());
 					double m2 =  (double) j.getValue();
-					//TODO try catch parse double, format label string
 
 					if (chckbxUsemuScale_1.isSelected()){
 						textField_class_2.setText(format(1 / m2));
@@ -604,7 +559,7 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 			
 			final JComboBox<String> cmbDataType = new JComboBox<String>();
 			cmbDataType.setBounds(100, 7, 156, 23);
-			cmbDataType.setModel(new DefaultComboBoxModel(new String[] {"Training Data", "Test Data"}));
+			cmbDataType.setModel(new DefaultComboBoxModel<String>(new String[] {"Training Data", "Test Data"}));
 			pContainerLoadData.add(cmbDataType);
 			
 			JButton btnGenerateData = new JButton("Generate Random Data");
@@ -619,20 +574,47 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 					int separationDelta = Integer.parseInt(textField_SeparationDelta.getText());
 					double min = Double.parseDouble(txtMin.getText());
 					double max = Double.parseDouble(txtMax.getText());
+					double minW = Double.parseDouble(txtMinweight.getText());
+					double maxW = Double.parseDouble(txtMaxweight.getText());
+					
+					if (min > max){
+						JOptionPane.showMessageDialog(frame,
+							    "Min Value should be less than Max Value",
+							    "Error",
+							    JOptionPane.ERROR_MESSAGE);
+						return;
+					}
+					
+					if (minW > maxW){
+						JOptionPane.showMessageDialog(frame,
+							    "Min Weight should be less than Max Weight",
+							    "Error",
+							    JOptionPane.ERROR_MESSAGE);
+						return;
+					}
+					
+					if (minW < 0){
+						JOptionPane.showMessageDialog(frame,
+							    "Weight should be positive",
+							    "Error",
+							    JOptionPane.ERROR_MESSAGE);
+						return;
+					}
 					
 					if (cmbDataType.getSelectedIndex() == 0){
 						model.generateRandomTrainingData(numDims,
-							numPoints, percentPos, separationDelta, min, max);
+							numPoints, percentPos, separationDelta, min, max, minW, maxW);
 						//dataset 0 for training set
 						chart.getXYPlot().setDataset(0, model.getTrainingData()); 
 					}else if(cmbDataType.getSelectedIndex() == 1){
 						model.generateRandomTestData
-						(numDims, numPoints, percentPos, separationDelta, min, max);
+						(numDims, numPoints, percentPos, separationDelta, min, max, minW, maxW);
 						//dataset 2 for training set
 						chart.getXYPlot().setDataset(2, model.getTestData());
 					}
 					
-					
+					chartPanel.thisPlot.getDomainAxis().setAutoRange(true);
+					chartPanel.thisPlot.getRangeAxis().setAutoRange(true);
 					
 				}
 			});
@@ -649,7 +631,7 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 				        	
 				        	File file = fc.getSelectedFile();
 				        	String file_name = file.toString();
-				        	
+				        	//TODO load test data
 				        	if (file_name.endsWith("csv")){
 				        		model.getChartDataset().loadFromFile(file_name, "csv");
 				        	}else if (file_name.endsWith("libsvm") || file_name.endsWith("dat")){
@@ -659,13 +641,15 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 				        	}
 				        } 
 						
+				        
+						chartPanel.thisPlot.getDomainAxis().setAutoRange(true);
+						chartPanel.thisPlot.getRangeAxis().setAutoRange(true);
 					} catch (Exception e1) {
-						// TODO
 						e1.printStackTrace();
 					}
 				}
 			});
-			btnLoadData.setBounds(10, 87, 118, 23);
+			btnLoadData.setBounds(10, 41, 118, 23);
 			pContainerLoadData.add(btnLoadData);
 			
 			JLabel lblNumDataPoints = new JLabel("Number of Data Points:");
@@ -700,15 +684,6 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 			});
 			btnClearPlot.setBounds(219, 294, 79, 23);
 			pContainerLoadData.add(btnClearPlot);
-			
-			JComboBox<String> cmbPredefinedData = new JComboBox<String>();
-			cmbPredefinedData.setModel(new DefaultComboBoxModel<String>(new String[] {"Triangle"}));
-			cmbPredefinedData.setBounds(164, 45, 134, 20);
-			pContainerLoadData.add(cmbPredefinedData);
-			
-			JButton btnPredefinedDatasets = new JButton("Predefined Datasets");
-			btnPredefinedDatasets.setBounds(11, 45, 143, 23);
-			pContainerLoadData.add(btnPredefinedDatasets);
 			
 			JLabel lblOverlapDelta = new JLabel("Separation Delta:");
 			lblOverlapDelta.setBounds(10, 256, 104, 14);
@@ -749,12 +724,11 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 				        } 
 						
 					} catch (Exception e1) {
-						// TODO
 						e1.printStackTrace();
 					}
 				}
 			});
-			btnSaveData.setBounds(166, 87, 132, 23);
+			btnSaveData.setBounds(164, 41, 132, 23);
 			pContainerLoadData.add(btnSaveData);
 			
 			txtNumDimensions = new JTextField();
@@ -767,25 +741,45 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 			lblNumberOfDimensions.setBounds(10, 144, 105, 14);
 			pContainerLoadData.add(lblNumberOfDimensions);
 			
-			JLabel lblMin = new JLabel("Min:");
-			lblMin.setBounds(164, 141, 32, 14);
+			JLabel lblMin = new JLabel("Min Value:");
+			lblMin.setBounds(10, 82, 64, 14);
 			pContainerLoadData.add(lblMin);
 			
-			JLabel lblMax = new JLabel("Max:");
-			lblMax.setBounds(164, 172, 46, 14);
+			JLabel lblMax = new JLabel("Max Value:");
+			lblMax.setBounds(10, 113, 64, 14);
 			pContainerLoadData.add(lblMax);
 			
 			txtMin = new JTextField();
 			txtMin.setText("0");
-			txtMin.setBounds(212, 138, 86, 20);
+			txtMin.setBounds(128, 79, 86, 20);
 			pContainerLoadData.add(txtMin);
 			txtMin.setColumns(6);
 			
 			txtMax = new JTextField();
 			txtMax.setText("10");
-			txtMax.setBounds(212, 169, 86, 20);
+			txtMax.setBounds(128, 110, 86, 20);
 			pContainerLoadData.add(txtMax);
 			txtMax.setColumns(6);
+			
+			JLabel lblMinWeight = new JLabel("Min Weight:");
+			lblMinWeight.setBounds(175, 164, 64, 14);
+			pContainerLoadData.add(lblMinWeight);
+			
+			JLabel lblMaxWeight = new JLabel("Max Weight:");
+			lblMaxWeight.setBounds(177, 189, 62, 14);
+			pContainerLoadData.add(lblMaxWeight);
+			
+			txtMinweight = new JTextField();
+			txtMinweight.setText("1");
+			txtMinweight.setBounds(252, 164, 46, 20);
+			pContainerLoadData.add(txtMinweight);
+			txtMinweight.setColumns(10);
+			
+			txtMaxweight = new JTextField();
+			txtMaxweight.setText("1");
+			txtMaxweight.setBounds(252, 183, 46, 20);
+			pContainerLoadData.add(txtMaxweight);
+			txtMaxweight.setColumns(10);
 			
 			JPanel pContainerDataEditing = new JPanel();
 			tabbedPane.addTab("Data Editing", null, pContainerDataEditing, null);
@@ -860,38 +854,6 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 			bg.add(rdbtnRemoveTool);
 			bg.add(rdbtnDuplicateTool);
 			bg.add(rdbtnWeightingTool);
-			
-			JLabel lblX = new JLabel("X:");
-			lblX.setBounds(10, 303, 18, 14);
-			pContainerDataEditing.add(lblX);
-			
-			JLabel lblY = new JLabel("Y:");
-			lblY.setBounds(86, 303, 18, 14);
-			pContainerDataEditing.add(lblY);
-			
-			textField_11 = new JTextField();
-			textField_11.setBounds(20, 300, 46, 20);
-			pContainerDataEditing.add(textField_11);
-			textField_11.setColumns(10);
-			
-			textField_12 = new JTextField();
-			textField_12.setBounds(96, 300, 46, 20);
-			pContainerDataEditing.add(textField_12);
-			textField_12.setColumns(10);
-			
-			final JButton btnAddPoint = new JButton("Add Point");
-			btnAddPoint.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					addItemDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-					addItemDialog.setVisible(true);
-				}
-			});
-			btnAddPoint.setBounds(199, 299, 89, 23);
-			pContainerDataEditing.add(btnAddPoint);
-			
-			JLabel lblDefineExactPoint = new JLabel("Add to an exact location:");
-			lblDefineExactPoint.setBounds(20, 278, 129, 14);
-			pContainerDataEditing.add(lblDefineExactPoint);
 			
 			JPanel pContainerPerformance = new JPanel();
 			tabbedPane.addTab("Performance", null, pContainerPerformance, null);
@@ -1023,16 +985,6 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 			tabbedPane.addTab("Statistics", null, pContainerStatisticsData, null);
 			pContainerStatisticsData.setLayout(null);
 			
-			JButton btnLoadTestingData = new JButton("Load Testing Data");
-			btnLoadTestingData.setVisible(false);
-			btnLoadTestingData.setBounds(179, 260, 119, 23);
-			pContainerStatisticsData.add(btnLoadTestingData);
-			
-			JButton btnPerformCrossValidation = new JButton("Perform Cross Validation");
-			btnPerformCrossValidation.setVisible(false);
-			btnPerformCrossValidation.setBounds(139, 294, 159, 23);
-			pContainerStatisticsData.add(btnPerformCrossValidation);
-			
 			JLabel lblnumPositiveSupport = new JLabel("<html>Num. Positive\r\n<br> Support Vectors:");
 			lblnumPositiveSupport.setBounds(10, 11, 87, 28);
 			pContainerStatisticsData.add(lblnumPositiveSupport);
@@ -1045,9 +997,9 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 			label_2.setBounds(10, 127, 99, 14);
 			pContainerStatisticsData.add(label_2);
 			
-			JLabel label_3 = new JLabel("numIterations");
-			label_3.setBounds(10, 232, 78, 14);
-			pContainerStatisticsData.add(label_3);
+			JLabel lblNumOfWsk = new JLabel("Num of WSK Iterations:");
+			lblNumOfWsk.setBounds(10, 232, 119, 14);
+			pContainerStatisticsData.add(lblNumOfWsk);
 			
 			JLabel lblnumNegativeSupport = new JLabel("<html>Num. Positive\r\n<br> Support Vectors:");
 			lblnumNegativeSupport.setBounds(10, 50, 87, 28);
@@ -1080,22 +1032,18 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 			pContainerWeighting.add(chckbxEnableAutoWeighting);
 			
 			JButton btnRandomUndersample = new JButton("Random Undersample");
-			btnRandomUndersample.setVisible(false);
 			btnRandomUndersample.setBounds(10, 260, 145, 23);
 			pContainerWeighting.add(btnRandomUndersample);
 			
 			JButton btnRandomOversample = new JButton("Random Oversample");
-			btnRandomOversample.setVisible(false);
 			btnRandomOversample.setBounds(10, 294, 145, 23);
 			pContainerWeighting.add(btnRandomOversample);
 			
 			JButton btnSystematicUndersample = new JButton("Systematic Undersample");
-			btnSystematicUndersample.setVisible(false);
 			btnSystematicUndersample.setBounds(10, 194, 157, 23);
 			pContainerWeighting.add(btnSystematicUndersample);
 			
 			JButton btnSystematicOversample = new JButton("Systematic Oversample");
-			btnSystematicOversample.setVisible(false);
 			btnSystematicOversample.setBounds(10, 226, 157, 23);
 			pContainerWeighting.add(btnSystematicOversample);
 			
@@ -1124,8 +1072,8 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 			btnResetWeights.setBounds(185, 7, 113, 23);
 			pContainerWeighting.add(btnResetWeights);
 			
-			JComboBox cmbWeightingClass = new JComboBox();
-			cmbWeightingClass.setModel(new DefaultComboBoxModel(new String[] {"Positive", "Negative", "Both"}));
+			JComboBox<String> cmbWeightingClass = new JComboBox<String>();
+			cmbWeightingClass.setModel(new DefaultComboBoxModel<String>(new String[] {"Positive", "Negative", "Both"}));
 			cmbWeightingClass.setBounds(230, 59, 68, 20);
 			pContainerWeighting.add(cmbWeightingClass);
 			
@@ -1133,19 +1081,21 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 			lblApplyWeightsTo.setBounds(210, 37, 88, 14);
 			pContainerWeighting.add(lblApplyWeightsTo);
 			
+			Panel pStatus = new Panel();
+			pStatus.setBounds(10, 469, 817, 20);
+			frame.getContentPane().add(pStatus);
+			pStatus.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 5));
+			
+			lblStatus = new JLabel("");
+			lblStatus.setFont(new Font("Tahoma", Font.BOLD, 11));
+			lblStatus.setForeground(Color.RED);
+			pStatus.add(lblStatus);
+			
 			JMenuBar menuBar = new JMenuBar();
 			frame.setJMenuBar(menuBar);
 			
 			JMenu mnFile = new JMenu("File");
 			menuBar.add(mnFile);
-			
-			JMenuItem mntmAddPoint = new JMenuItem("Add Point");
-			mntmAddPoint.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					btnAddPoint.doClick();
-				}
-			});
-			mnFile.add(mntmAddPoint);
 			
 			JMenuItem mntmOpenFile = new JMenuItem("Open File");
 			mntmOpenFile.addActionListener(new ActionListener() {
@@ -1315,17 +1265,6 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 			});
 			mnData.add(mntmTrapezium);
 			
-			JMenuItem mntmRandom = new JMenuItem("Random");
-			mntmRandom.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					model.getChartDataset().clearData();
-					model.generateRandomTrainingData( 2, //TODO make this completely random
-							10,
-							50, 
-							0,0,10);
-				}
-			});
-			
 			JMenuItem mntmTPoints = new JMenuItem("T points");
 			mntmTPoints.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
@@ -1333,7 +1272,6 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 				}
 			});
 			mnData.add(mntmTPoints);
-			mnData.add(mntmRandom);
 			
 			JMenuItem mntmNewMenuItem = new JMenuItem("Triangle 2");
 			mntmNewMenuItem.addActionListener(new ActionListener() {
@@ -1345,15 +1283,6 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 			
 			JMenu mnHelp = new JMenu("Help");
 			menuBar.add(mnHelp);
-			
-			JMenuItem mntmHelpContent = new JMenuItem("Help Content");
-			mntmHelpContent.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					helpDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-					helpDialog.setVisible(true);
-				}
-			});
-			mnHelp.add(mntmHelpContent);
 			
 			JMenuItem mntmAbout = new JMenuItem("About");
 			mntmAbout.addActionListener(new ActionListener() {
@@ -1420,7 +1349,6 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 			model.solveWRCH(1);
 			chartPanel.updateWRCHSolutions();
 		} catch (Exception e) {
-			// TODO
 			e.printStackTrace();
 		}
 	}
@@ -1436,32 +1364,38 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 	}
 
 	private JSlider setupSlider(JSlider slider, boolean useMuScale, int maxValue){
-	    java.util.Hashtable<Integer,JLabel> labelTable = new java.util.Hashtable<Integer,JLabel>();  
-	    labelTable.put(new Integer(100), new JLabel("1.0"));  
-	    labelTable.put(new Integer(75), new JLabel("0.75"));  
-	    labelTable.put(new Integer(50), new JLabel("0.50"));  
-	    labelTable.put(new Integer(25), new JLabel("0.25"));  
-	    labelTable.put(new Integer(0), new JLabel("0.0"));
-	    
-	    slider.setBounds(0, 26, 200, 40);
-	    slider.setFont(new Font("Tahoma", Font.PLAIN, 8));	    
-	    
-	    slider.setLabelTable(null);
-	    
-	    if (useMuScale){
-	    	slider.setMajorTickSpacing(25);
-	    	slider.setLabelTable(labelTable);
-	    	slider.setMinimum(0);
-	    	slider.setMaximum(100);
-	    }else{
-	    	slider.setMajorTickSpacing(maxValue/2);
-	    	//slider.setLabelTable(slider.createStandardLabels(10));
-	    	slider.setMinimum(0);
-	    	slider.setMaximum(maxValue);
-	    }
-	    
-		slider.setPaintLabels(true);
-		slider.setPaintTicks(true);
+	    try {
+			java.util.Hashtable<Integer,JLabel> labelTable = new java.util.Hashtable<Integer,JLabel>();  
+			labelTable.put(new Integer(100), new JLabel("1.0"));  
+			labelTable.put(new Integer(75), new JLabel("0.75"));  
+			labelTable.put(new Integer(50), new JLabel("0.50"));  
+			labelTable.put(new Integer(25), new JLabel("0.25"));  
+			labelTable.put(new Integer(0), new JLabel("0.0"));
+			
+			slider.setBounds(0, 26, 200, 40);
+			slider.setFont(new Font("Tahoma", Font.PLAIN, 8));	    
+			
+			slider.setLabelTable(null);
+			
+			if (useMuScale){
+				slider.setMajorTickSpacing(25);
+				slider.setLabelTable(labelTable);
+				slider.setMinimum(0);
+				slider.setMaximum(100);
+			}else{
+				slider.setMajorTickSpacing(maxValue/2);
+				//slider.setLabelTable(slider.createStandardLabels(10));
+				slider.setMinimum(0);
+				slider.setMaximum(maxValue);
+			}
+			
+			slider.setPaintLabels(true);
+			slider.setPaintTicks(true);
+		} catch (Exception e) {
+
+		}
+		
+		
 		return slider;
 	}
 	
@@ -1469,20 +1403,15 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 	public String format(double d){
 		return String.format("%.4f", d);
 	}
-	
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		Object source = e.getSource();
-		
-		if (source instanceof JMenuItem){
-			JMenuItem mItem = (JMenuItem) source;
-			//TODO if (mItem.equals(obj)
-		}
-		
+
+
+	public void setStatus(String status){
+		lblStatus.setText(status);
 	}
-
-
-
+	
+	public String getStatus(){
+		return lblStatus.getText();
+	}
 
 
 	@Override
@@ -1502,7 +1431,7 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 				chartPanel.duplicateSelection(duplications);
 			}else if (rdbtnAddTool.isSelected()){
 				
-				DVector newPoint = new DVector(model.getTrainingData().getDimensions());
+				SVMDataItem newPoint = new SVMDataItem(model.getTrainingData().getDimensions());
 				newPoint.setWeight(Double.parseDouble(textField_NewWeight.getText()));
 				
 				if (cmbNewClass.getSelectedIndex() == 0){ //asumption 0 is positive class
@@ -1517,14 +1446,16 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 				//TODO update view-solution
 			}
 			
-			
+			if (!chartPanel.isSolutionExits()){
+				setStatus("WSVM solution not found, change mu values to reduce WRCH");
+			}else{
+				setStatus("");
+			}
 			// if model updated //TODO change to better design
 			
 		} catch (NumberFormatException e) {
-			// TODO
 			e.printStackTrace();
 		} catch (Exception e) {
-			// TODO
 			e.printStackTrace();
 		}
 	}
@@ -1552,6 +1483,14 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 				if (chckbxAutoUpdateWsvm.isSelected()){
 					solveSVM(model.getMu1(), model.getMu2());
 				}
+				
+				setupSlider(slider_class1, !chckbxUsemuScale.isSelected(), 
+						model.getTrainingData().getSeries(model.getTrainingData().getPositiveSeriesID()).getItemCount());
+				
+				setupSlider(slider_class2, !chckbxUsemuScale_1.isSelected(), 
+						model.getTrainingData().getSeries(model.getTrainingData().getNegativeSeriesID()).getItemCount());
+				
+
 			}
 		}
 	}

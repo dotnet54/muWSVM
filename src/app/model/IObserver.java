@@ -1,4 +1,4 @@
-package app.model.data;
+package app.model;
 /**
  * 
  * REFERENCE: design pattern source code from
