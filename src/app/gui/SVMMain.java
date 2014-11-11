@@ -26,6 +26,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.JTabbedPane;
 
 import org.jfree.chart.ChartFactory;
@@ -44,7 +45,6 @@ import java.awt.event.InputMethodListener;
 import java.awt.event.InputMethodEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeEvent;
-import java.io.IOException;
 import java.awt.BorderLayout;
 import java.awt.Font;
 import javax.swing.UIManager;
@@ -56,6 +56,8 @@ import java.awt.Panel;
 import java.awt.FlowLayout;
 import java.awt.Dimension;
 import javax.swing.JRadioButtonMenuItem;
+
+import jogamp.graph.font.typecast.ot.table.CvtTable;
 
 /**
  * Main GUI window for the application
@@ -127,6 +129,10 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 	private JComboBox<String> cmbYDimensionName;
 	private JTextField txtMin;
 	private JTextField txtMax;
+
+	private FileNameExtensionFilter csvFilter;
+
+	private FileNameExtensionFilter libsvmFilter;
 	
 	/**
 	 * Entry point - Launch the application.
@@ -167,6 +173,16 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 		model.register(this);
 
 		//Initialize GUI
+		
+		csvFilter = new FileNameExtensionFilter(
+		        "Comma Separated Values File (CSV)", "csv", "gif");
+		libsvmFilter = new FileNameExtensionFilter(
+		        "LibSVM File", "libsvm", "dat");
+		fc.addChoosableFileFilter(csvFilter);
+		fc.addChoosableFileFilter(libsvmFilter);
+		fc.setAcceptAllFileFilterUsed(true);
+		fc.setFileFilter(fc.getAcceptAllFileFilter());
+		
 		initializeGUI();
 	}
 	
@@ -251,6 +267,7 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 			pContainerParameters.add(pClass1);
 			
 			slider_class1 = new JSlider();
+			slider_class1.setValue(100);
 			setupSlider(slider_class1, true, 100);
 			
 			slider_class1.addChangeListener(new ChangeListener() {
@@ -401,7 +418,7 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 	//				     }
 					  }
 					});
-			textField_class1.setText("0.5");
+			textField_class1.setText("1");
 			textField_class1.setColumns(10);
 			
 			
@@ -440,6 +457,7 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 			pContainerParameters.add(pClass2);
 			
 			slider_class2 = new JSlider();
+			slider_class2.setValue(100);
 			setupSlider(slider_class2, true, 100);
 			slider_class2.addChangeListener(new ChangeListener() {
 				public void stateChanged(ChangeEvent arg0) {
@@ -501,7 +519,7 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 					System.out.println("actionPerformed " + model.getMu2() + arg0.getActionCommand());
 				}
 			});
-			textField_class_2.setText("0.5");
+			textField_class_2.setText("1");
 			textField_class_2.setColumns(10);
 			textField_class_2.addFocusListener(new FocusAdapter() {
 				@Override
@@ -628,7 +646,17 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 				        int returnVal = fc.showOpenDialog(frame);
 
 				        if (returnVal == JFileChooser.APPROVE_OPTION) {
-				        	model.getChartDataset().loadFromFile(fc.getSelectedFile());
+				        	
+				        	File file = fc.getSelectedFile();
+				        	String file_name = file.toString();
+				        	
+				        	if (file_name.endsWith("csv")){
+				        		model.getChartDataset().loadFromFile(file_name, "csv");
+				        	}else if (file_name.endsWith("libsvm") || file_name.endsWith("dat")){
+				        		model.getChartDataset().loadFromFile(file_name, "libsvm");
+				        	}else{
+				        		model.getChartDataset().loadFromFile(file_name, "libsvm"); //default
+				        	}
 				        } 
 						
 					} catch (Exception e1) {
@@ -667,7 +695,7 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 			JButton btnClearPlot = new JButton("Clear Plot");
 			btnClearPlot.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					model.clearDataSet(2);
+					chartPanel.clearPlot();
 				}
 			});
 			btnClearPlot.setBounds(219, 294, 79, 23);
@@ -695,8 +723,35 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 			JButton btnSaveData = new JButton("Save To File");
 			btnSaveData.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					File file = new File("wsvm_out.txt");
-					model.getChartDataset().saveToFile(file);
+					
+					try {
+				        int returnVal = fc.showSaveDialog(frame);
+
+				        if (returnVal == JFileChooser.APPROVE_OPTION) {
+				        	
+				        	File file = fc.getSelectedFile();
+				        	String file_name = file.toString();
+				        	
+				        	if (fc.getFileFilter() == csvFilter && !file_name.endsWith("csv")){
+				        		file_name += ".csv";
+				        		model.getChartDataset().saveToFile(
+				        				file_name, "csv");
+				        	}else if (fc.getFileFilter() == libsvmFilter 
+				        			&& (!file_name.endsWith("libsvm") || !file_name.endsWith("dat"))){
+				        		//TODO file_name += ".libsvm";
+				        		model.getChartDataset().saveToFile(
+				        				file_name, "libsvm");
+				        	}else{
+				        		model.getChartDataset().saveToFile(
+				        				file_name, "libsvm"); //default
+				        	}
+				        	
+				        } 
+						
+					} catch (Exception e1) {
+						// TODO
+						e1.printStackTrace();
+					}
 				}
 			});
 			btnSaveData.setBounds(166, 87, 132, 23);
@@ -898,6 +953,11 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 			frame.getContentPane().add(pSolveButtonsContainer);
 			
 			JButton btnClassify = new JButton("Classify Test Data");
+			btnClassify.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					model.classifyTestData();	//TODO hot fix
+				}
+			});
 			btnClassify.setBounds(188, 29, 125, 23);
 			pSolveButtonsContainer.add(btnClassify);
 			
@@ -964,11 +1024,13 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 			pContainerStatisticsData.setLayout(null);
 			
 			JButton btnLoadTestingData = new JButton("Load Testing Data");
-			btnLoadTestingData.setBounds(116, 221, 119, 23);
+			btnLoadTestingData.setVisible(false);
+			btnLoadTestingData.setBounds(179, 260, 119, 23);
 			pContainerStatisticsData.add(btnLoadTestingData);
 			
 			JButton btnPerformCrossValidation = new JButton("Perform Cross Validation");
-			btnPerformCrossValidation.setBounds(115, 255, 159, 23);
+			btnPerformCrossValidation.setVisible(false);
+			btnPerformCrossValidation.setBounds(139, 294, 159, 23);
 			pContainerStatisticsData.add(btnPerformCrossValidation);
 			
 			JLabel lblnumPositiveSupport = new JLabel("<html>Num. Positive\r\n<br> Support Vectors:");
@@ -984,7 +1046,7 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 			pContainerStatisticsData.add(label_2);
 			
 			JLabel label_3 = new JLabel("numIterations");
-			label_3.setBounds(152, 100, 78, 14);
+			label_3.setBounds(10, 232, 78, 14);
 			pContainerStatisticsData.add(label_3);
 			
 			JLabel lblnumNegativeSupport = new JLabel("<html>Num. Positive\r\n<br> Support Vectors:");
@@ -1018,18 +1080,22 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 			pContainerWeighting.add(chckbxEnableAutoWeighting);
 			
 			JButton btnRandomUndersample = new JButton("Random Undersample");
+			btnRandomUndersample.setVisible(false);
 			btnRandomUndersample.setBounds(10, 260, 145, 23);
 			pContainerWeighting.add(btnRandomUndersample);
 			
 			JButton btnRandomOversample = new JButton("Random Oversample");
+			btnRandomOversample.setVisible(false);
 			btnRandomOversample.setBounds(10, 294, 145, 23);
 			pContainerWeighting.add(btnRandomOversample);
 			
 			JButton btnSystematicUndersample = new JButton("Systematic Undersample");
+			btnSystematicUndersample.setVisible(false);
 			btnSystematicUndersample.setBounds(10, 194, 157, 23);
 			pContainerWeighting.add(btnSystematicUndersample);
 			
 			JButton btnSystematicOversample = new JButton("Systematic Oversample");
+			btnSystematicOversample.setVisible(false);
 			btnSystematicOversample.setBounds(10, 226, 157, 23);
 			pContainerWeighting.add(btnSystematicOversample);
 			
@@ -1361,7 +1427,7 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 	
 	private void showScatterPlotMatrix(){
 
-		frameSPLOM = new SVMSPLOM(model);
+		frameSPLOM = new SVMSPLOM(model, chart.getXYPlot().getRenderer());
 		
 		frameSPLOM.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		frameSPLOM.setPreferredSize(new Dimension(600,400));
@@ -1474,6 +1540,11 @@ public class SVMMain implements ActionListener, IObserver, DatasetChangeListener
 		if (data !=null && data instanceof SVMDataSet){
 			SVMDataSet svmDataset = (SVMDataSet) data;
 			if (svmDataset == model.getTrainingData()){
+				
+				if (frameSPLOM != null){
+					frameSPLOM.updateChartData();
+				}
+				
 				System.out.println("training data changed");
 				if (chckbxAutoUpdate.isSelected()){
 					findWRCH(model.getMu1(), model.getMu2());

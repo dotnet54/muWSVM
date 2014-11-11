@@ -61,6 +61,7 @@ public class SVMPanel extends ChartPanel
 	private JPopupMenu popup = new JPopupMenu();
 	private JMenuItem itp = new JMenuItem("Add to Positive Class");
 	private JMenuItem itn = new JMenuItem("Add to Negative Class");
+	private JMenuItem itu = new JMenuItem("Add Unlabelled Data");
 	private JMenuItem itd = new JMenuItem("Duplicate Point");
 	private JMenuItem itr = new JMenuItem("Remove Point");
 	private JMenuItem itw = new JMenuItem("Change Weight");
@@ -412,12 +413,14 @@ public class SVMPanel extends ChartPanel
 					popup.removeAll();
 					popup.add(itp);
 					popup.add(itn);
+					popup.add(itu);
 					popup.pack();
 					popup.show(this, event.getX(), event.getY());
 				} else {
 					popup.removeAll();
 					popup.add(itp);
 					popup.add(itn);
+					popup.add(itu);
 					popup.addSeparator();
 					popup.add(itd);// TODO duplicate point
 					popup.add(itr);
@@ -448,8 +451,8 @@ public class SVMPanel extends ChartPanel
 	
 	public void clearPlot(){
 			XYPlot p = getChart().getXYPlot();
-			p.clearAnnotations();
 			model.clearDataSet(0);
+			p.clearAnnotations();
 	}
 	
 	public void updateChart(){
@@ -564,7 +567,8 @@ public class SVMPanel extends ChartPanel
 				thisPlot.addAnnotation(marginNeg);
 			}
 			if (displayNearestPointLine){
-			    thisPlot.addAnnotation(nearestPointLine);
+				//TODO hot fix
+			   // thisPlot.addAnnotation(nearestPointLine);
 			}
 		} catch (Exception e) {
 			// TODO
@@ -628,6 +632,26 @@ public class SVMPanel extends ChartPanel
 			}
 		});
 		
+		itu.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					DVector newPoint = new DVector(model.getTestData().getDimensions());
+					int xDim = model.getTestData().getXDimension();
+					int yDim = model.getTestData().getYDimension();
+					
+					newPoint.setVal(xDim, xChart);
+					newPoint.setVal(yDim, yChart);
+					model.getTestData().addItem(0, newPoint);
+				} catch (Exception e1) {
+					// TODO
+					e1.printStackTrace();
+				}
+				
+			}
+		});
+		
 		itd.addActionListener(new ActionListener() {
 			
 			@Override
@@ -664,7 +688,9 @@ public class SVMPanel extends ChartPanel
 						weight = Double.parseDouble(input); // try catch TODO parse error handle
 						item.setWeight(weight);
 						item.setLabel(weight + "");
-						thisChart.fireChartChanged();
+						//TODO hot fix
+						model.getTrainingData().setWeight(e.getSeriesIndex(), e.getItem(), weight);
+						//thisChart.fireChartChanged();
 						System.out.println( item);
 					}
 	            }
@@ -814,7 +840,9 @@ public class SVMPanel extends ChartPanel
             	SVMDataSet svmData = (SVMDataSet) dataset;
             	SVMDataSeries series =  svmData.getSeries(e.getSeriesIndex());
             	DVector item = series.getDataItem(e.getItem());
-            	item.setWeight(newWeight);
+            	//item.setWeight(newWeight);
+            	//hot fix
+            	model.getTrainingData().setWeight(e.getSeriesIndex(), e.getItem(), newWeight);
             }
             
             clearSelection();

@@ -12,6 +12,8 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYItemRenderer;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 
 import app.model.data.DData;
 import app.model.data.SVMDataSet;
@@ -33,7 +35,7 @@ public class SVMSPLOM extends JFrame {
 	/**
 	 * Create the frame.
 	 */
-	public SVMSPLOM(SVMModel model) {
+	public SVMSPLOM(SVMModel model, XYItemRenderer renderer) {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 450, 300);
 		contentPane = new JPanel();
@@ -64,6 +66,8 @@ public class SVMSPLOM extends JFrame {
 					("Chart " + chartID, "Dimension: " + i,
 					"Dimension: " + j, datasource.getChartData(i, j));
 				
+				
+				
 				panels[chartID] = new ChartPanel(charts[chartID]);
 				panel.add(panels[chartID]);
 				
@@ -78,9 +82,13 @@ public class SVMSPLOM extends JFrame {
 				XYPlot plot = charts[chartID].getXYPlot();
 				plot.getDomainAxis().setLabelFont(font3);
 				plot.getRangeAxis().setLabelFont(font3);
+			
+				plot.setRenderer(renderer);
+				plot.setDomainPannable(true);
+				plot.setRangePannable(true);
 			}
 		}
-
+		
 		getContentPane().add(panel);
 	}
 	

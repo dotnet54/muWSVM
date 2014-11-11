@@ -53,21 +53,31 @@ public class Dwsk {
 		DVector n = null;
 		DVector w = null;
 		
+		ArrayList<DVector> positiveClass = Dataset.getPositiveClass();
+		ArrayList<DVector> negativeClass = Dataset.getNegativeClass();
+		
 		DVector startDirection = new DVector(Dataset.getDimensions());
 		startDirection.setXValue(+1);
 		DVector oppositeDirection = new DVector(Dataset.getDimensions());
 		oppositeDirection.setXValue(-1);
 
-		p = Dwrch.findExtremePoint(Dataset.getPositiveClass() , mu1, startDirection);
-		n = Dwrch.findExtremePoint(Dataset.getNegativeClass() , mu2, oppositeDirection);
+		p = findExtremePoint(positiveClass , mu1, startDirection);
+		n = findExtremePoint(negativeClass , mu2, oppositeDirection);
 		
 		while(iterations < maxIterations){
 			w = p.subtractVectors(n);
+			
+			//TODO hot fix centroid
+			if (w.equals(new DVector(w.getDimensions()))){
+				//centroids on top of each other-> no solution
+			
+			}
+			
 			DVector wprime = w.clone();
 			wprime.multiplyByScaler(-1);
 
-			DVector vp = findExtremePoint(Dataset.getPositiveClass() , mu1, wprime);
-			DVector vn = findExtremePoint(Dataset.getNegativeClass() , mu2, w);
+			DVector vp = findExtremePoint(positiveClass , mu1, wprime);
+			DVector vn = findExtremePoint(negativeClass , mu2, w);
 			
 			DVector dvp = vp.subtractVectors(n);
 			DVector dpv = p.subtractVectors(vn);
@@ -139,30 +149,38 @@ public class Dwsk {
 	public static DVector findExtremePoint(ArrayList<DVector> list, double mu, final DVector n){
 		
 		if (mu == 0){ //TODO fp comparison
-			//return findCentroid(P);
+			return Dwrch.findCentroid(list);	//TODO hot fix
 		}
 		
+//		if (1/mu > list.size()){
+//			System.out.println("centr");
+//			return Dwrch.findCentroid(list);//TODO hot fix
+//		}
+		
+		testSorting(list, n);
+		
 		//TODO if weight = 0 ??
-		Collections.sort(list,Collections.reverseOrder( new Comparator<DVector>() {
-			@Override
-			public int compare(DVector o1, DVector o2) {
-				//TODO fp comparisons
-				try {
-					double p1 = o1.getDotProduct(n);
-					double p2 = o2.getDotProduct(n);
-					if (p1 < p2){
-						return -1;
-					}else if (p2 > p1){
-						return 1;
-					}else{
-						return 0;
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-					return 0;
-				}
-			}
-		}));
+//		Collections.sort(list,Collections.reverseOrder( new Comparator<DVector>() {
+//			@Override
+//			public int compare(DVector o1, DVector o2) {
+//				
+//				//TODO fp comparisons
+//				try {
+//					double p1 = o1.getDotProduct(n);
+//					double p2 = o2.getDotProduct(n);
+//					if (p1 < p2){
+//						return -1;
+//					}else if (p2 > p1){
+//						return 1;
+//					}else{
+//						return 0;
+//					}
+//				} catch (Exception e) {
+//					e.printStackTrace();
+//					return 0;
+//				}
+//			}
+//		}));
 		
 		
 		double [] A = new double[list.size()];
@@ -173,9 +191,9 @@ public class Dwsk {
 		
 		while (s < 1.0){ //TODO fp comparison
 			if (k >= A.length){
-				//System.out.println("k fixed");
-				k = 0;
-				//return findCentroid(P); //TODO if all A are used then return centroid
+				System.out.println("k fixed");
+				k = 0;//
+				return Dwrch.findCentroid(list); // TODO if all A are used then return centroid
 			}
 				if (A[k] == 0){
 					count++;
@@ -212,6 +230,34 @@ public class Dwsk {
 		return v;
 	}
 	
+	private static void testSorting(ArrayList<DVector> list,final DVector normal){
+		Collections.sort(list,Collections.reverseOrder( new Comparator<DVector>() {
+			@Override
+			public int compare(DVector o1, DVector o2) {
+				
+				//TODO fp comparisons
+				try {
+					double p1 = o1.getDotProduct(normal);
+					double p2 = o2.getDotProduct(normal);
+					double diff = p1 - p2;
+					//System.out.format("p1:%f p2:%f\n" , p1, p2);					
+					if (p1 < p2){
+						return -1;
+					}else if (p2 > p1){
+						return 1;
+					}else{
+						return 0;
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+					return 0;
+				}
+			}
+		}));
+		
+		int a = 0;
+		
+	}
 	
 	private static double clamp(double c, double cmin, double cmax){
 		
@@ -224,7 +270,7 @@ public class Dwsk {
 		}else{
 			//assert error: should never reach this
 			System.out.println("logic error: assertion failed");
-			return Double.NaN;
+			return Double.NaN; //TODO 0?
 		}
 	}
 

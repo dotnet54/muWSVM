@@ -209,6 +209,8 @@ public class SVMModel implements DatasetChangeListener,ISubject {
 		solutionDataSet.getSeries(0).clear();
 		solutionDataSet.getSeries(1).clear();
 		solutionDataSet.getSeries(2).clear();
+		solutionDataSet.getSeries(3).clear();
+		solutionDataSet.getSeries(4).clear();
 		
 		if (series == 1){
 			dataset1.clear();
@@ -241,6 +243,7 @@ public class SVMModel implements DatasetChangeListener,ISubject {
 			trainingData = SVMDataGenerator.getDefaultSVMDataset();		
 			testData = new SVMDataSet(numDimensions);
 			SVMDataSeries series6 = new SVMDataSeries("Unlabelled Data", numDimensions);
+
 			testData.addSeries(series6);
 
 			solutionDataSet = new SVMDataSet(numDimensions);
@@ -250,6 +253,11 @@ public class SVMModel implements DatasetChangeListener,ISubject {
 			solutionDataSet.addSeries(series3);
 			solutionDataSet.addSeries(series4);
 			solutionDataSet.addSeries(series5);
+			
+			
+			solutionDataSet.addSeries(new SVMDataSeries("Test Positive", trainingData.getDimensions()));
+			solutionDataSet.addSeries(new SVMDataSeries("Test Negative", trainingData.getDimensions()));
+						
 			
 			//add change listeners
 			trainingData.addChangeListener(this);
@@ -382,7 +390,7 @@ public class SVMModel implements DatasetChangeListener,ISubject {
 			numActualPositives = positiveClass.getItemCount();
 			for (int i = 0; i < numActualPositives; i++){
 				item = positiveClass.getDataItem(i);
-				proj = getW().getDotProduct(item);
+				proj = getW().getDotProduct(item) - getB();
 				if (proj > 0){ //TODO fp comparison
 					count++;
 				}
@@ -396,7 +404,7 @@ public class SVMModel implements DatasetChangeListener,ISubject {
 			numActualNegatives = negativeClass.getItemCount();
 			for (int i = 0; i < numActualNegatives; i++){
 				item = negativeClass.getDataItem(i);
-				proj = getW().getDotProduct(item);
+				proj = getW().getDotProduct(item)- getB();
 				if (proj < 0){ //TODO fp comparison
 					count++;
 				}
@@ -414,6 +422,47 @@ public class SVMModel implements DatasetChangeListener,ISubject {
 		}
 	}
 
+	public void classifyTestData(){
+		
+		
+		
+		//TODO hot fix
+		try {
+
+			
+			for (int i = 0; i < getTestData().getItemCount(0); i++){
+				if (testPoint(testData.getSeries(0).getDataItem(i)) == 1){
+					//add to positive class
+					
+					solutionDataSet.addItem(3, testData.getSeries(0).getDataItem(i));
+				}else{
+					//add to negative class
+					solutionDataSet.addItem(4, testData.getSeries(0).getDataItem(i));
+				}
+			}
+			
+			testData.clearData();
+		} catch (Exception e) {
+			// TODO
+			e.printStackTrace();
+		}
+	}
+	
+	public int testPoint(DVector point){
+		try {
+			double proj = point.getDotProduct(getW()) - getB();
+			if (proj > 0){
+				return +1;
+			}else{
+				return -1;
+			}
+		} catch (Exception e) {
+			// TODO
+			e.printStackTrace();
+			return 0;
+		}
+	}
+	
 	public DVector getHyperplane() throws Exception{
 		return getW().get2DAntiClockwiseNormal(); //TODO sure?
 	}
@@ -475,13 +524,13 @@ public class SVMModel implements DatasetChangeListener,ISubject {
 			
 			//TODO note not using equals function, only testing for reference equality
 			if (svmDataset == trainingData){
-				System.out.println("training data changed");
+				//System.out.println("training data changed");
 				//updateModel();
 			}else if(svmDataset == testData){
 				System.out.println("test data changed");
 				
 			}else if (svmDataset == solutionDataSet){
-				System.out.println("solution data changed");
+				//System.out.println("solution data changed");
 			}
 		}
 

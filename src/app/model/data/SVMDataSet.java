@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -14,6 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.StringTokenizer;
+
+import javax.swing.JOptionPane;
 
 import org.jfree.data.general.Dataset;
 import org.jfree.data.xy.XYSeries;
@@ -87,6 +90,7 @@ public class SVMDataSet extends XYSeriesCollection {
 	
 	public void setWeight(int series, int index, double newWeight){
 		getSeries(series).getRawDataItem(index).setWeight(newWeight);
+		fireDatasetChanged(); //TODO hot fix
 	}
 
 	public double getXValue(int series, int item) {
@@ -119,46 +123,97 @@ public class SVMDataSet extends XYSeriesCollection {
 		return getSeries(getNegativeSeriesID()).toArrayList();
 	}
 	
-
-	public void loadFromFile(File fin) throws Exception{
+	
+	public void loadFromFile(String fname, String format){
+		File fin = new File(fname);
 		
-		FileInputStream fis = new FileInputStream(fin);
-		 
-		//Construct BufferedReader from InputStreamReader
-		BufferedReader br = new BufferedReader(new InputStreamReader(fis));
-	 
-		String line = null;
-		DVector item = null;
-		
-		clearData();
-		
-		while ((line = br.readLine()) != null) {
+		if (format.equals("csv")){
 			
-			StringTokenizer st = new StringTokenizer(line," \t\n\r\f:");
-			
-			int className = Integer.parseInt(st.nextToken());
-			st.nextToken();// skip attrib id
-			double x = Double.parseDouble(st.nextToken());
-			st.nextToken();// skip attrib id
-			double y = Double.parseDouble(st.nextToken());
-				
-			item = new DVector(x, y, 1,className);
-			System.out.println(item);
-			if (className >= 0){	//TODO add class 0 for positive
-				addItem(0, item);
-			}else{
-				addItem(1, item);
-			}
-			
+		}else if (format.equals("libsvm") || format.equals("dat")){
+			loadFromLIBSVMFile(fin);
+		}else {
+			loadFromLIBSVMFile(fin);
 		}
-	 
-		br.close();
+		
+	}
+
+	public void loadFromLIBSVMFile(File fin) {
+		
+		try {
+			FileInputStream fis = new FileInputStream(fin);
+			 
+			//Construct BufferedReader from InputStreamReader
+			BufferedReader br = new BufferedReader(new InputStreamReader(fis));
+ 
+			String line = null;
+			DVector item = null;
+			
+			clearData();
+			
+			
+			
+			while ((line = br.readLine()) != null) {
+				StringTokenizer st = new StringTokenizer(line," \t\n\r\f:");
+				
+				int className = (int) Double.parseDouble(st.nextToken());
+				st.nextToken();// skip attrib id
+				double x = Double.parseDouble(st.nextToken());
+				st.nextToken();// skip attrib id
+				double y = Double.parseDouble(st.nextToken());
+					
+				item = new DVector(x, y, 1,className);
+				//System.out.println(item);
+				if (className > 0){	//TODO add class 0 for positive
+					addItem(0, item);
+				}else{
+					addItem(1, item);
+				}
+			}
+ 
+			br.close();
+		} catch (NumberFormatException e) {
+			JOptionPane.showMessageDialog(null,
+				    "Error reading from file, make sure it is formatted correctly",
+				    "File IO error",
+				    JOptionPane.ERROR_MESSAGE);
+			e.printStackTrace();
+		} catch (FileNotFoundException e) {
+			JOptionPane.showMessageDialog(null,
+				    e.getMessage(),
+				    "File IO error",
+				    JOptionPane.ERROR_MESSAGE);
+			//e.printStackTrace();
+		} catch (IOException e) {
+			JOptionPane.showMessageDialog(null,
+				    e.getMessage(),
+				    "File IO error",
+				    JOptionPane.ERROR_MESSAGE);
+			//e.printStackTrace();
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(null,
+				    e.getMessage(),
+				    "File IO error",
+				    JOptionPane.ERROR_MESSAGE);
+			//e.printStackTrace();
+		}
 	}
 	
-	public void saveToFile(File fout){
+	public void saveToFile(String fname, String format){
+		File fout = new File(fname);
+		
+		if (format.equals("csv")){
+			
+		}else if (format.equals("libsvm") || format.equals("dat")){
+			saveToLIBSVMFile(fout);
+		}else {
+			saveToLIBSVMFile(fout);
+		}
+		
+	}
+	
+	public void saveToLIBSVMFile(File fout){
 	       String text = "";
 	        try {
-	          File file = new File("example.txt");
 	          BufferedWriter output = new BufferedWriter(new FileWriter(fout));
 	          
 	          DVector item = null;
