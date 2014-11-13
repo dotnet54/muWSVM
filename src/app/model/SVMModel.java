@@ -63,8 +63,17 @@ public class SVMModel implements DatasetChangeListener,ISubject {
 	public int numFalseNegatives;
 	
 	
+	private boolean isSVMSolved = false;
 	
 	
+	public boolean isSVMSolved() {
+		return isSVMSolved;
+	}
+
+	public void setSVMSolved(boolean isSolved) {
+		this.isSVMSolved = isSolved;
+	}
+
 	public SVMDataItem getCentroid1() {
 		return centroid1;
 	}
@@ -200,7 +209,7 @@ public class SVMModel implements DatasetChangeListener,ISubject {
 	}
 
 	public SVMDataItem getW(){
-		return w;	//reference or value TODO
+		return w;	
 	}
 
 	public double getB(){
@@ -235,8 +244,6 @@ public class SVMModel implements DatasetChangeListener,ISubject {
     private boolean changed;
     private final Object MUTEX= new Object();
 	
-	
-	//TODO sync problem, run bgtask in debugger, before 1 task finishes 
 	public SVMModel(){
 		try {
 			
@@ -247,6 +254,8 @@ public class SVMModel implements DatasetChangeListener,ISubject {
 			trainingData = SVMDataGenerator.getDefaultSVMDataset();		
 			testData = new SVMDataSet(numDimensions);
 			SVMDataSeries series6 = new SVMDataSeries("Unlabelled Data", numDimensions);
+			testData.setPositiveSeriesID(0);
+			testData.setNegativeSeriesID(0);
 
 			testData.addSeries(series6);
 
@@ -269,7 +278,6 @@ public class SVMModel implements DatasetChangeListener,ISubject {
 			solutionDataSet.addChangeListener(this);
 			
 		} catch (Exception e) {
-			// TODO
 			e.printStackTrace();
 		}
 
@@ -288,18 +296,27 @@ public class SVMModel implements DatasetChangeListener,ISubject {
 	}
 	
 	public void generateRandomTrainingData(int numDims,
-			int numPoints, int percentPos, int softnessDelta, 
+			int numPoints, int percentPos, String svmType, 
 			double min, double max, double minW, double maxW){
 		SVMDataGenerator dataGen = new SVMDataGenerator(this, 3, 2, 2);
-		dataGen.generateData(trainingData, numPoints, percentPos, softnessDelta, min, max, minW, maxW);
+		
+		if (svmType.equals("Hard Margin")){
+			dataGen.generateDataHardMargin(trainingData, 
+					numPoints, percentPos, min, max, minW, maxW);
+		}else{
+			dataGen.generateDataSoftMargin(trainingData, 
+					numPoints, percentPos, 0, min, max, minW, maxW);
+		}
+		
+		
 	}
 	
 	public void generateRandomTestData(int numDims,
-			int numPoints, int percentPos, int softnessDelta, 
+			int numPoints, int percentPos, String svmType, 
 			double min, double max, double minW, double maxW){
 		SVMDataGenerator dataGen = new SVMDataGenerator(this, 3, 2, 2);
 		dataGen.generateDataSeries(testData, 0, numPoints, percentPos, 
-				softnessDelta, min, max, minW, maxW);
+				svmType, min, max, minW, maxW);
 	}
 	
 	public void loadPredefinedDataset(String name){
@@ -388,6 +405,13 @@ public class SVMModel implements DatasetChangeListener,ISubject {
 			nearestPositivePoint = wskSolver.getNearestPositivePoint();
 			nearestNegativePoint = wskSolver.getNearestNegativePoint();
 			
+			if (!w.isZeroOrValid()){
+				setSVMSolved(false);
+				return;
+			}else{
+				setSVMSolved(true);
+			}
+			
 			
 			int count = 0;
 			double proj = 0.0;
@@ -398,7 +422,7 @@ public class SVMModel implements DatasetChangeListener,ISubject {
 			for (int i = 0; i < numActualPositives; i++){
 				item = positiveClass.getDataItem(i);
 				proj = getW().getDotProduct(item) - getB();
-				if (proj > 0){ //TODO fp comparison
+				if (proj > 0){ //fp comparison
 					count++;
 				}
 			}
@@ -412,7 +436,7 @@ public class SVMModel implements DatasetChangeListener,ISubject {
 			for (int i = 0; i < numActualNegatives; i++){
 				item = negativeClass.getDataItem(i);
 				proj = getW().getDotProduct(item)- getB();
-				if (proj < 0){ //TODO fp comparison
+				if (proj < 0){ //fp comparison
 					count++;
 				}
 			}
@@ -424,19 +448,12 @@ public class SVMModel implements DatasetChangeListener,ISubject {
 			numFalsePositives = numActualPositives - numPredictedPositives ;
 			numFalseNegatives = numActualNegatives - numPredictedNegatives;
 		} catch (Exception e) {
-			// TODO
 			e.printStackTrace();
 		}
 	}
 
 	public void classifyTestData(){
-		
-		
-		
-		//TODO hot fix
 		try {
-
-			
 			for (int i = 0; i < getTestData().getItemCount(0); i++){
 				if (testPoint(testData.getSeries(0).getDataItem(i)) == 1){
 					//add to positive class
@@ -450,7 +467,6 @@ public class SVMModel implements DatasetChangeListener,ISubject {
 			
 			testData.clearData();
 		} catch (Exception e) {
-			// TODO
 			e.printStackTrace();
 		}
 	}
@@ -464,14 +480,13 @@ public class SVMModel implements DatasetChangeListener,ISubject {
 				return -1;
 			}
 		} catch (Exception e) {
-			// TODO
 			e.printStackTrace();
 			return 0;
 		}
 	}
 	
 	public SVMDataItem getHyperplane() throws Exception{
-		return getW().get2DAntiClockwiseNormal(); //TODO sure?
+		return getW().get2DAntiClockwiseNormal(); //TODO 2d only
 	}
 	
 	public ArrayList<SVMDataItem> getRCH1(){
@@ -512,7 +527,6 @@ public class SVMModel implements DatasetChangeListener,ISubject {
 			}
 
 		} catch (Exception e) {
-			// TODO
 			e.printStackTrace();
 		}
 	}
@@ -529,7 +543,6 @@ public class SVMModel implements DatasetChangeListener,ISubject {
 		if (data !=null && data instanceof SVMDataSet){
 			SVMDataSet svmDataset = (SVMDataSet) data;
 			
-			//TODO note not using equals function, only testing for reference equality
 			if (svmDataset == trainingData){
 				//System.out.println("training data changed");
 				//updateModel();

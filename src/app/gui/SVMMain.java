@@ -35,8 +35,10 @@ import org.jfree.data.general.Dataset;
 import org.jfree.data.general.DatasetChangeEvent;
 import org.jfree.data.general.DatasetChangeListener;
 
+import app.model.DoubleMath;
 import app.model.IObserver;
 import app.model.SVMModel;
+import app.model.WSKSolver;
 import app.model.data.SVMDataItem;
 import app.model.data.SVMDataSet;
 import app.test.PerformanceMatrix;
@@ -91,7 +93,6 @@ public class SVMMain implements IObserver, DatasetChangeListener{
 	private JTextField textField_MaxRecursionWRCH;
 	private JTextField textField_FPPrecision;
 	private JTextField textField_NumDP;
-	private JTextField textField_SeparationDelta;
 	
 	private JLabel lblSelectedPoint;
 	
@@ -126,6 +127,9 @@ public class SVMMain implements IObserver, DatasetChangeListener{
 	private JTextField txtMaxweight;
 
 	private JLabel lblStatus;
+
+	private JComboBox<String> cmbSVMType;
+	private JTextField txtWskepsilon;
 	
 	/**
 	 * Entry point - Launch the application.
@@ -176,7 +180,15 @@ public class SVMMain implements IObserver, DatasetChangeListener{
 		fc.setAcceptAllFileFilterUsed(true);
 		fc.setFileFilter(fc.getAcceptAllFileFilter());
 		
+		
+		
 		initializeGUI();
+		
+		textField_FPPrecision.setText(DoubleMath.PRECISION + "");
+		textField_NumDP.setText(DoubleMath.DP + "");
+		textField_MaxIterationsWSK.setText(WSKSolver.maxIterations + "");
+		txtWskepsilon.setText(WSKSolver.epsilon + "");
+		
 	}
 	
 
@@ -571,7 +583,6 @@ public class SVMMain implements IObserver, DatasetChangeListener{
 					int numDims = Integer.parseInt(txtNumDimensions.getText());
 					int numPoints = Integer.parseInt(textField_NumDataPoints.getText());
 					int percentPos = Integer.parseInt(textField_PercentPos.getText());
-					int separationDelta = Integer.parseInt(textField_SeparationDelta.getText());
 					double min = Double.parseDouble(txtMin.getText());
 					double max = Double.parseDouble(txtMax.getText());
 					double minW = Double.parseDouble(txtMinweight.getText());
@@ -601,14 +612,16 @@ public class SVMMain implements IObserver, DatasetChangeListener{
 						return;
 					}
 					
+					String svmType = cmbSVMType.getSelectedItem().toString();
+					
 					if (cmbDataType.getSelectedIndex() == 0){
 						model.generateRandomTrainingData(numDims,
-							numPoints, percentPos, separationDelta, min, max, minW, maxW);
+							numPoints, percentPos, svmType, min, max, minW, maxW);
 						//dataset 0 for training set
 						chart.getXYPlot().setDataset(0, model.getTrainingData()); 
 					}else if(cmbDataType.getSelectedIndex() == 1){
 						model.generateRandomTestData
-						(numDims, numPoints, percentPos, separationDelta, min, max, minW, maxW);
+						(numDims, numPoints, percentPos, svmType, min, max, minW, maxW);
 						//dataset 2 for training set
 						chart.getXYPlot().setDataset(2, model.getTestData());
 					}
@@ -625,22 +638,30 @@ public class SVMMain implements IObserver, DatasetChangeListener{
 			btnLoadData.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					try {
+						
+						SVMDataSet dataset= null;
+						
+						if (cmbDataType.getSelectedItem().toString().equals("Test Data")){
+							dataset = model.getTestData();
+						}else{
+							dataset = model.getTrainingData();
+						}
+						
+						
 				        int returnVal = fc.showOpenDialog(frame);
 
 				        if (returnVal == JFileChooser.APPROVE_OPTION) {
 				        	
 				        	File file = fc.getSelectedFile();
 				        	String file_name = file.toString();
-				        	//TODO load test data
 				        	if (file_name.endsWith("csv")){
-				        		model.getChartDataset().loadFromFile(file_name, "csv");
+				        		dataset.loadFromFile(file_name, "csv");
 				        	}else if (file_name.endsWith("libsvm") || file_name.endsWith("dat")){
-				        		model.getChartDataset().loadFromFile(file_name, "libsvm");
+				        		dataset.loadFromFile(file_name, "libsvm");
 				        	}else{
-				        		model.getChartDataset().loadFromFile(file_name, "libsvm"); //default
+				        		dataset.loadFromFile(file_name, "libsvm"); //default
 				        	}
 				        } 
-						
 				        
 						chartPanel.thisPlot.getDomainAxis().setAutoRange(true);
 						chartPanel.thisPlot.getRangeAxis().setAutoRange(true);
@@ -685,15 +706,9 @@ public class SVMMain implements IObserver, DatasetChangeListener{
 			btnClearPlot.setBounds(219, 294, 79, 23);
 			pContainerLoadData.add(btnClearPlot);
 			
-			JLabel lblOverlapDelta = new JLabel("Separation Delta:");
+			JLabel lblOverlapDelta = new JLabel("SVM Type:");
 			lblOverlapDelta.setBounds(10, 256, 104, 14);
 			pContainerLoadData.add(lblOverlapDelta);
-			
-			textField_SeparationDelta = new JTextField();
-			textField_SeparationDelta.setText("0");
-			textField_SeparationDelta.setBounds(177, 253, 46, 20);
-			pContainerLoadData.add(textField_SeparationDelta);
-			textField_SeparationDelta.setColumns(3);
 			
 			JButton btnSaveData = new JButton("Save To File");
 			btnSaveData.addActionListener(new ActionListener() {
@@ -780,6 +795,12 @@ public class SVMMain implements IObserver, DatasetChangeListener{
 			txtMaxweight.setBounds(252, 183, 46, 20);
 			pContainerLoadData.add(txtMaxweight);
 			txtMaxweight.setColumns(10);
+			
+			cmbSVMType = new JComboBox<String>();
+			cmbSVMType.setModel(new DefaultComboBoxModel<String>(new String[] {"Hard Margin", "Soft Margin"}));
+			cmbSVMType.setSelectedIndex(1);
+			cmbSVMType.setBounds(124, 256, 99, 20);
+			pContainerLoadData.add(cmbSVMType);
 			
 			JPanel pContainerDataEditing = new JPanel();
 			tabbedPane.addTab("Data Editing", null, pContainerDataEditing, null);
@@ -917,7 +938,7 @@ public class SVMMain implements IObserver, DatasetChangeListener{
 			JButton btnClassify = new JButton("Classify Test Data");
 			btnClassify.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					model.classifyTestData();	//TODO hot fix
+					model.classifyTestData();	
 				}
 			});
 			btnClassify.setBounds(188, 29, 125, 23);
@@ -948,38 +969,63 @@ public class SVMMain implements IObserver, DatasetChangeListener{
 			textField_MaxIterationsWSK.setColumns(10);
 			
 			JLabel lblMaximumRecursionDepth = new JLabel("Maximum Recursion Depth for WRCH");
-			lblMaximumRecursionDepth.setBounds(10, 58, 191, 14);
+			lblMaximumRecursionDepth.setBounds(10, 117, 191, 14);
 			pContainerOptions.add(lblMaximumRecursionDepth);
 			
 			textField_MaxRecursionWRCH = new JTextField();
 			textField_MaxRecursionWRCH.setText("100");
-			textField_MaxRecursionWRCH.setBounds(10, 90, 86, 20);
+			textField_MaxRecursionWRCH.setBounds(10, 149, 86, 20);
 			pContainerOptions.add(textField_MaxRecursionWRCH);
 			textField_MaxRecursionWRCH.setColumns(10);
 			
 			JLabel lblOrToo = new JLabel("If 0 or too large, this setting depends on Java stack size");
-			lblOrToo.setBounds(10, 71, 288, 14);
+			lblOrToo.setBounds(10, 130, 288, 14);
 			pContainerOptions.add(lblOrToo);
 			
 			JLabel lblFloatingPointThreshold = new JLabel("Floating Point Comparison Threshold");
-			lblFloatingPointThreshold.setBounds(10, 138, 191, 14);
+			lblFloatingPointThreshold.setBounds(10, 180, 191, 14);
 			pContainerOptions.add(lblFloatingPointThreshold);
 			
 			textField_FPPrecision = new JTextField();
 			textField_FPPrecision.setText("0.001");
-			textField_FPPrecision.setBounds(10, 163, 86, 20);
+			textField_FPPrecision.setBounds(10, 205, 86, 20);
 			pContainerOptions.add(textField_FPPrecision);
 			textField_FPPrecision.setColumns(10);
 			
 			JLabel lblDecimalRounding = new JLabel("Number of Decimal Places");
-			lblDecimalRounding.setBounds(10, 199, 225, 14);
+			lblDecimalRounding.setBounds(10, 241, 225, 14);
 			pContainerOptions.add(lblDecimalRounding);
 			
 			textField_NumDP = new JTextField();
 			textField_NumDP.setText("2");
-			textField_NumDP.setBounds(10, 221, 86, 20);
+			textField_NumDP.setBounds(10, 263, 86, 20);
 			pContainerOptions.add(textField_NumDP);
 			textField_NumDP.setColumns(10);
+			
+			JButton btnSaveChanges = new JButton("Save Changes");
+			btnSaveChanges.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					//TODO verify input
+					DoubleMath.PRECISION = Double.parseDouble(textField_FPPrecision.getText());
+					DoubleMath.DP = Integer.parseInt(textField_NumDP.getText());
+					
+					WSKSolver.maxIterations = Integer.parseInt(textField_MaxIterationsWSK.getText());
+					WSKSolver.epsilon = Double.parseDouble(txtWskepsilon.getText());
+					
+				}
+			});
+			btnSaveChanges.setBounds(184, 294, 114, 23);
+			pContainerOptions.add(btnSaveChanges);
+			
+			txtWskepsilon = new JTextField();
+			txtWskepsilon.setText("0.001");
+			txtWskepsilon.setBounds(10, 86, 86, 20);
+			pContainerOptions.add(txtWskepsilon);
+			txtWskepsilon.setColumns(10);
+			
+			JLabel lblEpsilonstoppingDistance = new JLabel("Epsilon (Stopping distance for WSK)");
+			lblEpsilonstoppingDistance.setBounds(10, 57, 180, 14);
+			pContainerOptions.add(lblEpsilonstoppingDistance);
 			
 			JPanel pContainerStatisticsData = new JPanel();
 			tabbedPane.addTab("Statistics", null, pContainerStatisticsData, null);
@@ -1131,9 +1177,6 @@ public class SVMMain implements IObserver, DatasetChangeListener{
 			});
 			rdbtnmntmWeights.setSelected(true);
 			mnDisplayLabels.add(rdbtnmntmWeights);
-			
-			JRadioButtonMenuItem rdbtnmntmAlphaVlues = new JRadioButtonMenuItem("Alpha Vlues");
-			mnDisplayLabels.add(rdbtnmntmAlphaVlues);
 			
 			JMenu mnDataPoints = new JMenu("Data Points");
 			mnView.add(mnDataPoints);
@@ -1336,10 +1379,18 @@ public class SVMMain implements IObserver, DatasetChangeListener{
 		model.solveSVM();
 		chartPanel.updateWSVMSolutions();
 		
+		if (!model.isSVMSolved()){
+			setStatus("WSVM solution not found, change mu values until WRCHs do not overlap");
+		}else{
+			setStatus("");
+		}
+		
 		perfMatrix.setValue(0, 0, model.numTruePositives);
 		perfMatrix.setValue(0, 1, model.numFalseNegatives);
 		perfMatrix.setValue(1, 0, model.numFalsePositives);
 		perfMatrix.setValue(1, 1, model.numTrueNegatives);
+		
+		
 	}
 	
 	private void findWRCH(double mu1, double mu2){
@@ -1446,11 +1497,7 @@ public class SVMMain implements IObserver, DatasetChangeListener{
 				//TODO update view-solution
 			}
 			
-			if (!chartPanel.isSolutionExits()){
-				setStatus("WSVM solution not found, change mu values to reduce WRCH");
-			}else{
-				setStatus("");
-			}
+
 			// if model updated //TODO change to better design
 			
 		} catch (NumberFormatException e) {
@@ -1490,7 +1537,6 @@ public class SVMMain implements IObserver, DatasetChangeListener{
 				setupSlider(slider_class2, !chckbxUsemuScale_1.isSelected(), 
 						model.getTrainingData().getSeries(model.getTrainingData().getNegativeSeriesID()).getItemCount());
 				
-
 			}
 		}
 	}

@@ -205,6 +205,39 @@ public class SVMDataItem extends XYDataItem{
 		return vec;
 	}
 	
+	public boolean isZeroVector(){
+		try {
+			double val;
+			for (int i = 0; i < getDimensions(); i++){
+				val = getVal(i);
+				if (!DoubleMath.isEqual(val, 0)){
+					return false;
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return true;
+	}
+	
+	public boolean isValidVector(){
+		boolean valid = false;
+		try {
+			double val;
+			for (int i = 0; i < getDimensions(); i++){
+				val = getVal(i);
+				if (Double.isNaN(val) || Double.isInfinite(val)){
+					return false;
+				}
+			}
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return valid;
+	}
+	
+	//code repeated for performance
 	public boolean isZeroOrValid(){
 		boolean valid = false;
 		try {

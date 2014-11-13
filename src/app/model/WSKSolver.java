@@ -15,8 +15,8 @@ import app.model.data.SVMDataSet;
 public class WSKSolver {
 
 	
-	private double epsilon = 0.001;
-	private int maxIterations = 5000;
+	public static double epsilon = 0.001;
+	public static int maxIterations = 500;
 	
 	private SVMDataItem w;
 	private double b;
@@ -67,6 +67,7 @@ public class WSKSolver {
 		p = findExtremePoint(positiveClass , mu1, startDirection);
 		n = findExtremePoint(negativeClass , mu2, oppositeDirection);
 		
+		
 		while(iterations < maxIterations){
 			w = p.subtractVectors(n);
 			
@@ -101,6 +102,11 @@ public class WSKSolver {
 				double bottom = dpvp.getDotProduct(dpvp);
 				temp = top / bottom;
 				double delta = clamp(temp,0,1);
+				
+				if (delta == Double.NaN){
+					break;
+				}
+				
 				SVMDataItem newP = p.clone();
 				newP.multiplyByScaler((1-delta));
 				SVMDataItem newVP = vp.clone();
@@ -118,6 +124,11 @@ public class WSKSolver {
 				double bottom = dpvn.getDotProduct(dpvn);
 				temp = top / bottom;
 				double delta = clamp(temp,0,1);
+				
+				if (delta == Double.NaN){
+					break;
+				}
+				
 				SVMDataItem newN = n.clone();
 				newN.multiplyByScaler((1-delta));
 				SVMDataItem newVN = vn.clone();
@@ -257,9 +268,6 @@ public class WSKSolver {
 				}
 			}
 		}));
-		
-		int a = 0;
-		
 	}
 	
 	private static double clamp(double c, double cmin, double cmax){
@@ -271,9 +279,8 @@ public class WSKSolver {
 		}else if (c >= cmax){
 			return cmax;
 		}else{
-			//assert error: should never reach this
-			System.out.println("logic error: assertion failed");
-			return Double.NaN; //TODO 0?
+			//assert error: will happen if doubles contain NaN
+			return Double.NaN; 
 		}
 	}
 

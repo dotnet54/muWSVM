@@ -73,6 +73,11 @@ public class SVMDataSet extends XYSeriesCollection {
 		getSeries(seriesIndex).add(item);
 	}
 	
+	public void addItem(int seriesIndex, SVMDataItem item, boolean notify) throws Exception{
+		//TODO check if dimensions match, add to right class
+		getSeries(seriesIndex).add(item, notify);
+	}
+	
 	public void removeItem(int seriesIndex, int itemIndex){
 		//TODO check if dimensions match, add to right class
 		getSeries(seriesIndex).remove(itemIndex);
@@ -162,13 +167,14 @@ public class SVMDataSet extends XYSeriesCollection {
 				double y = Double.parseDouble(st.nextToken());
 					
 				item = new SVMDataItem(x, y, 1,className);
-				//System.out.println(item);
-				if (className > 0){	//TODO add class 0 for positive
-					addItem(0, item);
+				if (className > 0){	
+					addItem(getPositiveSeriesID(), item, false);
 				}else{
-					addItem(1, item);
+					addItem(getNegativeSeriesID(), item, false);
 				}
 			}
+			
+			fireDatasetChanged();
  
 			br.close();
 		} catch (NumberFormatException e) {
@@ -221,15 +227,15 @@ public class SVMDataSet extends XYSeriesCollection {
 	          BufferedWriter output = new BufferedWriter(new FileWriter(fout));
 	          
 	          SVMDataItem item = null;
-	          //TODO hard coded dataclass, series index
+	          //TODO hard coded dataclass
 	          for (int i = 0; i < getItemCount(0); i++){
-	        	  item = getSeries(0).getDataItem(i);
+	        	  item = getSeries(getPositiveSeriesID()).getDataItem(i);
 	        	  text = "+1  1:" 
 	        	  		+ item.getXValue() + " 2:" + item.getYValue();
 	        	  output.write(text + "\n");
 	          }
 	          for (int i = 0; i < getItemCount(1); i++){
-	        	  item = getSeries(1).getDataItem(i);
+	        	  item = getSeries(getNegativeSeriesID()).getDataItem(i);
 	        	  text =  "-1  1:" 
 	        	  		+ item.getXValue() + " 2:" + item.getYValue();
 	        	  output.write(text + "\n");
@@ -301,7 +307,6 @@ public class SVMDataSet extends XYSeriesCollection {
 			
 			
 		} catch (Exception e) {
-			// TODO
 			e.printStackTrace();
 		}
 		

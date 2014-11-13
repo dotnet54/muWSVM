@@ -24,6 +24,11 @@ import java.awt.FlowLayout;
 
 public class SVMSPLOM extends JFrame {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -5085575827721920635L;
+
 	private JPanel contentPane;
 
 	SVMDataSet datasource;

@@ -69,8 +69,6 @@ public class SVMPanel extends ChartPanel
 	
 	private SVMModel model = null;
 	private SVMDataSet chartData = null;
-	private SVMDataSet overlayData = null;
-	
 	private  XYShapeAnnotation annotationWRCH1 = null;
 	private  XYShapeAnnotation annotationWRCH2 = null;
 	
@@ -84,17 +82,6 @@ public class SVMPanel extends ChartPanel
 	
 	private XYItemEntity selectedEntity = null;
 	private SVMDataItem selectedDataItem = null;
-
-	private boolean solutionExits = true;
-	
-	public boolean isSolutionExits() {
-		return solutionExits;
-	}
-
-	public void setSolutionExits(boolean solutionExits) {
-		changed = true;
-		this.solutionExits = solutionExits;
-	}
 
 	private XYLineAndShapeRenderer trainingDatasetRenderer;
 	private XYLineAndShapeRenderer solutionRenderer;
@@ -275,9 +262,6 @@ public class SVMPanel extends ChartPanel
 	private boolean displayslackAmount = false;
 	
 	private boolean enableZoom = true;
-	private int pointSize = 2;
-	
-	
 	//observer pattern 
     private List<IObserver> observers;
     private boolean changed;
@@ -531,19 +515,15 @@ public class SVMPanel extends ChartPanel
 
 	public void updateWSVMSolutions(){
 		try {
+			
+			if (!model.isSVMSolved()){
+				return;
+			}
+			
 			SVMDataItem w = model.getW();
 			double b = model.getB();
 			SVMDataItem p =  model.getNearestPositivePoint();
 			SVMDataItem n = model.getNearestNegativePoint();			
-			
-			if (!w.isZeroOrValid()){
-				setSolutionExits(false);
-				notifyObservers();
-				return;
-			}else{
-				setSolutionExits(true);
-				notifyObservers();
-			}
 			
 			double y1 = -10000;
 			double y2 = 10000;
@@ -872,7 +852,7 @@ public class SVMPanel extends ChartPanel
     }
     
     /**
-     * based on 
+     * reference
      * http://www.journaldev.com/1739/observer-design-pattern-in-java-example-tutorial
      * @param obj
      */
@@ -885,6 +865,7 @@ public class SVMPanel extends ChartPanel
     }
  
     /**
+     * reference
      * http://www.journaldev.com/1739/observer-design-pattern-in-java-example-tutorial
      * @param obj
      */
@@ -896,6 +877,7 @@ public class SVMPanel extends ChartPanel
     }
  
     /**
+     * reference
      * http://www.journaldev.com/1739/observer-design-pattern-in-java-example-tutorial
      */
     @Override
