@@ -7,8 +7,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 
-import app.model.data.SVMDataItem;
-import app.model.data.SVMDataSet;
+import app.model.data.WSVMDataItem;
+import app.model.data.WSVMDataSet;
 
 
 
@@ -18,11 +18,11 @@ public class WSKSolver {
 	public static double epsilon = 0.001;
 	public static int maxIterations = 500;
 	
-	private SVMDataItem w;
+	private WSVMDataItem w;
 	private double b;
 	
-	private SVMDataItem nearestPositivePoint = null;
-	private SVMDataItem nearestNegativePoint = null;	
+	private WSVMDataItem nearestPositivePoint = null;
+	private WSVMDataItem nearestNegativePoint = null;	
 	
 	private int iterations = 0;
 	
@@ -30,61 +30,45 @@ public class WSKSolver {
 	private long endTime = 0;
 	private long elapsedTime = 0;
 	
-	public SVMDataItem getW() {
-		return w;
-	}
-	public double getB() {
-		return b;
-	}
-
-	public SVMDataItem getNearestPositivePoint() {
-		return nearestPositivePoint;
-	}
-
-	public SVMDataItem getNearestNegativePoint() {
-		return nearestNegativePoint;
-	}
-
-	//TODO handle n-dimension alg9 while wrch use 2 d a;g9
+	public boolean wsk(WSVMDataSet Dataset, double mu1,double mu2) throws Exception{
 	
-	public void wsk(SVMDataSet Dataset, double mu1,double mu2) throws Exception{
-
 		startTime = System.nanoTime();
 		double breakCondition = Double.NaN;
 		
-		SVMDataItem p = null;
-		SVMDataItem n = null;
-		SVMDataItem w = null;
+		WSVMDataItem p = null;
+		WSVMDataItem n = null;
+		WSVMDataItem w = null;
 		
-		ArrayList<SVMDataItem> positiveClass = Dataset.getPositiveClass();
-		ArrayList<SVMDataItem> negativeClass = Dataset.getNegativeClass();
+		ArrayList<WSVMDataItem> positiveClass = Dataset.getPositiveClass();
+		ArrayList<WSVMDataItem> negativeClass = Dataset.getNegativeClass();
 		
-		SVMDataItem startDirection = new SVMDataItem(Dataset.getDimensions());
+		if (positiveClass !=null && positiveClass.isEmpty()){
+			return false;
+		}
+		
+		if (negativeClass !=null && negativeClass.isEmpty()){
+			return false;
+		}
+		
+		WSVMDataItem startDirection = new WSVMDataItem(Dataset.getDimensions());
 		startDirection.setXValue(+1);
-		SVMDataItem oppositeDirection = new SVMDataItem(Dataset.getDimensions());
+		WSVMDataItem oppositeDirection = new WSVMDataItem(Dataset.getDimensions());
 		oppositeDirection.setXValue(-1);
-
+	
 		p = findExtremePoint(positiveClass , mu1, startDirection);
 		n = findExtremePoint(negativeClass , mu2, oppositeDirection);
 		
 		
 		while(iterations < maxIterations){
 			w = p.subtractVectors(n);
-			
-			//TODO hot fix centroid
-			if (w.equals(new SVMDataItem(w.getDimensions()))){
-				//centroids on top of each other-> no solution
-			
-			}
-			
-			SVMDataItem wprime = w.clone();
+			WSVMDataItem wprime = w.clone();
 			wprime.multiplyByScaler(-1);
-
-			SVMDataItem vp = findExtremePoint(positiveClass , mu1, wprime);
-			SVMDataItem vn = findExtremePoint(negativeClass , mu2, w);
+	
+			WSVMDataItem vp = findExtremePoint(positiveClass , mu1, wprime);
+			WSVMDataItem vn = findExtremePoint(negativeClass , mu2, w);
 			
-			SVMDataItem dvp = vp.subtractVectors(n);
-			SVMDataItem dpv = p.subtractVectors(vn);
+			WSVMDataItem dvp = vp.subtractVectors(n);
+			WSVMDataItem dpv = p.subtractVectors(vn);
 			
 			double w1 =(w.getDotProduct(dvp));
 			double w2 = (w.getDotProduct(dpv));
@@ -92,12 +76,15 @@ public class WSKSolver {
 			ws = Math.pow(ws, 2);
 			double temp;
 			if ( w1 < w2){
-				if ((1-(w1/ws)) < epsilon){
-					breakCondition = (1-(w1/ws));
+				breakCondition = (1-(w1/ws));
+				if (Double.isNaN(breakCondition)){
+					return false;
+				}
+				if (breakCondition < epsilon){
 					break;
 				}
-				SVMDataItem dnp = p.subtractVectors(n);
-				SVMDataItem dpvp = p.subtractVectors(vp);
+				WSVMDataItem dnp = p.subtractVectors(n);
+				WSVMDataItem dpvp = p.subtractVectors(vp);
 				double top = dnp.getDotProduct(dpvp);
 				double bottom = dpvp.getDotProduct(dpvp);
 				temp = top / bottom;
@@ -107,19 +94,22 @@ public class WSKSolver {
 					break;
 				}
 				
-				SVMDataItem newP = p.clone();
+				WSVMDataItem newP = p.clone();
 				newP.multiplyByScaler((1-delta));
-				SVMDataItem newVP = vp.clone();
+				WSVMDataItem newVP = vp.clone();
 				newVP.multiplyByScaler(delta);
 				newP.add(newVP);
 				p = newP;
 			}else{
-				if ((1-(w2/ws)) < epsilon){
-					breakCondition = (1-(w1/ws));
+				breakCondition = (1-(w2/ws));
+				if (Double.isNaN(breakCondition)){
+					return false;
+				}
+				if (breakCondition < epsilon){
 					break;
 				}
-				SVMDataItem dpn = n.subtractVectors(p);
-				SVMDataItem dpvn = n.subtractVectors(vn);
+				WSVMDataItem dpn = n.subtractVectors(p);
+				WSVMDataItem dpvn = n.subtractVectors(vn);
 				double top = dpn.getDotProduct(dpvn);
 				double bottom = dpvn.getDotProduct(dpvn);
 				temp = top / bottom;
@@ -129,9 +119,9 @@ public class WSKSolver {
 					break;
 				}
 				
-				SVMDataItem newN = n.clone();
+				WSVMDataItem newN = n.clone();
 				newN.multiplyByScaler((1-delta));
-				SVMDataItem newVN = vn.clone();
+				WSVMDataItem newVN = vn.clone();
 				newVN.multiplyByScaler(delta);
 				newN.add(newVN);
 				n = newN;
@@ -148,66 +138,44 @@ public class WSKSolver {
 		endTime = System.nanoTime();
 		elapsedTime = endTime - startTime;
 		
+		if (!isZeroOrValid(w)){
+			return false;
+		}
+		
+		
 		//System.out.println("w = " + finalW.getXValue() + ", "+finalW.getYValue());
 		//System.out.println("b = " + finalB);
 		System.out.println("it = " + iterations + ", break: " + breakCondition);
 		System.out.println("Elapsed Time for WSK: " + elapsedTime / 1e6 +" ms");
 		//System.out.println("p = " + p + ", n = " + n);
+
+		return true;
 		
 	}
-	
-	
-	//TODO NOTE WSK is n dimension whole WRCH is 2 dimension
-	
-	
-	public static SVMDataItem findExtremePoint(ArrayList<SVMDataItem> list, double mu, final SVMDataItem n){
+	//NOTE WSK is n dimension whole WRCH is 2 dimension
+	public static WSVMDataItem findExtremePoint(ArrayList<WSVMDataItem> list, double mu, final WSVMDataItem n){
 		
-		if (mu == 0){ //TODO fp comparison
-			return WRCHSolver.findCentroid(list);	//TODO hot fix
+		if (mu == 0){ 
+			return WRCHSolver.findCentroid(list);	
 		}
-		
-//		if (1/mu > list.size()){
-//			System.out.println("centr");
-//			return Dwrch.findCentroid(list);//TODO hot fix
-//		}
-		
-		testSorting(list, n);
-		
-		//TODO if weight = 0 ??
-//		Collections.sort(list,Collections.reverseOrder( new Comparator<DVector>() {
-//			@Override
-//			public int compare(DVector o1, DVector o2) {
-//				
-//				//TODO fp comparisons
-//				try {
-//					double p1 = o1.getDotProduct(n);
-//					double p2 = o2.getDotProduct(n);
-//					if (p1 < p2){
-//						return -1;
-//					}else if (p2 > p1){
-//						return 1;
-//					}else{
-//						return 0;
-//					}
-//				} catch (Exception e) {
-//					e.printStackTrace();
-//					return 0;
-//				}
-//			}
-//		}));
-		
-		
+	
+		try {
+			reverseSortOnProjections(list, n);
+		} catch (Exception e) {
+			//System.out.println("Comparator exception");
+			//e.printStackTrace();
+		}
+	
 		double [] A = new double[list.size()];
 		double s = 0;
 		int k = 0;
 		
 		int count = 0;
 		
-		while (s < 1.0){ //TODO fp comparison
+		while (DoubleMath.isLessThan(s, 1)){
 			if (k >= A.length){
-				System.out.println("k fixed");
 				k = 0;//
-				return WRCHSolver.findCentroid(list); // TODO if all A are used then return centroid
+				return WRCHSolver.findCentroid(list); 
 			}
 				if (A[k] == 0){
 					count++;
@@ -217,50 +185,38 @@ public class WSKSolver {
 			k++;
 		}
 		
-		SVMDataItem v = new SVMDataItem(n.getDimensions());
+		WSVMDataItem v = new WSVMDataItem(n.getDimensions());
 		int i = 0;
 		for (i = 0; i < count; i++){
-			if (i >=  list.size()){
-				System.out.println("index out of bounds");
-			}
-			SVMDataItem c = list.get(i).clone();
+			WSVMDataItem c = list.get(i).clone();
 			c.multiplyByScaler(A[i]);
 			try {
 				v.add(c);
 			} catch (Exception e) {
-				// TODO
 				e.printStackTrace();
 			}
 		}
-		
-
-//		//copy support points
-//		numSupportPoints = count;
-//		Z = new SVMDataItem[X.size()];
-//		for (int j = 0; j < X.size(); j++){
-//			Z[j] = X.get(j); 
-//		}
-		
 		return v;
 	}
-	
-	private static void testSorting(ArrayList<SVMDataItem> list,final SVMDataItem normal){
-		Collections.sort(list,Collections.reverseOrder( new Comparator<SVMDataItem>() {
+	private static void reverseSortOnProjections(ArrayList<WSVMDataItem> list,final WSVMDataItem normal){
+		Collections.sort(list,Collections.reverseOrder( new Comparator<WSVMDataItem>() {
 			@Override
-			public int compare(SVMDataItem o1, SVMDataItem o2) {
-				
-				//TODO fp comparisons
+			public int compare(WSVMDataItem o1, WSVMDataItem o2) {
+				//fp comparisons
 				try {
 					double p1 = o1.getDotProduct(normal);
 					double p2 = o2.getDotProduct(normal);
-					double diff = p1 - p2;
-					//System.out.format("p1:%f p2:%f\n" , p1, p2);					
-					if (p1 < p2){
-						return -1;
-					}else if (p2 > p1){
+					double diff = Math.abs(p1 - p2);
+					
+					//Known Exception: Comparison violates general contract
+					//rare cases when this comparator may not give a total ordering
+					//as java expects. this is due to precision erros
+					if ((diff - DoubleMath.PRECISION) < 0){
+						return 0;
+					}else if (p1 > p2){
 						return 1;
 					}else{
-						return 0;
+						return -1;
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -269,6 +225,7 @@ public class WSKSolver {
 			}
 		}));
 	}
+	
 	
 	private static double clamp(double c, double cmin, double cmax){
 		
@@ -279,9 +236,51 @@ public class WSKSolver {
 		}else if (c >= cmax){
 			return cmax;
 		}else{
-			//assert error: will happen if doubles contain NaN
+			//assert error: this will happen if doubles contain NaN, catch it in caller
 			return Double.NaN; 
 		}
+	}
+	
+	public boolean isZeroOrValid(WSVMDataItem w){
+		boolean valid = false;
+		try {
+			double val;
+			
+			for (int i = 0; i < w.getDimensions(); i++){
+				val = w.getVal(i);
+				
+				if (Double.isNaN(val) || Double.isInfinite(val)){
+					return false;
+				}
+				//adjust the value of 0.01 to give a min bound on nearest points for valid solutions
+				double diff = Math.abs(val - 0);
+				if (!(diff < 0.005)){
+					valid = true;
+				}
+				
+			}
+			
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return valid;
+	}
+	
+	
+	public WSVMDataItem getW() {
+		return w;
+	}
+	public double getB() {
+		return b;
+	}
+
+	public WSVMDataItem getNearestPositivePoint() {
+		return nearestPositivePoint;
+	}
+
+	public WSVMDataItem getNearestNegativePoint() {
+		return nearestNegativePoint;
 	}
 
 }

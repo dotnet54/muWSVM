@@ -7,30 +7,30 @@ import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import app.model.data.SVMDataItem;
-import app.model.data.SVMDataSeries;
-import app.test.SVMDataItemOLD2;
+import app.model.data.WSVMDataItem;
+import app.model.data.WSVMDataSeries;
 
 
-/*
- * 
- * 
- * 
- */
 public class WRCHSolver {
 	
-	
-	private static SVMDataItem [] Z;
+	private static WSVMDataItem [] Z;
 	private static int numSupportPoints;
-	
-	private static double epsilon = 0.001;
 	
 	private static long startTime = 0;
 	private static long endTime = 0;
 	private static long elapsedTime = 0;
 	
-	public static ArrayList<SVMDataItem> calcWeightedReducedCHull2(SVMDataSeries series, double mu) {
-		ArrayList<SVMDataItem> r = new ArrayList<SVMDataItem>();
+	
+	/**
+	 * External interfaces call this method to solve WRCH
+	 * 
+	 * @param series SVMDataseries
+	 * @param mu reduction parameter
+	 * @return list of data items
+	 */
+	
+	public static ArrayList<WSVMDataItem> calcWeightedReducedCHull2(WSVMDataSeries series, double mu) {
+		ArrayList<WSVMDataItem> r = new ArrayList<WSVMDataItem>();
 		
 		try{
 			
@@ -38,12 +38,14 @@ public class WRCHSolver {
 				return null;
 			}
 			
-			ArrayList<SVMDataItem> P =  new ArrayList<SVMDataItem>();
-			SVMDataItem t =null;
+			//making a copy is slower, rhull function works with an arraylist
+			//that is for testing it independent of gui package
+			ArrayList<WSVMDataItem> P =  new ArrayList<WSVMDataItem>();
+			WSVMDataItem t =null;
 			int xDim = series.getXDimension();
 			int yDim = series.getYDimension();
 			for (int i=0; i< series.getItemCount(); i++){
-				t = new SVMDataItem(0,0);
+				t = new WSVMDataItem(0,0);
 				t.setX(series.getRawDataItem(i).getVal(xDim));
 				t.setY(series.getRawDataItem(i).getVal(yDim));
 				t.setWeight(series.getRawDataItem(i).getWeight());
@@ -51,17 +53,11 @@ public class WRCHSolver {
 				P.add(t);
 			}
 			
+			WSVMDataItem[] res = rhull(P, mu);
 			
-//			if (1/mu > P.size()){
-//				r.add(findCentroid(P));
-//				return (r);
-//			}
-			
-			SVMDataItem[] res = rhull(P, mu);
-			
-			SVMDataItem p;
+			WSVMDataItem p;
 			for (int i=0;res!=null && i< res.length; i++){
-				p = new SVMDataItem(0,0);
+				p = new WSVMDataItem(0,0);
 				p.setX(res[i].getXValue());
 				p.setY(res[i].getYValue());
 				p.setLabel("");
@@ -70,30 +66,38 @@ public class WRCHSolver {
 		}catch(Exception e){
 			e.printStackTrace();
 		}catch (StackOverflowError e){
-			System.out.println("Stack over flow in RCH!");
+			System.out.println("Stack over flow in WRCH!");
 			return null;
 		}
 		
 		return r;
 	}
 	
-	
-	private static SVMDataItem[] rhull(ArrayList<SVMDataItem> P, double mu) throws StackOverflowError{
+	/**
+	 * Algorithm to find WRCH
+	 * 
+	 * @param P an array list of data points
+	 * @param mu reduction parameter
+	 * @return an array of points in WRCH
+	 * 
+	 * @throws StackOverflowError
+	 */
+	private static WSVMDataItem[] rhull(ArrayList<WSVMDataItem> P, double mu) throws StackOverflowError{
 
 		startTime = System.nanoTime();
 		
-		SVMDataItem[] Ret = null;
+		WSVMDataItem[] Ret = null;
 		try {
-			SVMDataItem n = new SVMDataItem(-1,0);
-			SVMDataItem l =  findExtremePoint(P, mu, n);
+			WSVMDataItem n = new WSVMDataItem(-1,0);
+			WSVMDataItem l =  findExtremePoint(P, mu, n);
 			n.setXValue(1);
-			SVMDataItem r =  findExtremePoint(P, mu,  n);
+			WSVMDataItem r =  findExtremePoint(P, mu,  n);
 			
-			Set<SVMDataItem> result = rhull_aux(P, l ,r, mu);
-			Set<SVMDataItem> B = rhull_aux(P, r, l, mu);
+			Set<WSVMDataItem> result = rhull_aux(P, l ,r, mu);
+			Set<WSVMDataItem> B = rhull_aux(P, r, l, mu);
 			result.addAll(B);
 
-			Ret = new SVMDataItem[result.size()];
+			Ret = new WSVMDataItem[result.size()];
 			Ret = result.toArray(Ret);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -106,32 +110,41 @@ public class WRCHSolver {
 		return Ret;
 	}
 	
-	private static Set<SVMDataItem> rhull_aux(ArrayList<SVMDataItem> P, 
-			SVMDataItem l, SVMDataItem r, double mu) throws StackOverflowError{
+	/**
+	 * private helper method used by rhull
+	 * 
+	 * @param P
+	 * @param l
+	 * @param r
+	 * @param mu
+	 * @return
+	 * @throws StackOverflowError
+	 */
+	private static Set<WSVMDataItem> rhull_aux(ArrayList<WSVMDataItem> P, 
+			WSVMDataItem l, WSVMDataItem r, double mu) throws StackOverflowError{
 		
-		Set<SVMDataItem> result = new LinkedHashSet<SVMDataItem>();
+		Set<WSVMDataItem> result = new LinkedHashSet<WSVMDataItem>();
 		
 		try {
-			SVMDataItem n = new SVMDataItem(0,0);
-			SVMDataItem h = new SVMDataItem(0,0);
+			WSVMDataItem n = new WSVMDataItem(0,0);
+			WSVMDataItem h = new WSVMDataItem(0,0);
 			
-			SVMDataItem diff = r.subtractVectors(l);
+			WSVMDataItem diff = r.subtractVectors(l);
 			diff.setXValue(DoubleMath.dMinus(r.getXValue(), l.getXValue()));
 			diff.setYValue(DoubleMath.dMinus(r.getYValue(), l.getYValue()));
 			n.setXValue(-diff.getYValue());
 			n.setYValue(diff.getXValue());
 
 			h =  findExtremePoint(P, mu,  n);
-			//System.out.format("h:%s,l:%s,r%s \n", h,l,r);
 
-			SVMDataItem facetNormal = l.subtractVectors(r);
+			WSVMDataItem facetNormal = l.subtractVectors(r);
 			facetNormal.setXValue(DoubleMath.dMinus(l.getXValue(), r.getXValue()));
 			facetNormal.setYValue(DoubleMath.dMinus(l.getYValue(), r.getYValue()));
 			facetNormal =  facetNormal.get2DAntiClockwiseNormal();
 			double pointOffset = h.getDotProduct(facetNormal);
 			double facetOffset = l.getDotProduct(facetNormal);
 			
-			if (Math.abs(pointOffset - facetOffset) < epsilon){
+			if (Math.abs(pointOffset - facetOffset) < DoubleMath.PRECISION){
 				result.add(l);
 				result.add(r);
 				return result;
@@ -139,8 +152,8 @@ public class WRCHSolver {
 			
 			
 			
-			SVMDataItem nl = new SVMDataItem(0,0);
-			SVMDataItem nr = new SVMDataItem(0,0);
+			WSVMDataItem nl = new WSVMDataItem(0,0);
+			WSVMDataItem nr = new WSVMDataItem(0,0);
 			
 			diff = h.subtractVectors(l);
 			diff.setXValue(DoubleMath.dMinus(h.getXValue(), l.getXValue()));
@@ -154,14 +167,14 @@ public class WRCHSolver {
 			nr.setXValue(-diff.getYValue());
 			nr.setYValue(diff.getXValue());
 			
-			SVMDataItem[] supportPoints = new SVMDataItem[numSupportPoints];
+			WSVMDataItem[] supportPoints = new WSVMDataItem[numSupportPoints];
 			for (int i = 0; i < numSupportPoints ; i++){
 				supportPoints[i] = Z[i];
 			}
 			double scalerProjections[] = new double [numSupportPoints];
 			double minOffset;
-			ArrayList<SVMDataItem> L = new ArrayList<SVMDataItem>();
-			ArrayList<SVMDataItem> R = new ArrayList<SVMDataItem>();
+			ArrayList<WSVMDataItem> L = new ArrayList<WSVMDataItem>();
+			ArrayList<WSVMDataItem> R = new ArrayList<WSVMDataItem>();
 			
 			
 			for (int i = 0; i < numSupportPoints; i++){
@@ -172,7 +185,7 @@ public class WRCHSolver {
 			double projection = 0.0;
 			for (int i = 0; i < size; i++){
 				projection = P.get(i).getDotProduct(nl);
-				if (Math.abs(projection - minOffset) < epsilon ||
+				if (Math.abs(projection - minOffset) < DoubleMath.PRECISION ||
 						projection > minOffset){
 					L.add(P.get(i));
 				}
@@ -184,7 +197,7 @@ public class WRCHSolver {
 			minOffset = minValue(scalerProjections);
 			for (int i = 0; i < size; i++){
 				projection = P.get(i).getDotProduct(nr);
-				if (Math.abs(projection - minOffset) < epsilon || 
+				if (Math.abs(projection - minOffset) < DoubleMath.PRECISION || 
 						projection > minOffset){
 					R.add(P.get(i));
 				}
@@ -192,7 +205,7 @@ public class WRCHSolver {
 			
 			
 			result = rhull_aux(L, l ,h, mu);
-			Set<SVMDataItem> B = rhull_aux(R, h, r, mu);
+			Set<WSVMDataItem> B = rhull_aux(R, h, r, mu);
 			result.addAll(B);
 			
 		} catch (Exception e) {
@@ -200,131 +213,30 @@ public class WRCHSolver {
 		}
 		return result;
 	}
-	
-//	
-//	public static DVector alg10(ArrayList<DVector> list, double mu, final DVector n){
-//		DVector v = new DVector(n.getDimensions());
-//		try {
-//				
-//			double A[] = new double[list.size()];
-//			double total = 0;
-//			
-//			int order[] = new int[list.size()];
-//			double projections[] = new double[list.size()];
-//			for (int i = 0; i < list.size(); i++){
-//				projections[i] = list.get(i).getDotProduct(n);
-//			}
-//			
-//			double temp;
-//			int m, min;
-//			for (int i = 0; i < projections.length -1; i++){
-//				min = i;
-//				for (m = i+1; m < projections.length; m++){
-//					if (projections[m] < projections[min]){
-//						min = m;
-//						order[i] = m;
-//					}
-//				}
-//				if (min != i){
-//					temp = projections[i];
-//					projections[i] = projections[min];
-//					projections[min] = temp;
-//				}
-//			}
-//			
-//			int i = 0;
-//			for (int j = 0; j < list.size() && total < 1; j++){
-//				A[i] = Math.min(list.get(i).getWeight() * mu, 1 - total);
-//				total += A[i];
-//				
-//				if (j == list.size() && total < 1){
-//					j = 0;
-//				}
-//			}
-//			
-//			
-//		
-//			DVector c = null;
-//			int k = 0;
-//			for (i = 0; i < A.length; i++) {
-//				c = list.get(i).clone();
-//				c.multiplyByScaler(A[i]);
-//				v.add(c);
-//			}
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-//		
-//		return v;
-//	}
-//	
-	public static SVMDataItem findExtremePoint(ArrayList<SVMDataItem> list, double mu, final SVMDataItem n){
+
+	public static WSVMDataItem findExtremePoint(ArrayList<WSVMDataItem> list, double mu, final WSVMDataItem n){
 		
-		if (mu == 0){ //TODO fp comparison
+		if (mu == 0){ //fp comparison
 			return findCentroid(list);
 		}
-		
-		if (1/mu > list.size()){
-			System.out.println("centr");
-			//return Dwrch.findCentroid(list);//TODO hot fix
+
+		try {
+			reverseSortOnProjections(list, n);
+		} catch (Exception e) {
+			System.out.println("Comparator exception");
+			//e.printStackTrace();
 		}
-		
-		//TODO if weight = 0 ??
-		Collections.sort(list,Collections.reverseOrder( new Comparator<SVMDataItem>() {
-			@Override
-			public int compare(SVMDataItem o1, SVMDataItem o2) {
-				//TODO fp comparisons
-				try {
-					double p1 = o1.getDotProduct(n);
-					double p2 = o2.getDotProduct(n);
-					//double diff = Math.abs(DoubleMath.dMinus(p1, p2));
-					double diff = Math.abs(p1 - p2);
-					
-					double d1 = o1.getWeight();
-					double d2 = o2.getWeight();
-					//double diffWeight =  Math.abs(DoubleMath.dMinus(d1, d2));
-					double diffWeight =  Math.abs(d1 - d2);
-					
-					//TODO Exception: Comparison violates general contract
-					if ((diff - epsilon) < 0){
-//						if ((diffWeight - epsilon) < 0){
-//							return 0;
-//						}else if(d1 > d2){
-//							return 1;
-//						}else{
-//							return -1;
-//						}
-						//System.out.format("0: %f : %f = %f\n", p1, p2, diff);
-						return 0;
-					}else if (p1 > p2){
-						//System.out.format("1: %f : %f = %f\n", p1, p2, diff);
-						return 1;
-					}else{
-						//System.out.format("-1: %f : %f = %f\n", p1, p2, diff);
-						return -1;
-					}
-					
-				} catch (Exception e) {
-					System.out.println("Exception In Comparison");
-					e.printStackTrace();
-					
-					return 0;
-				}
-			}
-		}));
-		
-		
+
 		double [] A = new double[list.size()];
 		double s = 0;
 		int k = 0;
 		
 		int count = 0;
 		
-		while (s < 1.0){ //TODO fp comparison
+		while (DoubleMath.isLessThan(s, 1)){
 			if (k >= A.length){
-				System.out.println("k fixed");
-				k = 0;//
-				return findCentroid(list); //TODO if all A are used then return centroid
+				k = 0;
+				return findCentroid(list);
 			}
 				if (A[k] == 0){
 					count++;
@@ -334,26 +246,20 @@ public class WRCHSolver {
 			k++;
 		}
 		
-		SVMDataItem v = new SVMDataItem(n.getDimensions());
+		WSVMDataItem v = new WSVMDataItem(n.getDimensions());
 		int i = 0;
 		for (i = 0; i < count; i++){
-			if (i >=  list.size()){
-				System.out.println("index out of bounds");
-			}
-			SVMDataItem c = list.get(i).clone();
+			WSVMDataItem c = list.get(i).clone();
 			c.multiplyByScaler(A[i]);
 			try {
 				v.add(c);
 			} catch (Exception e) {
-				// TODO
 				e.printStackTrace();
 			}
 		}
-		
 
-//		//copy support points
 		numSupportPoints = count;
-		Z = new SVMDataItem[list.size()];
+		Z = new WSVMDataItem[list.size()];
 		for (int j = 0; j < list.size(); j++){
 			Z[j] = list.get(j); 
 		}
@@ -361,12 +267,43 @@ public class WRCHSolver {
 		return v;
 	}
 
+	private static void reverseSortOnProjections(ArrayList<WSVMDataItem> list,final WSVMDataItem normal){
+		Collections.sort(list,Collections.reverseOrder( new Comparator<WSVMDataItem>() {
+			@Override
+			public int compare(WSVMDataItem o1, WSVMDataItem o2) {
+				try {
+					double p1 = o1.getDotProduct(normal);
+					double p2 = o2.getDotProduct(normal);
+					double diff = Math.abs(p1 - p2);
+					
+					double d1 = o1.getWeight();
+					double d2 = o2.getWeight();
+					double diffWeight =  Math.abs(d1 - d2);
+					
+					//Known Exception: Comparison violates general contract
+					//rare cases when this comparator may not give a total ordering
+					//as java expects. this is due to precision erros
+					if ((diff - DoubleMath.PRECISION) < 0){
+						return 0;
+					}else if (p1 > p2){
+						return 1;
+					}else{
+						return -1;
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+					return 0;
+				}
+			}
+		}));
+	}
+	
 	private static double minValue(double[] array){
 		double min = Double.NaN;
 		if (array != null && array.length > 0){
 			min = array[0];
 			for (int i = 1; i < array.length; i++){
-				if (array[i] < min){ //TODO fp comparison
+				if (array[i] < min){ //fp comparison
 					min = array[i];
 				}
 			}
@@ -374,18 +311,9 @@ public class WRCHSolver {
 		return min;
 	}
 	
-	private static SVMDataItem normal(SVMDataItem p1, SVMDataItem p2){
-			double dx, dy;
-			dx = DoubleMath.dMinus(p1.getXValue(), p2.getXValue());
-			dy = DoubleMath.dMinus(p1.getYValue(), p2.getYValue());
-			SVMDataItem n = new SVMDataItem(0,0);
-			n.setX(-dy);
-			n.setY(dx);
-			return n;
-		}
 
-	public static SVMDataItem findCentroid(SVMDataItem P[]){
-		SVMDataItem cent = new SVMDataItem(0, 0);
+	public static WSVMDataItem findCentroid(WSVMDataItem P[]){
+		WSVMDataItem cent = new WSVMDataItem(0, 0);
 		
 		for (int i = 0; i < P.length; i++){
 			cent.setX(cent.getXValue() + P[i].getXValue() * P[i].getWeight());
@@ -396,7 +324,9 @@ public class WRCHSolver {
 		for (int i = 0; i < P.length; i++){
 			totalWeight += P[i].getWeight();
 		}
-		//ASSERT totalWeight != 0;
+		if (totalWeight == 0){
+			totalWeight = 1;
+		}
 		
 		cent.setX(cent.getXValue() / totalWeight);
 		cent.setY(cent.getYValue() / totalWeight);
@@ -404,8 +334,8 @@ public class WRCHSolver {
 		return cent;
 	}
 	
-	public static SVMDataItem findCentroid(ArrayList<SVMDataItem> dataset){
-		SVMDataItem cent = new SVMDataItem(0, 0);
+	public static WSVMDataItem findCentroid(ArrayList<WSVMDataItem> dataset){
+		WSVMDataItem cent = new WSVMDataItem(0, 0);
 		
 		for (int i = 0; i < dataset.size(); i++){
 			cent.setX(cent.getXValue() + dataset.get(i).getXValue() * dataset.get(i).getWeight());
@@ -416,7 +346,9 @@ public class WRCHSolver {
 		for (int i = 0; i < dataset.size(); i++){
 			totalWeight += dataset.get(i).getWeight();
 		}
-		//ASSERT totalWeight != 0;
+		if (totalWeight == 0){
+			totalWeight = 1;
+		}
 		
 		cent.setX(cent.getXValue() / totalWeight);
 		cent.setY(cent.getYValue() / totalWeight);

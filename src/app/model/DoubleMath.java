@@ -1,16 +1,21 @@
 package app.model;
 
+/**
+ * Class used to reduce floating point precision errors
+ * @author shifaz
+ *
+ */
 public class DoubleMath {
 	
-	public static double PRECISION = 0.00001; //provide a set precision function
+	public static double PRECISION = 0.00001;
 	public static int DP = 6;
 	
 	
 	public static boolean isLessThan(double d1, double d2){
 		double df = (d1 - d2);
-		if (Math.abs(df) < PRECISION){//eq
+		if (Math.abs(df) < PRECISION){
 			return false;
-		}else if(df < 0){//note -0 and +0
+		}else if(df < 0){
 			return true;
 		}else{
 			return false;
@@ -19,9 +24,9 @@ public class DoubleMath {
 	
 	public static boolean isLessThanOrEq(double d1, double d2){
 		double df = (d1 - d2);
-		if (Math.abs(df) < PRECISION){//eq
+		if (Math.abs(df) < PRECISION){
 			return true;
-		}else if(df < 0){//note -0 and +0
+		}else if(df < 0){
 			return true;
 		}else{
 			return false;
@@ -30,9 +35,9 @@ public class DoubleMath {
 	
 	public static boolean isGreaterThan(double d1, double d2){
 		double df = (d1 - d2);
-		if (Math.abs(df) < PRECISION){//eq
+		if (Math.abs(df) < PRECISION){
 			return false;
-		}else if(df > 0){//note -0 and +0
+		}else if(df > 0){
 			return true;
 		}else{
 			return false;
@@ -41,9 +46,9 @@ public class DoubleMath {
 	
 	public static boolean isGreaterThanEq(double d1, double d2){
 		double df = (d1 - d2);
-		if (Math.abs(df) < PRECISION){//eq
+		if (Math.abs(df) < PRECISION){
 			return true;
-		}else if(df > 0){//note -0 and +0
+		}else if(df > 0){
 			return true;
 		}else{
 			return false;
@@ -89,7 +94,6 @@ public class DoubleMath {
 		return r;
 	}
 	
-	//new BigDecimal(value).setScale(places, RoundingMode.HALF_UP).doubleValue()
 	public static double round(double value, int places) {
 	    if (places < 0) throw new IllegalArgumentException();
 
