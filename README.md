@@ -1,3 +1,7 @@
+muWSVM [![Build Status](https://travis-ci.org/dotnet54/muWSVM.svg)](https://travis-ci.org/dotnet54/muWSVM) 
+======
+
+
 Weighted Support Vector Machine
 ===============================
 Implementing a weighted support vector machine based on geometric concepts.
