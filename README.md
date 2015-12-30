@@ -34,5 +34,5 @@ Need Java 1.7 runtime.
 
 
 For support with installation/run issues, email
-ashi32@student.monash.edu
+
 dotnet54@gmail.com
